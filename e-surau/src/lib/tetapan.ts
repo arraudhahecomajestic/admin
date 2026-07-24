@@ -1,0 +1,10 @@
+// Tetapan lalai surau — ditulis siap supaya berfungsi walaupun env belum diset.
+export const NAMA_SURAU =
+  process.env.NEXT_PUBLIC_NAMA_SURAU ?? "Surau Ar Raudhah, Eco Majestic Semenyih";
+export const NEGERI = "Negeri Selangor";
+export const ZON_SOLAT = process.env.NEXT_PUBLIC_ZON_SOLAT ?? "SGR01";
+
+export const LOGO_JAIS = "/logo-jais.png";
+export const LOGO_SELANGOR = "/logo-selangor.png";
+export const LOGO_SURAU = "/logo-surau-2.png"; // mendatar (header)
+export const LOGO_SURAU_TEGAK = "/logo-surau-1.png"; // menegak (cetak/hero)
