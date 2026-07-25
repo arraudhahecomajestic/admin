@@ -14,6 +14,7 @@ type Ahli = {
   telefon: string;
   status: "menunggu" | "lulus" | "tolak";
   peringkat: "baru" | "disokong_su" | "disokong_nazir" | "selesai";
+  maklumat_disahkan: boolean;
   tarikh_daftar: string;
   tanggungan: { id: string }[];
   keahlian_khairat: { no_khairat: string | null }[];
@@ -46,7 +47,7 @@ export default async function AdminPage() {
   const db = createAdminClient();
   const { data } = await db
     .from("ahli_kariah")
-    .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
+    .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
     .order("tarikh_daftar", { ascending: false });
   const ahli = (data as Ahli[]) ?? [];
 
@@ -54,6 +55,7 @@ export default async function AdminPage() {
     menunggu: ahli.filter((a) => a.status === "menunggu").length,
     lulus: ahli.filter((a) => a.status === "lulus").length,
     khairat: ahli.filter((a) => a.keahlian_khairat.length > 0).length,
+    belumKemas: ahli.filter((a) => !a.maklumat_disahkan).length,
   };
 
   return (
@@ -61,10 +63,11 @@ export default async function AdminPage() {
       <AdminNav aktif="/admin" nama={profil.nama ?? profil.emel ?? undefined} />
       <h1 className="text-2xl font-bold text-slate-900">Permohonan Ahli Kariah</h1>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Menunggu Tindakan" nilai={jum.menunggu} warna="text-amber-600" />
         <Stat label="Ahli Diluluskan" nilai={jum.lulus} warna="text-green-600" />
         <Stat label="Ahli Khairat" nilai={jum.khairat} warna="text-surau" />
+        <Stat label="Belum Kemas Kini" nilai={jum.belumKemas} warna="text-orange-600" />
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
@@ -75,6 +78,7 @@ export default async function AdminPage() {
               <th className="px-4 py-3">Nama</th>
               <th className="px-4 py-3">Peringkat</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Maklumat</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -96,6 +100,11 @@ export default async function AdminPage() {
                 </td>
                 <td className="px-4 py-3">
                   <span className={`rounded px-2 py-0.5 text-xs font-semibold ${statusLabel[a.status]}`}>{a.status}</span>
+                </td>
+                <td className="px-4 py-3">
+                  {a.maklumat_disahkan
+                    ? <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Disahkan</span>
+                    : <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">Belum</span>}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link href={`/admin/permohonan/${a.id}`} className="rounded-lg bg-surau px-3 py-1.5 text-xs font-semibold text-white hover:bg-surau-dark">

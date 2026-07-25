@@ -59,6 +59,25 @@ export default async function AhliPage() {
         </form>
       </div>
 
+      {/* Banner kemas kini maklumat */}
+      {!a?.maklumat_disahkan ? (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+          <div className="font-semibold text-amber-800">⚠️ Sila kemas kini & sahkan maklumat anda</div>
+          <p className="mt-1 text-sm text-amber-700">
+            Maklumat anda mungkin belum lengkap atau perlu disemak. Ambil masa sebentar untuk
+            betulkan & lengkapkan (alamat, telefon, gambar IC, tanggungan).
+          </p>
+          <Link href="/ahli/kemaskini" className="mt-3 inline-block rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">
+            Kemas Kini Maklumat →
+          </Link>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          <span>✓ Maklumat disahkan{a.tarikh_kemaskini ? ` pada ${tarikhMs(a.tarikh_kemaskini)}` : ""}.</span>
+          <Link href="/ahli/kemaskini" className="font-medium underline">Kemas kini semula</Link>
+        </div>
+      )}
+
       {/* Status permohonan */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Kad label="Status Keahlian" nilai={a?.status === "lulus" ? "Diluluskan" : a?.status === "tolak" ? "Tidak Diluluskan" : "Menunggu"} warna={a?.status === "lulus" ? "text-green-600" : a?.status === "tolak" ? "text-red-600" : "text-amber-600"} />
