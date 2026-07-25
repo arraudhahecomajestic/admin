@@ -45,6 +45,12 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
   };
   if (data.url_kp_depan) patch.url_kp_depan = data.url_kp_depan;
   if (data.url_kp_belakang) patch.url_kp_belakang = data.url_kp_belakang;
+  if (data.url_tandatangan) patch.url_tandatangan = data.url_tandatangan;
+  if (data.url_selfie) patch.url_selfie = data.url_selfie;
+  if (data.url_tandatangan && data.url_selfie) {
+    patch.disahkan_esign = true;
+    patch.tarikh_esign = new Date().toISOString();
+  }
 
   const { error } = await db.from("ahli_kariah").update(patch).eq("id", p.ahli_id);
   if (error) {

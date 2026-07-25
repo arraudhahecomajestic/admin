@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import { GELARAN } from "@/lib/tetapan";
+import SignaturePad from "@/components/SignaturePad";
 
 type Tgg = {
   nama: string;
@@ -33,6 +34,10 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
   const [urlDepan, setUrlDepan] = useState(awal.url_kp_depan ?? "");
   const [urlBelakang, setUrlBelakang] = useState(awal.url_kp_belakang ?? "");
   const [muatNaik, setMuatNaik] = useState<"" | "depan" | "belakang">("");
+  const [urlSelfie, setUrlSelfie] = useState(awal.url_selfie ?? "");
+  const [muatSelfie, setMuatSelfie] = useState(false);
+  const [urlTtd, setUrlTtd] = useState(awal.url_tandatangan ?? "");
+  const [ttdBaru, setTtdBaru] = useState<string | null>(null);
   const [alamatSama, setAlamatSama] = useState<boolean>(
     !!awal.alamat_kp && awal.alamat_kp === awal.alamat
   );
@@ -79,15 +84,45 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     if (sisi === "depan") setUrlDepan(`salinan-kp/${path}`); else setUrlBelakang(`salinan-kp/${path}`);
   }
 
+  async function snapSelfie(e: React.ChangeEvent<HTMLInputElement>) {
+    const fail = e.target.files?.[0];
+    if (!fail) return;
+    setMuatSelfie(true);
+    const supabase = createClient();
+    const ext = fail.name.split(".").pop() || "jpg";
+    const path = `${crypto.randomUUID()}-selfie.${ext}`;
+    const { error } = await supabase.storage.from("salinan-kp").upload(path, fail);
+    setMuatSelfie(false);
+    if (error) { setSelesai({ ok: false, msg: `Gagal muat naik swafoto: ${error.message}` }); return; }
+    setUrlSelfie(`salinan-kp/${path}`);
+  }
+
+  async function uploadTtd(dataUrl: string): Promise<string> {
+    const supabase = createClient();
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = `${crypto.randomUUID()}-ttd.png`;
+    const { error } = await supabase.storage.from("salinan-kp").upload(path, blob, { contentType: "image/png" });
+    if (error) throw new Error(error.message);
+    return `salinan-kp/${path}`;
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!nama || !noKp || !hp) { setSelesai({ ok: false, msg: "Sila lengkapkan Nama, No. KP dan No. H/P." }); return; }
+    if (!ttdBaru && !urlTtd) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan anda." }); return; }
+    if (!urlSelfie) { setSelesai({ ok: false, msg: "Sila ambil swafoto (selfie) untuk pengesahan." }); return; }
     setHantar(true);
+    let ttdPath = urlTtd;
+    if (ttdBaru) {
+      try { ttdPath = await uploadTtd(ttdBaru); }
+      catch (err: any) { setHantar(false); setSelesai({ ok: false, msg: `Gagal simpan tandatangan: ${err.message}` }); return; }
+    }
     const res = await simpanKemaskini({
       gelaran, nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamat, no_telefon_rumah: telRumah,
       telefon: hp, emel, status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
+      url_tandatangan: ttdPath, url_selfie: urlSelfie,
       tanggungan: tanggungan.filter((t) => t.nama.trim()),
     });
     setHantar(false);
@@ -238,7 +273,38 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
         })}
       </section>
 
-      <button type="submit" disabled={hantar || muatNaik !== ""} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
+      {/* Pengesahan: e-tandatangan + swafoto */}
+      <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-surau">Pengesahan Identiti</h2>
+        <p className="text-xs text-slate-500">
+          Menggantikan borang hardcopy. Sila turunkan tandatangan & ambil swafoto sebagai bukti
+          pengesahan diri.
+        </p>
+
+        <div>
+          <span className="mb-1 block text-sm font-medium text-slate-700">e-Tandatangan *</span>
+          {urlTtd && !ttdBaru ? (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+              ✓ Tandatangan sedia ada.{" "}
+              <button type="button" onClick={() => setUrlTtd("")} className="font-medium underline">Tandatangan semula</button>
+            </div>
+          ) : (
+            <SignaturePad onChange={setTtdBaru} />
+          )}
+        </div>
+
+        <div>
+          <span className="mb-1 block text-sm font-medium text-slate-700">Swafoto (Selfie) *</span>
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center hover:border-surau">
+            <input type="file" accept="image/*" capture="user" className="hidden" onChange={snapSelfie} />
+            {urlSelfie ? <span className="text-sm font-medium text-green-600">✓ Swafoto ada — ketik untuk ambil semula</span>
+              : muatSelfie ? <span className="text-sm text-amber-600">Memuat naik…</span>
+              : <><span className="text-2xl">🤳</span><span className="mt-1 text-sm font-medium text-slate-700">Ambil Swafoto</span><span className="text-xs text-slate-400">Kamera hadapan akan terbuka</span></>}
+          </label>
+        </div>
+      </section>
+
+      <button type="submit" disabled={hantar || muatNaik !== "" || muatSelfie} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {hantar ? "Menyimpan…" : "Simpan & Sahkan Maklumat"}
       </button>
 

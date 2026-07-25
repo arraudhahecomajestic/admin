@@ -30,7 +30,12 @@ export default async function PermohonanPage({ params }: { params: { id: string 
     const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
     return data?.signedUrl ?? null;
   }
-  const [depan, belakang] = await Promise.all([signed(a.url_kp_depan), signed(a.url_kp_belakang)]);
+  const [depan, belakang, selfie, ttd] = await Promise.all([
+    signed(a.url_kp_depan),
+    signed(a.url_kp_belakang),
+    signed(a.url_selfie),
+    signed(a.url_tandatangan),
+  ]);
   const bolehKeputusan = profil.peranan === "admin";
   const tempoh = a.tempoh_menetap_nilai ? `${a.tempoh_menetap_nilai} ${a.tempoh_menetap_unit ?? ""}` : "-";
 
@@ -70,6 +75,30 @@ export default async function PermohonanPage({ params }: { params: { id: string 
               {depan && <a href={depan} target="_blank"><img src={depan} alt="IC Depan" className="h-28 rounded border" /></a>}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {belakang && <a href={belakang} target="_blank"><img src={belakang} alt="IC Belakang" className="h-28 rounded border" /></a>}
+            </div>
+          </div>
+        )}
+
+        {(selfie || ttd) && (
+          <div className="mt-4">
+            <div className="mb-1 text-sm font-medium text-slate-700">
+              Pengesahan Identiti {a.disahkan_esign ? <span className="ml-1 rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">✓ e-Sah</span> : null}
+            </div>
+            <div className="flex flex-wrap items-start gap-4">
+              {selfie && (
+                <div className="text-center text-xs text-slate-500">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <a href={selfie} target="_blank"><img src={selfie} alt="Swafoto" className="h-28 rounded border" /></a>
+                  <div className="mt-1">Swafoto</div>
+                </div>
+              )}
+              {ttd && (
+                <div className="text-center text-xs text-slate-500">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <a href={ttd} target="_blank"><img src={ttd} alt="Tandatangan" className="h-28 rounded border bg-white" /></a>
+                  <div className="mt-1">e-Tandatangan{a.tarikh_esign ? ` · ${tarikhMs(a.tarikh_esign)}` : ""}</div>
+                </div>
+              )}
             </div>
           </div>
         )}
