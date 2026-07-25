@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const pautan = [
   { href: "/admin", label: "Permohonan" },
+  { href: "/admin/ahli", label: "Jejak Ahli" },
   { href: "/admin/kewangan", label: "Kewangan" },
   { href: "/admin/khairat", label: "Khairat" },
   { href: "/admin/cetak", label: "Cetak Borang" },
