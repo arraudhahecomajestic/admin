@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { NAMA_SURAU, KHAIRAT_DIBUKA, GELARAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
+import SignaturePad from "@/components/SignaturePad";
 
 const namaSurau = NAMA_SURAU;
 const configured = Boolean(
@@ -44,6 +45,11 @@ export default function DaftarPage() {
   const [urlDepan, setUrlDepan] = useState("");
   const [urlBelakang, setUrlBelakang] = useState("");
   const [muatNaik, setMuatNaik] = useState<"" | "depan" | "belakang">("");
+
+  // Pengesahan: e-tandatangan + swafoto
+  const [urlSelfie, setUrlSelfie] = useState("");
+  const [muatSelfie, setMuatSelfie] = useState(false);
+  const [ttdBaru, setTtdBaru] = useState<string | null>(null);
 
   // Akaun portal ahli (pilihan)
   const [kataLaluan, setKataLaluan] = useState("");
@@ -86,6 +92,28 @@ export default function DaftarPage() {
     else setUrlBelakang(`salinan-kp/${path}`);
   }
 
+  async function snapSelfie(e: React.ChangeEvent<HTMLInputElement>) {
+    const fail = e.target.files?.[0];
+    if (!fail || !configured) return;
+    setMuatSelfie(true);
+    const supabase = createClient();
+    const ext = fail.name.split(".").pop() || "jpg";
+    const path = `${crypto.randomUUID()}-selfie.${ext}`;
+    const { error } = await supabase.storage.from("salinan-kp").upload(path, fail);
+    setMuatSelfie(false);
+    if (error) { setSelesai({ ok: false, msg: "Gagal muat naik swafoto: " + error.message }); return; }
+    setUrlSelfie(`salinan-kp/${path}`);
+  }
+
+  async function uploadTtd(dataUrl: string): Promise<string> {
+    const supabase = createClient();
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = `${crypto.randomUUID()}-ttd.png`;
+    const { error } = await supabase.storage.from("salinan-kp").upload(path, blob, { contentType: "image/png" });
+    if (error) throw new Error(error.message);
+    return `salinan-kp/${path}`;
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSelesai(null);
@@ -101,6 +129,8 @@ export default function DaftarPage() {
       setSelesai({ ok: false, msg: "Sila tandakan pengakuan (Bahagian A, no. 8)." });
       return;
     }
+    if (!ttdBaru) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan." }); return; }
+    if (!urlSelfie) { setSelesai({ ok: false, msg: "Sila ambil swafoto (selfie) untuk pengesahan." }); return; }
     // Jika nak cipta akaun, sahkan kata laluan
     const nakAkaun = kataLaluan.trim() !== "";
     if (nakAkaun) {
@@ -119,6 +149,9 @@ export default function DaftarPage() {
     }
     setHantar(true);
     const supabase = createClient();
+    let urlTtd = "";
+    try { urlTtd = await uploadTtd(ttdBaru); }
+    catch (err: any) { setHantar(false); setSelesai({ ok: false, msg: "Gagal simpan tandatangan: " + err.message }); return; }
     const payload = {
       kariah: namaSurau,
       gelaran, nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamatSekarang,
@@ -126,6 +159,7 @@ export default function DaftarPage() {
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       pengakuan, url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
+      url_tandatangan: urlTtd, url_selfie: urlSelfie,
       sertai_khairat: KHAIRAT_DIBUKA && sertaiKhairat,
       tanggungan: tanggungan
         .filter((t) => t.nama.trim() !== "")
@@ -355,6 +389,25 @@ export default function DaftarPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <input className="inp" type="password" placeholder="Kata laluan (min. 6 aksara)" value={kataLaluan} onChange={(e) => setKataLaluan(e.target.value)} />
           <input className="inp" type="password" placeholder="Sahkan kata laluan" value={kataLaluan2} onChange={(e) => setKataLaluan2(e.target.value)} />
+        </div>
+      </section>
+
+      {/* Pengesahan: e-tandatangan + swafoto */}
+      <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-surau">Pengesahan Identiti</h2>
+        <p className="text-xs text-slate-500">Sila turunkan tandatangan & ambil swafoto sebagai bukti pengesahan diri.</p>
+        <div>
+          <span className="mb-1 block text-sm font-medium text-slate-700">e-Tandatangan *</span>
+          <SignaturePad onChange={setTtdBaru} />
+        </div>
+        <div>
+          <span className="mb-1 block text-sm font-medium text-slate-700">Swafoto (Selfie) *</span>
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center hover:border-surau">
+            <input type="file" accept="image/*" capture="user" className="hidden" onChange={snapSelfie} />
+            {urlSelfie ? <span className="text-sm font-medium text-green-600">✓ Swafoto ada — ketik untuk ambil semula</span>
+              : muatSelfie ? <span className="text-sm text-amber-600">Memuat naik…</span>
+              : <><span className="text-2xl">🤳</span><span className="mt-1 text-sm font-medium text-slate-700">Ambil Swafoto</span><span className="text-xs text-slate-400">Kamera hadapan akan terbuka</span></>}
+          </label>
         </div>
       </section>
 

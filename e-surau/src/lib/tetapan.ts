@@ -19,6 +19,8 @@ export const GELARAN = [
   "Dato'",
   "Datin",
   "Datuk",
+  "Dato' Sri",
+  "Datin Sri",
   "Tan Sri",
   "Tun",
 ];
