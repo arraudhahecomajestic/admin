@@ -1,14 +1,16 @@
 import Link from "next/link";
 
-const pautan = [
+const pautanPenuh = [
   { href: "/admin", label: "Permohonan" },
   { href: "/admin/ahli", label: "Jejak Ahli" },
   { href: "/admin/kewangan", label: "Kewangan" },
   { href: "/admin/khairat", label: "Khairat" },
   { href: "/admin/cetak", label: "Cetak Borang" },
 ];
+const pautanBendahari = [{ href: "/admin/kewangan", label: "Kewangan" }];
 
-export default function AdminNav({ aktif, nama }: { aktif: string; nama?: string }) {
+export default function AdminNav({ aktif, nama, peranan }: { aktif: string; nama?: string; peranan?: string }) {
+  const pautan = peranan === "bendahari" ? pautanBendahari : pautanPenuh;
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
       <nav className="flex flex-wrap gap-1">

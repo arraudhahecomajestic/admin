@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, bolehKewangan } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -16,7 +16,7 @@ export default async function KewanganPage() {
     return <Perlu />;
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isStaf(profil)) return <TiadaAkses />;
+  if (!bolehKewangan(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
   const [katK, katB, kutipanRes, belanjaRes, tuntutanRes, ahliRes] = await Promise.all([
@@ -51,7 +51,7 @@ export default async function KewanganPage() {
 
   return (
     <div className="space-y-6">
-      <AdminNav aktif="/admin/kewangan" nama={profil.nama ?? profil.emel ?? undefined} />
+      <AdminNav aktif="/admin/kewangan" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} />
       <h1 className="text-2xl font-bold text-slate-900">Kewangan</h1>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, bolehKewangan } from "@/lib/sesi";
 
 export async function tambahKutipan(formData: FormData) {
-  if (!isStaf(await getProfil())) return;
+  if (!bolehKewangan(await getProfil())) return;
   const db = createAdminClient();
   const ahli = String(formData.get("ahli_id") ?? "");
   await db.from("kutipan").insert({
@@ -21,7 +21,7 @@ export async function tambahKutipan(formData: FormData) {
 }
 
 export async function tambahBelanja(formData: FormData) {
-  if (!isStaf(await getProfil())) return;
+  if (!bolehKewangan(await getProfil())) return;
   const db = createAdminClient();
   await db.from("perbelanjaan").insert({
     kategori_id: Number(formData.get("kategori_id")),

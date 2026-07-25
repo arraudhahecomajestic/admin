@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
@@ -48,7 +48,7 @@ export default async function AdminPage() {
   try {
     const profil = await getProfil();
     if (!profil) return <PerluMasuk />;
-    if (!isStaf(profil)) return <TiadaAkses />;
+    if (!isPentadbir(profil)) return <TiadaAkses />;
     namaStaf = profil.nama ?? profil.emel ?? undefined;
 
     const db = createAdminClient();

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 import { adminConfigured } from "@/lib/supabaseAdmin";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import AdminNav from "@/components/AdminNav";
@@ -16,7 +16,7 @@ export default async function SeedAkaunPage() {
     );
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isStaf(profil)) return <TiadaAkses />;
+  if (!isPentadbir(profil)) return <TiadaAkses />;
 
   return (
     <div className="space-y-6">

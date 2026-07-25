@@ -1,7 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 
 const emailOk = (e: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
 
@@ -18,7 +18,7 @@ export async function seedAkaunAhli(offset: number): Promise<{
   done?: boolean;
 }> {
   const p = await getProfil();
-  if (!p || !isStaf(p)) return { ok: false, msg: "Tiada kebenaran." };
+  if (!p || !isPentadbir(p)) return { ok: false, msg: "Tiada kebenaran." };
 
   const db = createAdminClient();
   const { data, error } = await db

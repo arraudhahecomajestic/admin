@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { NAMA_SURAU, KHAIRAT_DIBUKA } from "@/lib/tetapan";
+import { NAMA_SURAU, KHAIRAT_DIBUKA, GELARAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 
 const namaSurau = NAMA_SURAU;
@@ -26,6 +26,7 @@ const kosong = (): Tanggungan => ({
 
 export default function DaftarPage() {
   // Bahagian A
+  const [gelaran, setGelaran] = useState("");
   const [nama, setNama] = useState("");
   const [noKp, setNoKp] = useState("");
   const [alamatKp, setAlamatKp] = useState("");
@@ -120,7 +121,7 @@ export default function DaftarPage() {
     const supabase = createClient();
     const payload = {
       kariah: namaSurau,
-      nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamatSekarang,
+      gelaran, nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamatSekarang,
       no_telefon_rumah: telRumah, telefon: hp, emel,
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
@@ -187,6 +188,15 @@ export default function DaftarPage() {
       {/* BAHAGIAN A */}
       <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-surau">BAHAGIAN A · Butiran Ahli Kariah</h2>
+
+        <Field label="Gelaran">
+          <select className="inp" value={gelaran} onChange={(e) => setGelaran(e.target.value)}>
+            <option value="">— Tiada —</option>
+            {GELARAN.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        </Field>
 
         <Field label="1. Nama Pemohon *">
           <input className="inp" value={nama} onChange={(e) => setNama(e.target.value)} />

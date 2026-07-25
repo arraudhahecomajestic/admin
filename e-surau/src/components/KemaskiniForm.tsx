@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
+import { GELARAN } from "@/lib/tetapan";
 
 type Tgg = {
   nama: string;
@@ -18,6 +19,7 @@ type Tgg = {
 
 export default function KemaskiniForm({ awal }: { awal: any }) {
   const router = useRouter();
+  const [gelaran, setGelaran] = useState(awal.gelaran ?? "");
   const [nama, setNama] = useState(awal.nama ?? "");
   const [noKp, setNoKp] = useState(awal.no_kp ?? "");
   const [alamatKp, setAlamatKp] = useState(awal.alamat_kp ?? "");
@@ -82,7 +84,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     if (!nama || !noKp || !hp) { setSelesai({ ok: false, msg: "Sila lengkapkan Nama, No. KP dan No. H/P." }); return; }
     setHantar(true);
     const res = await simpanKemaskini({
-      nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamat, no_telefon_rumah: telRumah,
+      gelaran, nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamat, no_telefon_rumah: telRumah,
       telefon: hp, emel, status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
@@ -114,6 +116,12 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
 
       <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-surau">Maklumat Diri</h2>
+        <F label="Gelaran">
+          <select className="inp" value={gelaran} onChange={(e) => setGelaran(e.target.value)}>
+            <option value="">— Tiada —</option>
+            {GELARAN.map((g) => (<option key={g} value={g}>{g}</option>))}
+          </select>
+        </F>
         <F label="Nama Penuh *"><input className="inp" value={nama} onChange={(e) => setNama(e.target.value)} /></F>
         <F label="No. Kad Pengenalan *"><input className="inp" value={noKp} onChange={(e) => setNoKp(e.target.value)} /></F>
         <div>

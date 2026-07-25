@@ -29,6 +29,7 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
   const db = createAdminClient();
 
   const patch: any = {
+    gelaran: data.gelaran || null,
     nama: data.nama,
     no_kp: data.no_kp,
     alamat_kp: data.alamat_kp || null,

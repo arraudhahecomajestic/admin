@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import ButangCetak from "@/components/ButangCetak";
@@ -23,7 +23,7 @@ export default async function CetakPage({
     return <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Supabase belum dikonfigurasi.</div>;
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isStaf(profil)) return <TiadaAkses />;
+  if (!isPentadbir(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
   let q = db
@@ -134,7 +134,7 @@ function Borang({ a, nama }: { a: any; nama: string }) {
       </header>
 
       <div className="mb-2 inline-block bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">BAHAGIAN A : BUTIRAN AHLI KARIAH</div>
-      <Baris label="1. Nama Pemohon" nilai={a.nama} />
+      <Baris label="1. Nama Pemohon" nilai={[a.gelaran, a.nama].filter(Boolean).join(" ")} />
       <Baris label="2. No. Kad Pengenalan" nilai={a.no_kp} />
       <Baris label="3. Alamat Dalam Kad Pengenalan / Passport" nilai={a.alamat_kp} />
       <Baris label="4. Alamat Tempat Tinggal Sekarang" nilai={a.alamat} />

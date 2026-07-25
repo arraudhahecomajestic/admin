@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 
 const hariIni = () => new Date().toISOString().slice(0, 10);
 
 // BAHAGIAN B1 — Ulasan Setiausaha / Pengerusi MPKK
 export async function ulasanSU(id: string, formData: FormData) {
   const p = await getProfil();
-  if (!isStaf(p)) return;
+  if (!isPentadbir(p)) return;
   const db = createAdminClient();
   await db.from("ahli_kariah").update({
     ulasan_su_sokong: formData.get("sokong") === "ya",
@@ -25,7 +25,7 @@ export async function ulasanSU(id: string, formData: FormData) {
 // BAHAGIAN B2 — Ulasan Nazir / Pengerusi Surau
 export async function ulasanNazir(id: string, formData: FormData) {
   const p = await getProfil();
-  if (!isStaf(p)) return;
+  if (!isPentadbir(p)) return;
   const db = createAdminClient();
   await db.from("ahli_kariah").update({
     ulasan_nazir_sokong: formData.get("sokong") === "ya",

@@ -31,8 +31,8 @@ export default async function AhliPage() {
 
         {["admin", "bendahari", "ajk"].includes(profil.peranan) && (
           <div className="mt-5 border-t pt-4 text-center">
-            <Link href="/admin" className="inline-block rounded-lg bg-hitam px-5 py-2.5 text-sm font-semibold text-white">
-              Ke Panel Admin →
+            <Link href={profil.peranan === "bendahari" ? "/admin/kewangan" : "/admin"} className="inline-block rounded-lg bg-hitam px-5 py-2.5 text-sm font-semibold text-white">
+              {profil.peranan === "bendahari" ? "Ke Panel Kewangan →" : "Ke Panel Admin →"}
             </Link>
           </div>
         )}
@@ -82,7 +82,7 @@ export default async function AhliPage() {
       <div className="flex items-center justify-between border-b pb-3">
         <div>
           <div className="text-xs text-slate-500">Portal Ahli</div>
-          <h1 className="text-2xl font-bold text-slate-900">{a?.nama}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{[a?.gelaran, a?.nama].filter(Boolean).join(" ")}</h1>
           <p className="text-sm text-slate-500">{a?.no_ahli}</p>
         </div>
         <div className="flex items-center gap-4">

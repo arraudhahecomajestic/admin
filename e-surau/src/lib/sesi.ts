@@ -37,3 +37,17 @@ export function isStaf(p: Profil | null): boolean {
 export function isAdminAtauBendahari(p: Profil | null): boolean {
   return !!p && ["admin", "bendahari"].includes(p.peranan);
 }
+
+// SU / Pengerusi / AJK — pentadbir penuh (permohonan, jejak, cetak, dll).
+export function isPentadbir(p: Profil | null): boolean {
+  return !!p && ["admin", "ajk"].includes(p.peranan);
+}
+
+// Boleh guna modul Kewangan (kutipan & belanja) — termasuk Bendahari.
+export function bolehKewangan(p: Profil | null): boolean {
+  return !!p && ["admin", "ajk", "bendahari"].includes(p.peranan);
+}
+
+export function isBendahari(p: Profil | null): boolean {
+  return !!p && p.peranan === "bendahari";
+}

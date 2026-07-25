@@ -31,7 +31,8 @@ export default function MasukPage() {
     let dest = "/ahli";
     if (user) {
       const { data: prof } = await supabase.from("profil").select("peranan").eq("id", user.id).single();
-      if (prof && ["admin", "bendahari", "ajk"].includes(prof.peranan)) dest = "/admin";
+      if (prof?.peranan === "bendahari") dest = "/admin/kewangan";
+      else if (prof && ["admin", "ajk"].includes(prof.peranan)) dest = "/admin";
     }
     setSedang(false);
     router.push(dest);

@@ -1,4 +1,4 @@
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import AdminNav from "@/components/AdminNav";
@@ -15,7 +15,7 @@ export default async function JejakAhliPage() {
     );
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isStaf(profil)) return <TiadaAkses />;
+  if (!isPentadbir(profil)) return <TiadaAkses />;
 
   let senarai: any[] = [];
   let ralat: string | null = null;

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 
 const tahunSemasa = () => new Date().getFullYear();
 const hariIni = () => new Date().toISOString().slice(0, 10);
@@ -14,7 +14,7 @@ export async function bayarYuran(
   ahliId: string | null,
   formData: FormData
 ) {
-  if (!isStaf(await getProfil())) return;
+  if (!isPentadbir(await getProfil())) return;
   const db = createAdminClient();
   const tahun = Number(formData.get("tahun")) || tahunSemasa();
   const kaedah = String(formData.get("kaedah") ?? "tunai");
@@ -52,7 +52,7 @@ export async function bayarYuran(
 
 // Buat tuntutan kematian — dengan semakan kelayakan (yuran mesti lunas)
 export async function buatTuntutan(formData: FormData) {
-  if (!isStaf(await getProfil())) return;
+  if (!isPentadbir(await getProfil())) return;
   const db = createAdminClient();
 
   const keahlianId = String(formData.get("keahlian_id") ?? "");
@@ -90,7 +90,7 @@ export async function tukarStatusTuntutan(
   id: string,
   status: "lulus" | "dibayar" | "tolak"
 ) {
-  if (!isStaf(await getProfil())) return;
+  if (!isPentadbir(await getProfil())) return;
   const db = createAdminClient();
   const patch: any = { status };
   if (status === "dibayar") patch.tarikh_bayar = hariIni();
