@@ -41,6 +41,19 @@ export function umurDari(tarikhLahir?: string | null, noKp?: string | null): num
   return umur >= 0 && umur < 130 ? umur : null;
 }
 
+// Dapatkan tarikh lahir (YYYY-MM-DD) dari 6 digit pertama No. KP / MyKid.
+export function tarikhLahirDariKp(noKp?: string | null): string | null {
+  const g = (noKp || "").replace(/\D/g, "");
+  if (g.length < 6) return null;
+  const yy = +g.slice(0, 2);
+  const mm = +g.slice(2, 4);
+  const dd = +g.slice(4, 6);
+  if (!(mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31)) return null;
+  const cy = new Date().getFullYear() % 100;
+  const abad = yy <= cy ? 2000 : 1900;
+  return `${abad + yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+}
+
 export function layakKhairat(t: TanggunganInput): { layak: boolean; sebab: string } {
   const h = (t.hubungan || "lain").toLowerCase();
   if (h === "pasangan") return { layak: true, sebab: "Pasangan" };

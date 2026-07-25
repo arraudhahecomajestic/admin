@@ -2,6 +2,7 @@ import Link from "next/link";
 import PrayerTimes from "@/components/PrayerTimes";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
 import { NAMA_SURAU, ZON_SOLAT } from "@/lib/tetapan";
+import { rm, tarikhMs } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,16 @@ type Pengumuman = {
   kandungan: string;
   penting: boolean;
   tarikh: string;
+};
+
+type Tabung = {
+  kategori_id: number;
+  nama: string;
+  jenis_khairat: boolean;
+  jumlah_terkumpul: number | string;
+  jumlah_bulan_ini: number | string;
+  terkini_jumlah: number | string | null;
+  terkini_tarikh: string | null;
 };
 
 async function ambilPengumuman(): Promise<Pengumuman[]> {
@@ -25,10 +36,20 @@ async function ambilPengumuman(): Promise<Pengumuman[]> {
   return data ?? [];
 }
 
+async function ambilTabung(): Promise<Tabung[]> {
+  if (!supabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from("v_kutipan_ringkasan")
+    .select("kategori_id, nama, jenis_khairat, jumlah_terkumpul, jumlah_bulan_ini, terkini_jumlah, terkini_tarikh")
+    .order("urutan", { ascending: true });
+  if (error) return [];
+  return (data as Tabung[]) ?? [];
+}
+
 export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
-  const pengumuman = await ambilPengumuman();
+  const [pengumuman, tabung] = await Promise.all([ambilPengumuman(), ambilTabung()]);
 
   return (
     <div className="space-y-8">
@@ -76,6 +97,44 @@ export default async function Home() {
       </section>
 
       <PrayerTimes zon={zon} />
+
+      {/* Tabung Kutipan Surau */}
+      {tabung.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-xl font-bold text-slate-900">Kutipan Tabung Surau</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {tabung.map((t) => (
+              <div key={t.kategori_id} className="rounded-xl bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-900">{t.nama}</h3>
+                  {t.jenis_khairat && (
+                    <span className="rounded bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">Khairat</span>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-surau">{rm(t.terkini_jumlah)}</div>
+                  <div className="text-xs text-slate-500">
+                    Kutipan terkini{t.terkini_tarikh ? ` · ${tarikhMs(t.terkini_tarikh)}` : " · belum ada rekod"}
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-6 border-t pt-3 text-sm">
+                  <div>
+                    <div className="font-semibold text-slate-800">{rm(t.jumlah_bulan_ini)}</div>
+                    <div className="text-xs text-slate-500">Bulan ini</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-800">{rm(t.jumlah_terkumpul)}</div>
+                    <div className="text-xs text-slate-500">Terkumpul</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-400">
+            Dikemas kini automatik apabila bendahari merekod kutipan. Semoga Allah membalas jariah anda.
+          </p>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-xl font-bold text-slate-900">Pengumuman</h2>

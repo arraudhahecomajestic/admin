@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
-import { layakKhairat } from "@/lib/khairat";
+import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 
 type Tgg = {
   nama: string;
@@ -46,6 +46,15 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
 
   function ubahT(i: number, k: keyof Tgg, v: any) {
     setTanggungan((t) => t.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
+  }
+
+  // Bila No. KP tanggungan diubah — auto-kira tarikh lahir dari IC/MyKid.
+  function ubahKpTgg(i: number, val: string) {
+    setTanggungan((t) =>
+      t.map((r, idx) =>
+        idx === i ? { ...r, no_kp: val, tarikh_lahir: tarikhLahirDariKp(val) ?? r.tarikh_lahir } : r
+      )
+    );
   }
 
   // Bila No. KP tanggungan dimasukkan & dia juga ahli kariah — auto-isi nama.
@@ -177,27 +186,39 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
                 className="inp"
                 placeholder="No. KP / MyKid"
                 value={t.no_kp}
-                onChange={(e) => ubahT(i, "no_kp", e.target.value)}
+                onChange={(e) => ubahKpTgg(i, e.target.value)}
                 onBlur={(e) => cariNamaT(i, e.target.value)}
               />
             </div>
             <input className="inp" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-1 block text-xs text-slate-500">Tarikh lahir</span>
-                <input className="inp" type="date" value={t.tarikh_lahir} onChange={(e) => ubahT(i, "tarikh_lahir", e.target.value)} />
-              </label>
-              {t.hubungan === "anak" && (
-                <div className="flex flex-col justify-end gap-1 pb-1 text-sm text-slate-600">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={t.oku} onChange={(e) => ubahT(i, "oku", e.target.checked)} /> Anak OKU
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={t.masih_belajar} onChange={(e) => ubahT(i, "masih_belajar", e.target.checked)} /> Masih belajar sepenuh masa
-                  </label>
-                </div>
-              )}
-            </div>
+            {(() => {
+              const dob = tarikhLahirDariKp(t.no_kp);
+              const umur = umurDari(t.tarikh_lahir, t.no_kp);
+              if (dob || umur !== null) {
+                return (
+                  <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    Tarikh lahir (auto dari No. KP): <b>{dob ?? t.tarikh_lahir}</b>
+                    {umur !== null ? <> · <b>{umur} tahun</b></> : null}
+                  </div>
+                );
+              }
+              return (
+                <label className="block">
+                  <span className="mb-1 block text-xs text-slate-500">Tarikh lahir (No. KP tidak lengkap — isi manual)</span>
+                  <input className="inp" type="date" value={t.tarikh_lahir} onChange={(e) => ubahT(i, "tarikh_lahir", e.target.value)} />
+                </label>
+              );
+            })()}
+            {t.hubungan === "anak" && (
+              <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={t.oku} onChange={(e) => ubahT(i, "oku", e.target.checked)} /> Anak OKU
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={t.masih_belajar} onChange={(e) => ubahT(i, "masih_belajar", e.target.checked)} /> Masih belajar sepenuh masa
+                </label>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className={`rounded px-2 py-0.5 text-xs font-semibold ${status.layak ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
                 {status.layak ? `✓ Dilindungi khairat · ${status.sebab}` : `Tidak dilindungi · ${status.sebab}`}
