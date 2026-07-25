@@ -53,7 +53,7 @@ export default function RootLayout({
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <footer className="mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
-          {namaSurau} · Dikuasakan oleh e-Surau
+          Jawatankuasa Surau Ar Raudhah, Eco Majestic
         </footer>
       </body>
     </html>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { NAMA_SURAU } from "@/lib/tetapan";
+import { NAMA_SURAU, KHAIRAT_DIBUKA } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 
 const namaSurau = NAMA_SURAU;
@@ -125,7 +125,7 @@ export default function DaftarPage() {
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       pengakuan, url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
-      sertai_khairat: sertaiKhairat,
+      sertai_khairat: KHAIRAT_DIBUKA && sertaiKhairat,
       tanggungan: tanggungan
         .filter((t) => t.nama.trim() !== "")
         .map((t) => ({ ...t, dilindungi_khairat: layakKhairat(t).layak })),
@@ -318,16 +318,18 @@ export default function DaftarPage() {
         })}
       </section>
 
-      {/* Khairat */}
-      <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
-        <label className="flex items-start gap-3">
-          <input type="checkbox" className="mt-1" checked={sertaiKhairat} onChange={(e) => setSertaiKhairat(e.target.checked)} />
-          <span>
-            <span className="font-semibold text-slate-900">Saya ingin menyertai Skim Khairat Kematian</span>
-            <span className="mt-1 block text-sm text-slate-600">Yuran <b>RM60 setahun</b>, pampasan tetap <b>RM1,400</b> setiap kematian ahli/tanggungan dilindungi.</span>
-          </span>
-        </label>
-      </section>
+      {/* Khairat — dipaparkan hanya bila langganan dibuka */}
+      {KHAIRAT_DIBUKA && (
+        <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+          <label className="flex items-start gap-3">
+            <input type="checkbox" className="mt-1" checked={sertaiKhairat} onChange={(e) => setSertaiKhairat(e.target.checked)} />
+            <span>
+              <span className="font-semibold text-slate-900">Saya ingin menyertai Skim Khairat Kematian</span>
+              <span className="mt-1 block text-sm text-slate-600">Yuran <b>RM60 setahun</b>, pampasan tetap <b>RM1,400</b> setiap kematian ahli/tanggungan dilindungi.</span>
+            </span>
+          </label>
+        </section>
+      )}
 
       {/* Akaun Portal Ahli (pilihan) */}
       <section className="space-y-3 rounded-xl bg-white p-5 shadow-sm">

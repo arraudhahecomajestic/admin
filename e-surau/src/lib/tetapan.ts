@@ -4,6 +4,10 @@ export const NAMA_SURAU =
 export const NEGERI = "Negeri Selangor";
 export const ZON_SOLAT = process.env.NEXT_PUBLIC_ZON_SOLAT ?? "SGR01";
 
+// Langganan/sertai khairat dibuka? Set false untuk "hold" bahagian sertai khairat
+// (butang Sertai Skim Khairat & pilihan sertai di borang) — pendaftaran tanggungan kekal.
+export const KHAIRAT_DIBUKA = false;
+
 export const LOGO_JAIS = "/logo-jais.png";
 export const LOGO_SELANGOR = "/logo-selangor.png";
 export const LOGO_SURAU = "/logo-surau-2.png"; // mendatar (header)

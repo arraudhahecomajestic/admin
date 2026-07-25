@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { rm, tarikhMs } from "@/lib/format";
 import { sertaiKhairat } from "./actions";
 import PautRekodForm from "@/components/PautRekodForm";
+import { KHAIRAT_DIBUKA } from "@/lib/tetapan";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export default async function AhliPage() {
   // Elak pertindihan: adakah ahli ini dilindungi sebagai tanggungan di bawah
   // khairat orang lain? (padan No. KP)
   let dilindungiBawah: string | null = null;
-  if (a?.no_kp && kh?.status !== "aktif") {
+  if (KHAIRAT_DIBUKA && a?.no_kp && kh?.status !== "aktif") {
     const { data: tgRows } = await db
       .from("tanggungan")
       .select("ahli_id")
@@ -114,13 +115,18 @@ export default async function AhliPage() {
       )}
 
       {/* Status permohonan */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={`grid gap-4 ${KHAIRAT_DIBUKA ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
         <Kad label="Status Keahlian" nilai={a?.status === "lulus" ? "Diluluskan" : a?.status === "tolak" ? "Tidak Diluluskan" : "Menunggu"} warna={a?.status === "lulus" ? "text-green-600" : a?.status === "tolak" ? "text-red-600" : "text-amber-600"} />
-        <Kad label="Khairat Kematian" nilai={kh ? (kh.status === "aktif" ? "Aktif" : "Tertunggak") : dilindungiBawah ? "Dilindungi" : "Tidak sertai"} warna={kh?.status === "aktif" || dilindungiBawah ? "text-green-600" : "text-slate-500"} />
-        <Kad label={`Yuran Khairat ${TAHUN}`} nilai={kh ? (yuranTahunIni ? "Lunas" : "Belum bayar") : "-"} warna={yuranTahunIni ? "text-green-600" : "text-red-600"} />
+        {KHAIRAT_DIBUKA && (
+          <>
+            <Kad label="Khairat Kematian" nilai={kh ? (kh.status === "aktif" ? "Aktif" : "Tertunggak") : dilindungiBawah ? "Dilindungi" : "Tidak sertai"} warna={kh?.status === "aktif" || dilindungiBawah ? "text-green-600" : "text-slate-500"} />
+            <Kad label={`Yuran Khairat ${TAHUN}`} nilai={kh ? (yuranTahunIni ? "Lunas" : "Belum bayar") : "-"} warna={yuranTahunIni ? "text-green-600" : "text-red-600"} />
+          </>
+        )}
       </div>
 
       {/* Skim Khairat Kematian */}
+      {KHAIRAT_DIBUKA && (
       <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
         <h2 className="mb-2 font-semibold text-slate-900">Skim Khairat Kematian</h2>
         {!kh && dilindungiBawah ? (
@@ -158,6 +164,7 @@ export default async function AhliPage() {
           </div>
         )}
       </section>
+      )}
 
       {/* Maklumat diri */}
       <section className="rounded-xl bg-white p-5 shadow-sm">
