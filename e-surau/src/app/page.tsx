@@ -40,12 +40,39 @@ export default async function Home() {
           Portal rasmi kariah — daftar ahli, sertai khairat kematian, dan ikuti
           program surau.
         </p>
-        <Link
-          href="/daftar"
-          className="mt-4 inline-block rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark"
-        >
-          Daftar Ahli Kariah →
-        </Link>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          {/* Ahli baharu */}
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-sm font-semibold text-slate-900">Ahli baharu?</div>
+            <p className="mt-1 text-sm text-slate-500">
+              Belum pernah daftar sebagai ahli kariah. Isi borang pendaftaran penuh.
+            </p>
+            <Link
+              href="/daftar"
+              className="mt-3 inline-block rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark"
+            >
+              Daftar Ahli Kariah →
+            </Link>
+          </div>
+
+          {/* Ahli sedia ada */}
+          <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-4">
+            <div className="text-sm font-semibold text-slate-900">Sudah ahli kariah?</div>
+            <p className="mt-1 text-sm text-slate-600">
+              Akaun anda <b>sudah didaftarkan</b>. Log masuk untuk kemas kini maklumat anda.
+            </p>
+            <Link
+              href="/masuk"
+              className="mt-3 inline-block rounded-lg bg-hitam px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+            >
+              Log Masuk & Kemas Kini →
+            </Link>
+            <p className="mt-2 text-xs text-slate-500">
+              Kata laluan kali pertama = <b>No. Kad Pengenalan anda</b> (tanpa sengkang).
+            </p>
+          </div>
+        </div>
       </section>
 
       <PrayerTimes zon={zon} />

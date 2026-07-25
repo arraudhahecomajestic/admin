@@ -19,7 +19,16 @@ export default async function KemaskiniPage() {
     .from("ahli_kariah")
     .select("*, tanggungan(nama, no_kp, hubungan, tarikh_lahir, dilindungi_khairat)")
     .eq("id", profil.ahli_id)
-    .single();
+    .maybeSingle();
+
+  if (!data)
+    return (
+      <div className="mx-auto max-w-md rounded-xl bg-white p-6 text-center text-sm text-slate-600 shadow-sm">
+        Rekod ahli anda tidak dijumpai. Sila hubungi admin surau.
+      </div>
+    );
+
+  const awal = { ...data, tanggungan: (data as any).tanggungan ?? [] };
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -31,7 +40,7 @@ export default async function KemaskiniPage() {
           maklumat anda akan ditandakan sebagai <b>disahkan</b>.
         </p>
       </div>
-      <KemaskiniForm awal={data} />
+      <KemaskiniForm awal={awal} />
     </div>
   );
 }

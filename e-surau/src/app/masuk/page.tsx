@@ -43,8 +43,12 @@ export default function MasukPage() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <h1 className="text-xl font-bold text-slate-900">Log Masuk</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Untuk AJK, bendahari & admin surau.
+          Untuk ahli kariah, AJK, bendahari & admin surau.
         </p>
+        <div className="mt-3 rounded-lg border border-surau/30 bg-surau/5 p-3 text-xs text-slate-600">
+          <b>Ahli sedia ada:</b> guna emel anda, kata laluan = <b>No. Kad Pengenalan</b> anda
+          (tanpa sengkang). Sila tukar kata laluan selepas log masuk.
+        </div>
 
         <form onSubmit={masuk} className="mt-4 space-y-3">
           {ralat && (
@@ -81,6 +85,10 @@ export default function MasukPage() {
         </form>
       </div>
       <p className="mt-4 text-center text-sm text-slate-500">
+        Belum ada akaun / ahli baharu?{" "}
+        <Link href="/daftar" className="font-medium text-surau hover:underline">Daftar di sini</Link>
+      </p>
+      <p className="mt-2 text-center text-sm text-slate-500">
         <Link href="/" className="hover:underline">← Kembali ke laman utama</Link>
       </p>
     </div>

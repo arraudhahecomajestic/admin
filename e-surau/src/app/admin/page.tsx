@@ -93,7 +93,12 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin" nama={namaStaf} />
-      <h1 className="text-2xl font-bold text-slate-900">Permohonan Ahli Kariah</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold text-slate-900">Permohonan Ahli Kariah</h1>
+        <Link href="/admin/seed-akaun" className="rounded-lg border border-surau/40 px-3 py-1.5 text-xs font-semibold text-surau hover:bg-surau/10">
+          Sediakan Akaun Ahli
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Menunggu Tindakan" nilai={jum.menunggu} warna="text-amber-600" />

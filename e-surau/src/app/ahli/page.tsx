@@ -4,6 +4,7 @@ import { PerluMasuk } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { rm, tarikhMs } from "@/lib/format";
 import { sertaiKhairat } from "./actions";
+import PautRekodForm from "@/components/PautRekodForm";
 
 export const dynamic = "force-dynamic";
 
@@ -16,17 +17,23 @@ export default async function AhliPage() {
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
 
-  // Staf tanpa rekod ahli — halakan ke panel admin
+  // Akaun belum dipaut ke rekod ahli — beri cara paut sendiri guna No. KP
   if (!profil.ahli_id) {
     return (
-      <div className="mx-auto max-w-md rounded-xl bg-white p-6 text-center shadow-sm">
-        <h1 className="text-lg font-bold text-slate-900">Akaun belum dipautkan</h1>
-        <p className="mt-2 text-sm text-slate-600">
+      <div className="mx-auto max-w-md rounded-xl bg-white p-6 shadow-sm">
+        <h1 className="text-center text-lg font-bold text-slate-900">Akaun belum dipautkan</h1>
+        <p className="mt-2 text-center text-sm text-slate-600">
           Akaun anda ({profil.emel}) belum dipautkan ke sebarang rekod ahli kariah.
-          Pastikan emel akaun sama dengan emel dalam borang pendaftaran, atau hubungi admin surau.
         </p>
+
+        <PautRekodForm />
+
         {["admin", "bendahari", "ajk"].includes(profil.peranan) && (
-          <Link href="/admin" className="mt-4 inline-block rounded-lg bg-surau px-5 py-2.5 font-semibold text-white">Ke Panel Admin →</Link>
+          <div className="mt-5 border-t pt-4 text-center">
+            <Link href="/admin" className="inline-block rounded-lg bg-hitam px-5 py-2.5 text-sm font-semibold text-white">
+              Ke Panel Admin →
+            </Link>
+          </div>
         )}
       </div>
     );
@@ -54,9 +61,14 @@ export default async function AhliPage() {
           <h1 className="text-2xl font-bold text-slate-900">{a?.nama}</h1>
           <p className="text-sm text-slate-500">{a?.no_ahli}</p>
         </div>
-        <form action="/masuk/logout" method="post">
-          <button className="text-sm text-slate-500 hover:underline">Log keluar</button>
-        </form>
+        <div className="flex items-center gap-4">
+          <Link href="/ahli/tukar-kata-laluan" className="text-sm text-slate-500 hover:underline">
+            Tukar kata laluan
+          </Link>
+          <form action="/masuk/logout" method="post">
+            <button className="text-sm text-slate-500 hover:underline">Log keluar</button>
+          </form>
+        </div>
       </div>
 
       {/* Banner kemas kini maklumat */}
