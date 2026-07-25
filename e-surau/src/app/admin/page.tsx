@@ -44,12 +44,34 @@ export default async function AdminPage() {
   if (!profil) return <PerluMasuk />;
   if (!isStaf(profil)) return <TiadaAkses />;
 
-  const db = createAdminClient();
-  const { data } = await db
-    .from("ahli_kariah")
-    .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
-    .order("tarikh_daftar", { ascending: false });
-  const ahli = (data as Ahli[]) ?? [];
+  let ahli: Ahli[] = [];
+  let ralat: string | null = null;
+  try {
+    const db = createAdminClient();
+    const { data, error } = await db
+      .from("ahli_kariah")
+      .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
+      .order("tarikh_daftar", { ascending: false });
+    if (error) ralat = error.message + (error.hint ? ` (${error.hint})` : "");
+    else ahli = (data as Ahli[]) ?? [];
+  } catch (e: any) {
+    ralat = e?.message ?? String(e);
+  }
+
+  if (ralat)
+    return (
+      <div className="space-y-4">
+        <AdminNav aktif="/admin" nama={profil.nama ?? profil.emel ?? undefined} />
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="font-semibold">Ralat memuat data ahli</div>
+          <p className="mt-1 break-words">{ralat}</p>
+          <p className="mt-2 text-xs text-red-500">
+            Jika ralat menyebut kolum <code>maklumat_disahkan</code> tidak wujud, sila jalankan
+            fail <code>schema_fasa7_kemaskini.sql</code> di Supabase SQL Editor.
+          </p>
+        </div>
+      </div>
+    );
 
   const jum = {
     menunggu: ahli.filter((a) => a.status === "menunggu").length,
@@ -84,7 +106,7 @@ export default async function AdminPage() {
           </thead>
           <tbody>
             {ahli.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Tiada permohonan lagi.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Tiada permohonan lagi.</td></tr>
             )}
             {ahli.map((a) => (
               <tr key={a.id} className="border-b last:border-0">
