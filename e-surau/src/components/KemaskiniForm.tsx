@@ -3,9 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { simpanKemaskini } from "@/app/ahli/kemaskini/actions";
+import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
+import { layakKhairat } from "@/lib/khairat";
 
-type Tgg = { nama: string; no_kp: string; hubungan: string; tarikh_lahir: string; dilindungi_khairat: boolean };
+type Tgg = {
+  nama: string;
+  no_kp: string;
+  hubungan: string;
+  tarikh_lahir: string;
+  oku: boolean;
+  masih_belajar: boolean;
+  dilindungi_khairat: boolean;
+};
 
 export default function KemaskiniForm({ awal }: { awal: any }) {
   const router = useRouter();
@@ -22,10 +31,14 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
   const [urlDepan, setUrlDepan] = useState(awal.url_kp_depan ?? "");
   const [urlBelakang, setUrlBelakang] = useState(awal.url_kp_belakang ?? "");
   const [muatNaik, setMuatNaik] = useState<"" | "depan" | "belakang">("");
+  const [alamatSama, setAlamatSama] = useState<boolean>(
+    !!awal.alamat_kp && awal.alamat_kp === awal.alamat
+  );
   const [tanggungan, setTanggungan] = useState<Tgg[]>(
     (awal.tanggungan ?? []).map((t: any) => ({
       nama: t.nama ?? "", no_kp: t.no_kp ?? "", hubungan: t.hubungan ?? "anak",
-      tarikh_lahir: t.tarikh_lahir ?? "", dilindungi_khairat: t.dilindungi_khairat ?? true,
+      tarikh_lahir: t.tarikh_lahir ?? "", oku: t.oku ?? false, masih_belajar: t.masih_belajar ?? false,
+      dilindungi_khairat: t.dilindungi_khairat ?? true,
     }))
   );
   const [hantar, setHantar] = useState(false);
@@ -33,6 +46,13 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
 
   function ubahT(i: number, k: keyof Tgg, v: any) {
     setTanggungan((t) => t.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
+  }
+
+  // Bila No. KP tanggungan dimasukkan & dia juga ahli kariah — auto-isi nama.
+  async function cariNamaT(i: number, kp: string) {
+    if (kp.replace(/\D/g, "").length < 6) return;
+    const res = await cariAhliIkutKp(kp);
+    if (res.ok && res.nama) ubahT(i, "nama", res.nama);
   }
 
   async function snap(sisi: "depan" | "belakang", e: React.ChangeEvent<HTMLInputElement>) {
@@ -53,7 +73,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     if (!nama || !noKp || !hp) { setSelesai({ ok: false, msg: "Sila lengkapkan Nama, No. KP dan No. H/P." }); return; }
     setHantar(true);
     const res = await simpanKemaskini({
-      nama, no_kp: noKp, alamat_kp: alamatKp, alamat, no_telefon_rumah: telRumah,
+      nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamat, no_telefon_rumah: telRumah,
       telefon: hp, emel, status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
@@ -95,7 +115,17 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
           </div>
         </div>
         <F label="Alamat Dalam KP / Passport"><textarea className="inp" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value)} /></F>
-        <F label="Alamat Tempat Tinggal Sekarang"><textarea className="inp" rows={2} value={alamat} onChange={(e) => setAlamat(e.target.value)} /></F>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={alamatSama}
+            onChange={(e) => { setAlamatSama(e.target.checked); if (e.target.checked) setAlamat(alamatKp); }}
+          />
+          Alamat tempat tinggal sama seperti alamat dalam KP
+        </label>
+        {!alamatSama && (
+          <F label="Alamat Tempat Tinggal Sekarang"><textarea className="inp" rows={2} value={alamat} onChange={(e) => setAlamat(e.target.value)} /></F>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           <F label="No. Telefon Rumah"><input className="inp" value={telRumah} onChange={(e) => setTelRumah(e.target.value)} /></F>
           <F label="No. H/P *"><input className="inp" value={hp} onChange={(e) => setHp(e.target.value)} /></F>
@@ -125,30 +155,58 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
       <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-slate-900">Tanggungan / Isi Rumah</h2>
-          <button type="button" onClick={() => setTanggungan((t) => [...t, { nama: "", no_kp: "", hubungan: "anak", tarikh_lahir: "", dilindungi_khairat: true }])} className="rounded-lg bg-surau/10 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/20">+ Tambah</button>
+          <button type="button" onClick={() => setTanggungan((t) => [...t, { nama: "", no_kp: "", hubungan: "anak", tarikh_lahir: "", oku: false, masih_belajar: false, dilindungi_khairat: true }])} className="rounded-lg bg-surau/10 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/20">+ Tambah</button>
         </div>
+        <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+          <b>Penting untuk khairat:</b> senaraikan pasangan & anak (21 tahun ke bawah).
+          Layak juga: anak OKU (tanpa had umur) & anak masih belajar (hingga 25 tahun), serta
+          ibu/bapa yang ditanggung. Isi <b>Nama penuh</b> & <b>No. KP / MyKid</b> setiap anak.
+          Jika pasangan/anak sudah ahli kariah, masukkan No. KP mereka — nama akan diisi automatik.
+        </p>
         {tanggungan.length === 0 && <p className="text-sm text-slate-500">Tiada tanggungan.</p>}
-        {tanggungan.map((t, i) => (
+        {tanggungan.map((t, i) => {
+          const status = layakKhairat(t);
+          return (
           <div key={i} className="space-y-3 rounded-lg border border-slate-200 p-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input className="inp" placeholder="Nama tanggungan" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
-              <input className="inp" placeholder="No. KP" value={t.no_kp} onChange={(e) => ubahT(i, "no_kp", e.target.value)} />
-            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <select className="inp" value={t.hubungan} onChange={(e) => ubahT(i, "hubungan", e.target.value)}>
                 <option value="pasangan">Pasangan</option><option value="anak">Anak</option>
                 <option value="ibu">Ibu</option><option value="bapa">Bapa</option><option value="lain">Lain-lain</option>
               </select>
-              <input className="inp" type="date" value={t.tarikh_lahir} onChange={(e) => ubahT(i, "tarikh_lahir", e.target.value)} />
+              <input
+                className="inp"
+                placeholder="No. KP / MyKid"
+                value={t.no_kp}
+                onChange={(e) => ubahT(i, "no_kp", e.target.value)}
+                onBlur={(e) => cariNamaT(i, e.target.value)}
+              />
+            </div>
+            <input className="inp" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-xs text-slate-500">Tarikh lahir</span>
+                <input className="inp" type="date" value={t.tarikh_lahir} onChange={(e) => ubahT(i, "tarikh_lahir", e.target.value)} />
+              </label>
+              {t.hubungan === "anak" && (
+                <div className="flex flex-col justify-end gap-1 pb-1 text-sm text-slate-600">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={t.oku} onChange={(e) => ubahT(i, "oku", e.target.checked)} /> Anak OKU
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={t.masih_belajar} onChange={(e) => ubahT(i, "masih_belajar", e.target.checked)} /> Masih belajar sepenuh masa
+                  </label>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-slate-600">
-                <input type="checkbox" checked={t.dilindungi_khairat} onChange={(e) => ubahT(i, "dilindungi_khairat", e.target.checked)} /> Dilindungi khairat
-              </label>
+              <span className={`rounded px-2 py-0.5 text-xs font-semibold ${status.layak ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                {status.layak ? `✓ Dilindungi khairat · ${status.sebab}` : `Tidak dilindungi · ${status.sebab}`}
+              </span>
               <button type="button" onClick={() => setTanggungan((t) => t.filter((_, idx) => idx !== i))} className="text-sm font-medium text-red-600 hover:underline">Buang</button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </section>
 
       <button type="submit" disabled={hantar || muatNaik !== ""} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">

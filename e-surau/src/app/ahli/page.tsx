@@ -53,6 +53,29 @@ export default async function AhliPage() {
   const invois = (invoisRes.data as any[]) ?? [];
   const yuranTahunIni = kh?.yuran_khairat?.some((y: any) => y.tahun === TAHUN && y.lunas);
 
+  // Elak pertindihan: adakah ahli ini dilindungi sebagai tanggungan di bawah
+  // khairat orang lain? (padan No. KP)
+  let dilindungiBawah: string | null = null;
+  if (a?.no_kp && kh?.status !== "aktif") {
+    const { data: tgRows } = await db
+      .from("tanggungan")
+      .select("ahli_id")
+      .eq("no_kp", a.no_kp)
+      .eq("dilindungi_khairat", true)
+      .neq("ahli_id", profil.ahli_id);
+    const idIbuBapa = [...new Set(((tgRows as any[]) ?? []).map((r) => r.ahli_id))];
+    if (idIbuBapa.length) {
+      const { data: pembayar } = await db
+        .from("ahli_kariah")
+        .select("nama, keahlian_khairat(status)")
+        .in("id", idIbuBapa);
+      const aktif = ((pembayar as any[]) ?? []).find((pp) =>
+        (pp.keahlian_khairat ?? []).some((k: any) => k.status === "aktif")
+      );
+      if (aktif) dilindungiBawah = aktif.nama;
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b pb-3">
@@ -93,14 +116,19 @@ export default async function AhliPage() {
       {/* Status permohonan */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Kad label="Status Keahlian" nilai={a?.status === "lulus" ? "Diluluskan" : a?.status === "tolak" ? "Tidak Diluluskan" : "Menunggu"} warna={a?.status === "lulus" ? "text-green-600" : a?.status === "tolak" ? "text-red-600" : "text-amber-600"} />
-        <Kad label="Khairat Kematian" nilai={kh ? (kh.status === "aktif" ? "Aktif" : "Tertunggak") : "Tidak sertai"} warna={kh?.status === "aktif" ? "text-green-600" : "text-slate-500"} />
+        <Kad label="Khairat Kematian" nilai={kh ? (kh.status === "aktif" ? "Aktif" : "Tertunggak") : dilindungiBawah ? "Dilindungi" : "Tidak sertai"} warna={kh?.status === "aktif" || dilindungiBawah ? "text-green-600" : "text-slate-500"} />
         <Kad label={`Yuran Khairat ${TAHUN}`} nilai={kh ? (yuranTahunIni ? "Lunas" : "Belum bayar") : "-"} warna={yuranTahunIni ? "text-green-600" : "text-red-600"} />
       </div>
 
       {/* Skim Khairat Kematian */}
       <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
         <h2 className="mb-2 font-semibold text-slate-900">Skim Khairat Kematian</h2>
-        {!kh ? (
+        {!kh && dilindungiBawah ? (
+          <p className="text-sm text-slate-700">
+            ✓ Anda <b className="text-green-700">dilindungi khairat</b> sebagai tanggungan di bawah{" "}
+            <b>{dilindungiBawah}</b>. Anda tidak perlu menyertai atau membayar yuran secara berasingan.
+          </p>
+        ) : !kh ? (
           <div className="space-y-3">
             <p className="text-sm text-slate-600">
               Anda belum menyertai skim khairat. Yuran <b>RM60 setahun</b>, pampasan tetap

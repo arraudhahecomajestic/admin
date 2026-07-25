@@ -3,6 +3,24 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil } from "@/lib/sesi";
+import { layakKhairat } from "@/lib/khairat";
+
+// Cari nama ahli sedia ada ikut No. KP (untuk auto-isi tanggungan yang juga ahli kariah).
+export async function cariAhliIkutKp(noKp: string): Promise<{ ok: boolean; nama?: string }> {
+  const p = await getProfil();
+  if (!p) return { ok: false };
+  const kp = (noKp || "").replace(/\D/g, "");
+  if (kp.length < 6) return { ok: false };
+  const db = createAdminClient();
+  const { data } = await db
+    .from("ahli_kariah")
+    .select("nama")
+    .eq("no_kp", kp)
+    .limit(1)
+    .maybeSingle();
+  if ((data as any)?.nama) return { ok: true, nama: (data as any).nama };
+  return { ok: false };
+}
 
 // Ahli kemas kini & sahkan maklumat sendiri.
 export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: string }> {
@@ -48,7 +66,10 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
         no_kp: t.no_kp || null,
         hubungan: t.hubungan || "lain",
         tarikh_lahir: t.tarikh_lahir || null,
-        dilindungi_khairat: t.dilindungi_khairat ?? true,
+        oku: !!t.oku,
+        masih_belajar: !!t.masih_belajar,
+        // kelayakan dikira oleh server (bukan input pengguna) supaya konsisten
+        dilindungi_khairat: layakKhairat(t).layak,
       }))
     );
   }

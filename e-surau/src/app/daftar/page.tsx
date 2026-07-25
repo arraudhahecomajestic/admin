@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { NAMA_SURAU } from "@/lib/tetapan";
+import { layakKhairat } from "@/lib/khairat";
 
 const namaSurau = NAMA_SURAU;
 const configured = Boolean(
@@ -15,10 +16,12 @@ type Tanggungan = {
   no_kp: string;
   hubungan: string;
   tarikh_lahir: string;
+  oku: boolean;
+  masih_belajar: boolean;
   dilindungi_khairat: boolean;
 };
 const kosong = (): Tanggungan => ({
-  nama: "", no_kp: "", hubungan: "anak", tarikh_lahir: "", dilindungi_khairat: true,
+  nama: "", no_kp: "", hubungan: "anak", tarikh_lahir: "", oku: false, masih_belajar: false, dilindungi_khairat: true,
 });
 
 export default function DaftarPage() {
@@ -27,6 +30,7 @@ export default function DaftarPage() {
   const [noKp, setNoKp] = useState("");
   const [alamatKp, setAlamatKp] = useState("");
   const [alamatSekarang, setAlamatSekarang] = useState("");
+  const [alamatSama, setAlamatSama] = useState(false);
   const [telRumah, setTelRumah] = useState("");
   const [hp, setHp] = useState("");
   const [emel, setEmel] = useState("");
@@ -107,13 +111,15 @@ export default function DaftarPage() {
     const supabase = createClient();
     const payload = {
       kariah: namaSurau,
-      nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSekarang,
+      nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamatSekarang,
       no_telefon_rumah: telRumah, telefon: hp, emel,
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       pengakuan, url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
       sertai_khairat: sertaiKhairat,
-      tanggungan: tanggungan.filter((t) => t.nama.trim() !== ""),
+      tanggungan: tanggungan
+        .filter((t) => t.nama.trim() !== "")
+        .map((t) => ({ ...t, dilindungi_khairat: layakKhairat(t).layak })),
     };
     const { error } = await supabase.rpc("daftar_ahli", { payload });
     if (error) {
@@ -190,9 +196,19 @@ export default function DaftarPage() {
           <textarea className="inp" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value)} />
         </Field>
 
-        <Field label="4. Alamat Tempat Tinggal Sekarang">
-          <textarea className="inp" rows={2} value={alamatSekarang} onChange={(e) => setAlamatSekarang(e.target.value)} />
-        </Field>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={alamatSama}
+            onChange={(e) => { setAlamatSama(e.target.checked); if (e.target.checked) setAlamatSekarang(alamatKp); }}
+          />
+          Alamat tempat tinggal sama seperti alamat dalam KP
+        </label>
+        {!alamatSama && (
+          <Field label="4. Alamat Tempat Tinggal Sekarang">
+            <textarea className="inp" rows={2} value={alamatSekarang} onChange={(e) => setAlamatSekarang(e.target.value)} />
+          </Field>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="5. No. Telefon Rumah">
@@ -211,6 +227,8 @@ export default function DaftarPage() {
             <select className="inp" value={statusKahwin} onChange={(e) => setStatusKahwin(e.target.value)}>
               <option value="bujang">Bujang</option>
               <option value="berkahwin">Sudah Berkahwin</option>
+              <option value="duda">Duda</option>
+              <option value="janda">Janda</option>
             </select>
           </Field>
           <Field label="7. Tempoh Masa Telah Menetap">
@@ -231,13 +249,16 @@ export default function DaftarPage() {
           <h2 className="font-semibold text-slate-900">Tanggungan / Isi Rumah</h2>
           <button type="button" onClick={() => setTanggungan((t) => [...t, kosong()])} className="rounded-lg bg-surau/10 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/20">+ Tambah</button>
         </div>
+        <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+          <b>Penting untuk khairat:</b> senaraikan pasangan & anak (21 tahun ke bawah). Layak juga:
+          anak OKU (tanpa had umur) & anak masih belajar (hingga 25 tahun), serta ibu/bapa yang
+          ditanggung. Isi <b>Nama penuh</b> & <b>No. KP / MyKid</b> setiap anak.
+        </p>
         {tanggungan.length === 0 && <p className="text-sm text-slate-500">Tiada tanggungan ditambah.</p>}
-        {tanggungan.map((t, i) => (
+        {tanggungan.map((t, i) => {
+          const status = layakKhairat(t);
+          return (
           <div key={i} className="space-y-3 rounded-lg border border-slate-200 p-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input className="inp" placeholder="Nama tanggungan" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
-              <input className="inp" placeholder="No. KP (jika ada)" value={t.no_kp} onChange={(e) => ubahT(i, "no_kp", e.target.value)} />
-            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <select className="inp" value={t.hubungan} onChange={(e) => ubahT(i, "hubungan", e.target.value)}>
                 <option value="pasangan">Pasangan</option>
@@ -246,16 +267,34 @@ export default function DaftarPage() {
                 <option value="bapa">Bapa</option>
                 <option value="lain">Lain-lain</option>
               </select>
-              <input className="inp" type="date" value={t.tarikh_lahir} onChange={(e) => ubahT(i, "tarikh_lahir", e.target.value)} />
+              <input className="inp" placeholder="No. KP / MyKid" value={t.no_kp} onChange={(e) => ubahT(i, "no_kp", e.target.value)} />
+            </div>
+            <input className="inp" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-xs text-slate-500">Tarikh lahir</span>
+                <input className="inp" type="date" value={t.tarikh_lahir} onChange={(e) => ubahT(i, "tarikh_lahir", e.target.value)} />
+              </label>
+              {t.hubungan === "anak" && (
+                <div className="flex flex-col justify-end gap-1 pb-1 text-sm text-slate-600">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={t.oku} onChange={(e) => ubahT(i, "oku", e.target.checked)} /> Anak OKU
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={t.masih_belajar} onChange={(e) => ubahT(i, "masih_belajar", e.target.checked)} /> Masih belajar sepenuh masa
+                  </label>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-slate-600">
-                <input type="checkbox" checked={t.dilindungi_khairat} onChange={(e) => ubahT(i, "dilindungi_khairat", e.target.checked)} /> Dilindungi khairat
-              </label>
+              <span className={`rounded px-2 py-0.5 text-xs font-semibold ${status.layak ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                {status.layak ? `✓ Dilindungi khairat · ${status.sebab}` : `Tidak dilindungi · ${status.sebab}`}
+              </span>
               <button type="button" onClick={() => setTanggungan((t) => t.filter((_, idx) => idx !== i))} className="text-sm font-medium text-red-600 hover:underline">Buang</button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </section>
 
       {/* Khairat */}
