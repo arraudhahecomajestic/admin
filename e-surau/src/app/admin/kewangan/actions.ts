@@ -33,3 +33,21 @@ export async function tambahBelanja(formData: FormData) {
   });
   revalidatePath("/admin/kewangan");
 }
+
+export async function padamKutipan(formData: FormData) {
+  if (!bolehKewangan(await getProfil())) return;
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const db = createAdminClient();
+  await db.from("kutipan").delete().eq("id", id);
+  revalidatePath("/admin/kewangan");
+}
+
+export async function padamBelanja(formData: FormData) {
+  if (!bolehKewangan(await getProfil())) return;
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const db = createAdminClient();
+  await db.from("perbelanjaan").delete().eq("id", id);
+  revalidatePath("/admin/kewangan");
+}

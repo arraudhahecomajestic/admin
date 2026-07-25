@@ -4,7 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
-import { tambahKutipan, tambahBelanja } from "./actions";
+import { tambahKutipan, tambahBelanja, padamKutipan, padamBelanja } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +52,12 @@ export default async function KewanganPage() {
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/kewangan" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} />
-      <h1 className="text-2xl font-bold text-slate-900">Kewangan</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold text-slate-900">Kewangan</h1>
+        <Link href="/admin/kewangan/laporan" className="rounded-lg border border-surau/40 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/10">
+          Laporan & Penyata →
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Baki Tabung Am" nilai={rm(bakiAm)} warna="text-surau" />
@@ -139,9 +144,15 @@ export default async function KewanganPage() {
                   <td className="px-4 py-2">{k.ahli?.nama ?? "—"}</td>
                   <td className="px-4 py-2 text-right font-medium">{rm(k.jumlah)}</td>
                   <td className="px-4 py-2 text-right">
-                    <Link href={`/admin/kewangan/resit/${k.id}`} target="_blank" className="text-xs font-semibold text-surau hover:underline">
-                      Resit PDF
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link href={`/admin/kewangan/resit/${k.id}`} target="_blank" className="text-xs font-semibold text-surau hover:underline">
+                        Resit
+                      </Link>
+                      <form action={padamKutipan}>
+                        <input type="hidden" name="id" value={k.id} />
+                        <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -165,6 +176,7 @@ export default async function KewanganPage() {
                 <th className="px-4 py-2">Keterangan</th>
                 <th className="px-4 py-2">Tabung</th>
                 <th className="px-4 py-2 text-right">Jumlah</th>
+                <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
@@ -175,10 +187,16 @@ export default async function KewanganPage() {
                   <td className="px-4 py-2">{b.keterangan}</td>
                   <td className="px-4 py-2">{b.dari_khairat ? "Khairat" : "Am"}</td>
                   <td className="px-4 py-2 text-right font-medium text-red-600">{rm(b.jumlah)}</td>
+                  <td className="px-4 py-2 text-right">
+                    <form action={padamBelanja}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
+                    </form>
+                  </td>
                 </tr>
               ))}
               {belanja.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Tiada perbelanjaan lagi.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Tiada perbelanjaan lagi.</td></tr>
               )}
             </tbody>
           </table>

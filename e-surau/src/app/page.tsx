@@ -46,10 +46,17 @@ async function ambilTabung(): Promise<Tabung[]> {
   return (data as Tabung[]) ?? [];
 }
 
+async function ambilProgram(): Promise<any[]> {
+  if (!supabaseConfigured) return [];
+  const { data, error } = await supabase.from("v_program_awam").select("*").limit(3);
+  if (error) return [];
+  return (data as any[]) ?? [];
+}
+
 export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
-  const [pengumuman, tabung] = await Promise.all([ambilPengumuman(), ambilTabung()]);
+  const [pengumuman, tabung, program] = await Promise.all([ambilPengumuman(), ambilTabung(), ambilProgram()]);
 
   return (
     <div className="space-y-8">
@@ -144,6 +151,26 @@ export default async function Home() {
           <p className="mt-2 text-xs text-slate-400">
             Dikemas kini automatik apabila bendahari merekod kutipan. Semoga Allah membalas jariah anda.
           </p>
+        </section>
+      )}
+
+      {/* Program akan datang */}
+      {program.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900">Program Akan Datang</h2>
+            <Link href="/program" className="text-sm font-medium text-surau hover:underline">Lihat semua →</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {program.map((p) => (
+              <Link key={p.id} href="/program" className="rounded-xl bg-white p-4 shadow-sm hover:shadow">
+                {p.kategori && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{p.kategori}</span>}
+                <div className="mt-2 font-semibold text-slate-900">{p.tajuk}</div>
+                <div className="mt-1 text-xs text-slate-500">📅 {tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
+                {p.lokasi && <div className="text-xs text-slate-500">📍 {p.lokasi}</div>}
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 

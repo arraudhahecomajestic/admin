@@ -4,6 +4,8 @@ const pautanPenuh = [
   { href: "/admin", label: "Permohonan" },
   { href: "/admin/ahli", label: "Jejak Ahli" },
   { href: "/admin/kewangan", label: "Kewangan" },
+  { href: "/admin/program", label: "Program" },
+  { href: "/admin/aset", label: "Aset" },
   { href: "/admin/khairat", label: "Khairat" },
   { href: "/admin/cetak", label: "Cetak Borang" },
 ];

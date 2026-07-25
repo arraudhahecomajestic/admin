@@ -42,6 +42,9 @@ export default function RootLayout({
               <Link href="/daftar" className="hover:underline">
                 Daftar Ahli
               </Link>
+              <Link href="/program" className="hover:underline">
+                Program
+              </Link>
               <Link href="/ahli" className="hover:underline">
                 Portal Saya
               </Link>
