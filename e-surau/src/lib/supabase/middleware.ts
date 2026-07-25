@@ -27,6 +27,10 @@ export async function updateSession(request: NextRequest) {
   });
 
   // Wajib: refresh token & muat pengguna
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // jangan biar middleware crash seluruh laman jika auth gagal
+  }
   return response;
 }

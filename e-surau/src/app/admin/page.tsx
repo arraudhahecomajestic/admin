@@ -43,6 +43,7 @@ export default async function AdminPage() {
   let ahli: Ahli[] = [];
   let ralat: string | null = null;
   let namaStaf: string | undefined;
+  let jum = { menunggu: 0, lulus: 0, khairat: 0, belumKemas: 0 };
 
   try {
     const profil = await getProfil();
@@ -55,8 +56,21 @@ export default async function AdminPage() {
       .from("ahli_kariah")
       .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
       .order("tarikh_daftar", { ascending: false });
-    if (error) ralat = error.message + (error.hint ? ` (${error.hint})` : "");
-    else ahli = (data as Ahli[]) ?? [];
+    if (error) {
+      ralat = error.message + (error.hint ? ` (${error.hint})` : "");
+    } else {
+      ahli = ((data as Ahli[]) ?? []).map((a) => ({
+        ...a,
+        tanggungan: a.tanggungan ?? [],
+        keahlian_khairat: a.keahlian_khairat ?? [],
+      }));
+      jum = {
+        menunggu: ahli.filter((a) => a.status === "menunggu").length,
+        lulus: ahli.filter((a) => a.status === "lulus").length,
+        khairat: ahli.filter((a) => (a.keahlian_khairat?.length ?? 0) > 0).length,
+        belumKemas: ahli.filter((a) => !a.maklumat_disahkan).length,
+      };
+    }
   } catch (e: any) {
     ralat = e?.message ?? String(e);
   }
@@ -66,7 +80,7 @@ export default async function AdminPage() {
       <div className="space-y-4">
         <AdminNav aktif="/admin" nama={namaStaf} />
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <div className="font-semibold">Ralat (v2) — punca sebenar:</div>
+          <div className="font-semibold">Ralat (v3) — punca sebenar:</div>
           <p className="mt-1 break-words font-mono text-xs">{ralat}</p>
           <p className="mt-2 text-xs text-red-500">
             Jika ralat menyebut kolum <code>maklumat_disahkan</code> tidak wujud, sila jalankan
@@ -75,13 +89,6 @@ export default async function AdminPage() {
         </div>
       </div>
     );
-
-  const jum = {
-    menunggu: ahli.filter((a) => a.status === "menunggu").length,
-    lulus: ahli.filter((a) => a.status === "lulus").length,
-    khairat: ahli.filter((a) => a.keahlian_khairat.length > 0).length,
-    belumKemas: ahli.filter((a) => !a.maklumat_disahkan).length,
-  };
 
   return (
     <div className="space-y-6">
