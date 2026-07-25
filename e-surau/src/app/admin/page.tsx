@@ -40,13 +40,16 @@ export default async function AdminPage() {
       </div>
     );
 
-  const profil = await getProfil();
-  if (!profil) return <PerluMasuk />;
-  if (!isStaf(profil)) return <TiadaAkses />;
-
   let ahli: Ahli[] = [];
   let ralat: string | null = null;
+  let namaStaf: string | undefined;
+
   try {
+    const profil = await getProfil();
+    if (!profil) return <PerluMasuk />;
+    if (!isStaf(profil)) return <TiadaAkses />;
+    namaStaf = profil.nama ?? profil.emel ?? undefined;
+
     const db = createAdminClient();
     const { data, error } = await db
       .from("ahli_kariah")
@@ -61,10 +64,10 @@ export default async function AdminPage() {
   if (ralat)
     return (
       <div className="space-y-4">
-        <AdminNav aktif="/admin" nama={profil.nama ?? profil.emel ?? undefined} />
+        <AdminNav aktif="/admin" nama={namaStaf} />
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <div className="font-semibold">Ralat memuat data ahli</div>
-          <p className="mt-1 break-words">{ralat}</p>
+          <div className="font-semibold">Ralat (v2) — punca sebenar:</div>
+          <p className="mt-1 break-words font-mono text-xs">{ralat}</p>
           <p className="mt-2 text-xs text-red-500">
             Jika ralat menyebut kolum <code>maklumat_disahkan</code> tidak wujud, sila jalankan
             fail <code>schema_fasa7_kemaskini.sql</code> di Supabase SQL Editor.
@@ -82,7 +85,7 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <AdminNav aktif="/admin" nama={profil.nama ?? profil.emel ?? undefined} />
+      <AdminNav aktif="/admin" nama={namaStaf} />
       <h1 className="text-2xl font-bold text-slate-900">Permohonan Ahli Kariah</h1>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

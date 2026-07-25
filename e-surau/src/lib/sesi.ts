@@ -10,21 +10,24 @@ export type Profil = {
 
 // Dapatkan profil pengguna yang sedang log masuk (atau null).
 export async function getProfil(): Promise<Profil | null> {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      return null;
+    const supabase = createClient();
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user) return null;
+
+    const { data } = await supabase
+      .from("profil")
+      .select("id, nama, emel, ahli_id, peranan")
+      .eq("id", user.id)
+      .single();
+
+    return (data as Profil) ?? null;
+  } catch {
     return null;
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data } = await supabase
-    .from("profil")
-    .select("id, nama, emel, ahli_id, peranan")
-    .eq("id", user.id)
-    .single();
-
-  return (data as Profil) ?? null;
+  }
 }
 
 export function isStaf(p: Profil | null): boolean {
