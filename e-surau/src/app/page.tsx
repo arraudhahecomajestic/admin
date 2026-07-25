@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PrayerTimes from "@/components/PrayerTimes";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
-import { NAMA_SURAU, ZON_SOLAT } from "@/lib/tetapan";
+import { NAMA_SURAU, ZON_SOLAT, KHAIRAT_DIBUKA } from "@/lib/tetapan";
 import { rm, tarikhMs } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -103,7 +103,9 @@ export default async function Home() {
         <section>
           <h2 className="mb-3 text-xl font-bold text-slate-900">Kutipan Tabung Surau</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {tabung.map((t) => (
+            {tabung.map((t) => {
+              const belumLancar = t.jenis_khairat && !KHAIRAT_DIBUKA;
+              return (
               <div key={t.kategori_id} className="rounded-xl bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-slate-900">{t.nama}</h3>
@@ -111,24 +113,33 @@ export default async function Home() {
                     <span className="rounded bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">Khairat</span>
                   )}
                 </div>
-                <div className="mt-3">
-                  <div className="text-2xl font-bold text-surau">{rm(t.terkini_jumlah)}</div>
-                  <div className="text-xs text-slate-500">
-                    Kutipan terkini{t.terkini_tarikh ? ` · ${tarikhMs(t.terkini_tarikh)}` : " · belum ada rekod"}
+                {belumLancar ? (
+                  <div className="mt-3 rounded-lg bg-slate-50 p-4 text-center text-sm font-medium text-slate-500">
+                    Tabung khairat belum dilancarkan.
                   </div>
-                </div>
-                <div className="mt-3 flex gap-6 border-t pt-3 text-sm">
-                  <div>
-                    <div className="font-semibold text-slate-800">{rm(t.jumlah_bulan_ini)}</div>
-                    <div className="text-xs text-slate-500">Bulan ini</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-800">{rm(t.jumlah_terkumpul)}</div>
-                    <div className="text-xs text-slate-500">Terkumpul</div>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="mt-3">
+                      <div className="text-2xl font-bold text-surau">{rm(t.terkini_jumlah)}</div>
+                      <div className="text-xs text-slate-500">
+                        Kutipan terkini{t.terkini_tarikh ? ` · ${tarikhMs(t.terkini_tarikh)}` : " · belum ada rekod"}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-6 border-t pt-3 text-sm">
+                      <div>
+                        <div className="font-semibold text-slate-800">{rm(t.jumlah_bulan_ini)}</div>
+                        <div className="text-xs text-slate-500">Bulan ini</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-800">{rm(t.jumlah_terkumpul)}</div>
+                        <div className="text-xs text-slate-500">Terkumpul</div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
           <p className="mt-2 text-xs text-slate-400">
             Dikemas kini automatik apabila bendahari merekod kutipan. Semoga Allah membalas jariah anda.
