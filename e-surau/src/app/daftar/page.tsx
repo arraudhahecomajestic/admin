@@ -145,7 +145,11 @@ export default function DaftarPage() {
       const { error: eSignup } = await supabase.auth.signUp({
         email: emel,
         password: kataLaluan,
-        options: { data: { nama } },
+        options: {
+          data: { nama },
+          emailRedirectTo:
+            typeof window !== "undefined" ? `${window.location.origin}/selamat-datang` : undefined,
+        },
       });
       if (eSignup) {
         mesej += ` (Nota: akaun portal tidak dapat dicipta — ${eSignup.message}. Anda boleh cuba log masuk atau hubungi admin.)`;
