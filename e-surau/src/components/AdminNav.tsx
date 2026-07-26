@@ -11,6 +11,7 @@ const pautanPenuh = [
   { href: "/admin/aset", label: "Aset" },
   { href: "/admin/khairat", label: "Khairat" },
   { href: "/admin/tuntutan", label: "Tuntutan" },
+  { href: "/admin/penaja", label: "Penaja" },
   { href: "/admin/cetak", label: "Cetak Borang" },
 ];
 const pautanBendahari = [
@@ -23,7 +24,7 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
   let pautan = pautanPenuh;
   if (peranan === "bendahari") pautan = pautanBendahari;
   else if (peranan === "imam") pautan = pautanImam;
-  else if (master) pautan = [...pautanPenuh, { href: "/admin/peranan", label: "Peranan" }];
+  else if (master) pautan = [...pautanPenuh, { href: "/admin/peranan", label: "Peranan" }, { href: "/admin/tetapan", label: "Tetapan" }];
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
       <nav className="flex flex-wrap gap-1">

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import PrayerTimes from "@/components/PrayerTimes";
+import PenajaStrip from "@/components/PenajaStrip";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
-import { NAMA_SURAU, ZON_SOLAT, KHAIRAT_DIBUKA } from "@/lib/tetapan";
+import { NAMA_SURAU, ZON_SOLAT, PENAJA_DIPAPAR, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
+import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
 import { rm, tarikhMs } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -56,10 +58,54 @@ async function ambilProgram(): Promise<any[]> {
 export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
-  const [pengumuman, tabung, program] = await Promise.all([ambilPengumuman(), ambilTabung(), ambilProgram()]);
+  const [pengumuman, tabung, program, khDibuka, pampasan] = await Promise.all([
+    ambilPengumuman(),
+    ambilTabung(),
+    ambilProgram(),
+    khairatDibuka(),
+    pampasanKhairat(),
+  ]);
 
   return (
     <div className="space-y-8">
+      {/* Kempen Khairat Kematian — banner besar (dikawal toggle admin) */}
+      {khDibuka && (
+        <section className="overflow-hidden rounded-2xl border-2 border-teal-600 bg-gradient-to-br from-teal-700 to-emerald-800 p-6 text-white shadow-lg sm:p-8">
+          <span className="inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wide text-teal-900">
+            Baru Dibuka
+          </span>
+          <h2 className="mt-3 text-2xl font-extrabold leading-tight sm:text-3xl">
+            Sertai Skim Khairat Kematian Surau Ar Raudhah
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-teal-50 sm:text-base">
+            Ringankan beban keluarga di saat dukacita. Dengan hanya{" "}
+            <span className="font-bold text-white">RM{YURAN_KHAIRAT_TAHUNAN}/tahun</span>, keluarga menerima
+            pampasan khairat <span className="font-bold text-white">RM{rm(pampasan).replace("RM", "")}</span>{" "}
+            bagi setiap kematian yang dilindungi. Sertai sekarang — jangan tunggu hingga terlambat.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/daftar"
+              className="rounded-lg bg-amber-400 px-6 py-3 text-center text-sm font-bold text-teal-900 shadow hover:bg-amber-300"
+            >
+              Daftar Khairat Kematian →
+            </Link>
+            <Link
+              href="/masuk"
+              className="rounded-lg border-2 border-white/70 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-white/10"
+            >
+              Sudah Ahli? Kemas Kini & Sertai
+            </Link>
+            <Link
+              href="/khairat"
+              className="rounded-lg px-6 py-3 text-center text-sm font-semibold text-teal-100 underline underline-offset-4 hover:text-white"
+            >
+              Apa itu Khairat Kematian?
+            </Link>
+          </div>
+        </section>
+      )}
+
       <section className="rounded-xl bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">
           Selamat datang ke {namaSurau}
@@ -92,7 +138,7 @@ export default async function Home() {
           <h2 className="mb-3 text-xl font-bold text-slate-900">Kutipan Tabung Surau</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {tabung.map((t) => {
-              const belumLancar = t.jenis_khairat && !KHAIRAT_DIBUKA;
+              const belumLancar = t.jenis_khairat && !khDibuka;
               return (
               <div key={t.kategori_id} className="rounded-xl bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -195,6 +241,8 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      {PENAJA_DIPAPAR && <PenajaStrip />}
     </div>
   );
 }

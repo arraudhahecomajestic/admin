@@ -23,7 +23,7 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
   const db = createAdminClient();
   const { data } = await db
     .from("bayaran")
-    .select("id, jenis, rujukan_id, status, jumlah, emel, nama, no_rujukan")
+    .select("id, jenis, rujukan_id, status, jumlah, emel, nama, no_rujukan, tahun_bil")
     .eq("chip_id", chipId)
     .maybeSingle();
   const b: any = data;
@@ -52,20 +52,25 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
     const { data: k } = await db.from("keahlian_khairat").select("ahli_id").eq("id", keahlianId).maybeSingle();
     const ahliId = (k as any)?.ahli_id ?? null;
     const tahun = tahunSemasa();
-    // 1) Tandakan yuran tahun ini lunas (trigger auto-aktifkan keahlian)
-    await db.from("yuran_khairat").upsert(
-      { keahlian_id: keahlianId, tahun, jumlah: Number(b.jumlah || 60), lunas: true, tarikh_bayar: new Date().toISOString().slice(0, 10) },
-      { onConflict: "keahlian_id,tahun" }
-    );
+    const bilTahun = Number(b.tahun_bil || 1);
+    const seunit = Number(b.jumlah || 60) / bilTahun;
+    // 1) Tandakan yuran LUNAS untuk setiap tahun dalam pakej (trigger auto-aktifkan keahlian)
+    for (let i = 0; i < bilTahun; i++) {
+      await db.from("yuran_khairat").upsert(
+        { keahlian_id: keahlianId, tahun: tahun + i, jumlah: seunit, lunas: true, tarikh_bayar: new Date().toISOString().slice(0, 10) },
+        { onConflict: "keahlian_id,tahun" }
+      );
+    }
     // 2) Rekod wang sebagai kutipan (kategori Yuran Khairat) untuk resit & tabung
     const { data: kat } = await db.from("kategori_kutipan").select("id").eq("nama", "Yuran Khairat").maybeSingle();
     if (kat) {
+      const labelTahun = bilTahun === 1 ? `${tahun}` : `${tahun}–${tahun + bilTahun - 1}`;
       await db.from("kutipan").insert({
         kategori_id: (kat as any).id,
         jumlah: Number(b.jumlah || 60),
         kaedah: "online",
         ahli_id: ahliId,
-        catatan: `Yuran khairat tahun ${tahun} (CHIP)`,
+        catatan: `Yuran khairat ${bilTahun} tahun (${labelTahun}) (CHIP)`,
         tarikh: new Date().toISOString().slice(0, 10),
         direkod_oleh: "CHIP",
       });

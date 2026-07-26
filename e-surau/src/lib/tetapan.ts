@@ -38,6 +38,19 @@ export const EMEL_SURAU = "arraudhah.ecomajestic@gmail.com";
 export const WEB_SURAU = "https://ar-raudhah.mimbar.my/";
 export const CARA_BAYAR_BELANJA = ["Pindahan Atas Talian", "Tunai", "Cek"];
 
+// Papar bahagian Penaja di laman utama? false = urus di admin sahaja (belum dilancarkan).
+export const PENAJA_DIPAPAR = false;
+
+// Khairat: yuran & pakej pelbagai tahun (dibeli terus via CHIP)
+export const YURAN_KHAIRAT_TAHUNAN = 60;
+export const PAMPASAN_KHAIRAT = 1200; // pampasan tetap setiap kematian dilindungi
+export const PAKEJ_KHAIRAT = [
+  { tahun: 1, label: "1 Tahun" },
+  { tahun: 3, label: "3 Tahun" },
+  { tahun: 5, label: "5 Tahun" },
+  { tahun: 10, label: "10 Tahun" },
+];
+
 export const SENARAI_BANK = [
   "Maybank", "CIMB Bank", "Bank Islam", "RHB Bank", "Public Bank",
   "Bank Simpanan Nasional (BSN)", "Bank Rakyat", "AmBank", "Hong Leong Bank",

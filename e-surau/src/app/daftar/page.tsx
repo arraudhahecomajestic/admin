@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { NAMA_SURAU, KHAIRAT_DIBUKA, GELARAN } from "@/lib/tetapan";
+import { NAMA_SURAU, GELARAN, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
@@ -67,7 +67,26 @@ export default function DaftarPage() {
 
   // Khairat + tanggungan
   const [sertaiKhairat, setSertaiKhairat] = useState(true);
+  const [khDibuka, setKhDibuka] = useState(false);
   const [tanggungan, setTanggungan] = useState<Tanggungan[]>([]);
+
+  // Baca toggle khairat (runtime) dari tetapan_sistem — dikawal admin.
+  useEffect(() => {
+    if (!configured) return;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("tetapan_sistem")
+          .select("nilai")
+          .eq("kunci", "khairat_dibuka")
+          .maybeSingle();
+        setKhDibuka((data as any)?.nilai === "true");
+      } catch {
+        /* abaikan */
+      }
+    })();
+  }, []);
 
   const [hantar, setHantar] = useState(false);
   const [selesai, setSelesai] = useState<null | { ok: boolean; msg: string }>(null);
@@ -241,7 +260,7 @@ export default function DaftarPage() {
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       pengakuan, url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
       url_tandatangan: urlTtd, url_selfie: urlSelfie,
-      sertai_khairat: KHAIRAT_DIBUKA && sertaiKhairat,
+      sertai_khairat: khDibuka && sertaiKhairat,
       tanggungan: tanggungan
         .filter((t) => t.nama.trim() !== "")
         .map((t) => ({ ...t, nama: UP(t.nama), dilindungi_khairat: layakKhairat(t).layak })),
@@ -520,14 +539,14 @@ export default function DaftarPage() {
         })}
       </section>
 
-      {/* Khairat — dipaparkan hanya bila langganan dibuka */}
-      {KHAIRAT_DIBUKA && (
+      {/* Khairat — dipaparkan hanya bila langganan dibuka (toggle admin) */}
+      {khDibuka && (
         <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
           <label className="flex items-start gap-3">
             <input type="checkbox" className="mt-1" checked={sertaiKhairat} onChange={(e) => setSertaiKhairat(e.target.checked)} />
             <span>
               <span className="font-semibold text-slate-900">Saya ingin menyertai Skim Khairat Kematian</span>
-              <span className="mt-1 block text-sm text-slate-600">Yuran <b>RM60 setahun</b>, pampasan tetap <b>RM1,400</b> setiap kematian ahli/tanggungan dilindungi.</span>
+              <span className="mt-1 block text-sm text-slate-600">Yuran <b>RM{YURAN_KHAIRAT_TAHUNAN} setahun</b>, pampasan tetap setiap kematian ahli/tanggungan dilindungi. Bayaran dibuat selepas log masuk ke Portal Ahli.</span>
             </span>
           </label>
         </section>

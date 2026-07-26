@@ -3,15 +3,17 @@
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil } from "@/lib/sesi";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
+import { YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 
 const tahunSemasa = () => new Date().getFullYear();
 
-// Ahli bayar yuran khairat RM60/tahun secara online (CHIP) dari Portal Saya.
-export async function mulaBayaranKhairat(): Promise<{ ok: boolean; msg?: string; checkout_url?: string }> {
+// Ahli bayar yuran khairat secara online (CHIP) — pakej 1/3/5/10 tahun.
+export async function mulaBayaranKhairat(tahunBil: number = 1): Promise<{ ok: boolean; msg?: string; checkout_url?: string }> {
   const p = await getProfil();
   if (!p?.ahli_id) return { ok: false, msg: "Sesi tamat atau akaun belum dipautkan. Sila log masuk semula." };
   if (!chipConfigured("khairat"))
     return { ok: false, msg: "Gerbang pembayaran khairat belum disediakan. Sila hubungi admin surau." };
+  const bilTahun = [1, 3, 5, 10].includes(Number(tahunBil)) ? Number(tahunBil) : 1;
 
   const db = createAdminClient();
 
@@ -32,15 +34,7 @@ export async function mulaBayaranKhairat(): Promise<{ ok: boolean; msg?: string;
   }
   const keahlian: any = kh;
 
-  // 2) Sudah lunas tahun ini?
   const tahun = tahunSemasa();
-  const { data: y } = await db
-    .from("yuran_khairat")
-    .select("lunas")
-    .eq("keahlian_id", keahlian.id)
-    .eq("tahun", tahun)
-    .maybeSingle();
-  if ((y as any)?.lunas) return { ok: false, msg: `Yuran khairat tahun ${tahun} anda sudah lunas.` };
 
   // 3) Maklumat ahli untuk resit
   const { data: a } = await db
@@ -51,9 +45,11 @@ export async function mulaBayaranKhairat(): Promise<{ ok: boolean; msg?: string;
   const emel = ((a as any)?.emel || p.emel || "").trim().toLowerCase();
   if (!emel || !emel.includes("@")) return { ok: false, msg: "E-mel tidak sah. Sila kemas kini e-mel anda dahulu." };
 
-  const jumlah = Number(keahlian.kadar_yuran_tahunan || 60);
-  const ref = `KH-${String(keahlian.id).slice(0, 8)}-${tahun}`;
+  const seunit = Number(keahlian.kadar_yuran_tahunan || YURAN_KHAIRAT_TAHUNAN);
+  const jumlah = seunit * bilTahun;
+  const ref = `KH-${String(keahlian.id).slice(0, 8)}-${tahun}-${bilTahun}T`;
   const site = siteUrl();
+  const labelTahun = bilTahun === 1 ? `${tahun}` : `${tahun}–${tahun + bilTahun - 1}`;
 
   let purchase: any;
   try {
@@ -63,7 +59,7 @@ export async function mulaBayaranKhairat(): Promise<{ ok: boolean; msg?: string;
       nama: (a as any)?.nama,
       telefon: (a as any)?.telefon || undefined,
       amountCents: Math.round(jumlah * 100),
-      productName: `Yuran Khairat Kematian ${tahun} — ${(a as any)?.nama ?? ""}`.trim(),
+      productName: `Yuran Khairat Kematian (${bilTahun} tahun: ${labelTahun}) — ${(a as any)?.nama ?? ""}`.trim(),
       reference: ref,
       success_redirect: `${site}/ahli/khairat/selesai?ref=${encodeURIComponent(ref)}`,
       failure_redirect: `${site}/ahli/khairat/selesai?ref=${encodeURIComponent(ref)}&gagal=1`,
@@ -81,6 +77,7 @@ export async function mulaBayaranKhairat(): Promise<{ ok: boolean; msg?: string;
     nama: (a as any)?.nama,
     emel,
     jumlah,
+    tahun_bil: bilTahun,
     status: "menunggu",
     checkout_url: purchase.checkout_url,
   });
