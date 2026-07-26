@@ -8,12 +8,28 @@ export function jantinaDariNama(nama: string): "lelaki" | "perempuan" | "tidak_p
   return "tidak_pasti";
 }
 
-// Tarikh Khamis (malam Jumaat) yang akan datang / hari ini, format YYYY-MM-DD.
+// Waktu Malaysia (UTC+8) & waktu tutup pendaftaran tahlil.
+const MYT_OFFSET_MS = 8 * 60 * 60 * 1000;
+export const TUTUP_JAM = 19; // 7:00 malam
+
+// Date yang medan UTC-nya mewakili "jam dinding" Malaysia — supaya betul
+// walaupun pelayan (Cloudflare) berjalan dalam UTC.
+function mytSekarang(): Date {
+  return new Date(Date.now() + MYT_OFFSET_MS);
+}
+
+// Tarikh Khamis (malam Jumaat) sasaran untuk kemasukan nama arwah, format YYYY-MM-DD.
+// Peraturan: nama yang dihantar SEBELUM 7:00 malam Khamis dibawa ke majlis
+// Khamis itu. Selepas 7:00 malam Khamis, ia dikumpul untuk Khamis berikutnya.
 export function khamisAkan(): string {
-  const d = new Date();
-  const add = (4 - d.getDay() + 7) % 7; // 4 = Khamis
-  const r = new Date(d.getFullYear(), d.getMonth(), d.getDate() + add);
-  return `${r.getFullYear()}-${String(r.getMonth() + 1).padStart(2, "0")}-${String(r.getDate()).padStart(2, "0")}`;
+  const m = mytSekarang();
+  const dow = m.getUTCDay(); // 0=Ahad .. 4=Khamis .. 6=Sabtu
+  const jam = m.getUTCHours();
+  let add = (4 - dow + 7) % 7; // bilangan hari ke Khamis
+  // Hari ini Khamis tetapi sudah cecah/lepas 7:00 malam → tolak ke Khamis depan.
+  if (add === 0 && jam >= TUTUP_JAM) add = 7;
+  const t = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() + add));
+  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
 }
 
 export function gelaranArwah(jantina: string): string {
