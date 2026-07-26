@@ -23,5 +23,7 @@ export async function rsvpProgram(formData: FormData) {
 
   await db.from("rsvp").insert({ program_id, nama, telefon: telefon || null, bil_orang: bil });
   revalidatePath("/program");
+  revalidatePath(`/program/${program_id}`);
+  revalidatePath("/admin/program");
   revalidatePath("/");
 }
