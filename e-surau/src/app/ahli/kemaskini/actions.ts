@@ -26,6 +26,12 @@ export async function cariAhliIkutKp(noKp: string): Promise<{ ok: boolean; nama?
 export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: string }> {
   const p = await getProfil();
   if (!p?.ahli_id) return { ok: false, msg: "Sesi tamat. Sila log masuk semula." };
+
+  // Pengesahan wajib (server-side) — swafoto & e-tandatangan tidak boleh dilangkau
+  // walaupun semakan di pelayar diakali.
+  if (!data.url_selfie) return { ok: false, msg: "Swafoto (selfie) wajib untuk pengesahan." };
+  if (!data.url_tandatangan) return { ok: false, msg: "e-Tandatangan wajib untuk pengesahan." };
+
   const db = createAdminClient();
 
   const patch: any = {

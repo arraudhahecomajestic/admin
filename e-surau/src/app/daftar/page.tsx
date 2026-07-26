@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { NAMA_SURAU, KHAIRAT_DIBUKA, GELARAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import SignaturePad from "@/components/SignaturePad";
+import KameraKp from "@/components/KameraKp";
 
 const namaSurau = NAMA_SURAU;
 const configured = Boolean(
@@ -75,14 +76,12 @@ export default function DaftarPage() {
     );
   }
 
-  async function snap(sisi: "depan" | "belakang", e: React.ChangeEvent<HTMLInputElement>) {
-    const fail = e.target.files?.[0];
-    if (!fail || !configured) return;
+  async function naikKp(sisi: "depan" | "belakang", fail: Blob) {
+    if (!configured) return;
     setMuatNaik(sisi);
     const supabase = createClient();
-    const ext = fail.name.split(".").pop() || "jpg";
-    const path = `${crypto.randomUUID()}-${sisi}.${ext}`;
-    const { error } = await supabase.storage.from("salinan-kp").upload(path, fail);
+    const path = `${crypto.randomUUID()}-${sisi}.jpg`;
+    const { error } = await supabase.storage.from("salinan-kp").upload(path, fail, { contentType: (fail as any).type || "image/jpeg" });
     setMuatNaik("");
     if (error) {
       setSelesai({ ok: false, msg: `Gagal muat naik gambar IC (${sisi}): ` + error.message });
@@ -247,12 +246,12 @@ export default function DaftarPage() {
         </Field>
 
         <div>
-          <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (snap terus dengan kamera) *</span>
+          <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (letak kad dalam kotak, kemudian snap) *</span>
           <div className="grid gap-3 sm:grid-cols-2">
-            <SnapKad label="IC Depan" sisi="depan" url={urlDepan} sedang={muatNaik === "depan"} onSnap={snap} />
-            <SnapKad label="IC Belakang" sisi="belakang" url={urlBelakang} sedang={muatNaik === "belakang"} onSnap={snap} />
+            <KameraKp label="IC Depan" ada={!!urlDepan} sedang={muatNaik === "depan"} onBlob={(b) => naikKp("depan", b)} />
+            <KameraKp label="IC Belakang" ada={!!urlBelakang} sedang={muatNaik === "belakang"} onBlob={(b) => naikKp("belakang", b)} />
           </div>
-          <p className="mt-1 text-xs text-slate-500">Di telefon, ia akan buka kamera terus. Pastikan gambar jelas & tidak silau.</p>
+          <p className="mt-1 text-xs text-slate-500">Kamera akan tunjuk kotak kuning bernisbah kad — jajarkan kad dalam kotak, pastikan jelas & tidak silau, kemudian tekan Snap.</p>
         </div>
 
         <Field label="3. Alamat Dalam Kad Pengenalan / Passport *">
@@ -448,35 +447,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function SnapKad({
-  label, sisi, url, sedang, onSnap,
-}: {
-  label: string;
-  sisi: "depan" | "belakang";
-  url: string;
-  sedang: boolean;
-  onSnap: (s: "depan" | "belakang", e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center hover:border-surau">
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => onSnap(sisi, e)}
-      />
-      {url ? (
-        <span className="text-sm font-medium text-green-600">✓ {label} diambil</span>
-      ) : sedang ? (
-        <span className="text-sm text-amber-600">Memuat naik…</span>
-      ) : (
-        <>
-          <span className="text-2xl">📷</span>
-          <span className="mt-1 text-sm font-medium text-slate-700">{label}</span>
-          <span className="text-xs text-slate-400">Ketik untuk snap</span>
-        </>
-      )}
-    </label>
-  );
-}

@@ -7,6 +7,7 @@ import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import { GELARAN } from "@/lib/tetapan";
 import SignaturePad from "@/components/SignaturePad";
+import KameraKp from "@/components/KameraKp";
 
 type Tgg = {
   nama: string;
@@ -71,14 +72,11 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     if (res.ok && res.nama) ubahT(i, "nama", res.nama);
   }
 
-  async function snap(sisi: "depan" | "belakang", e: React.ChangeEvent<HTMLInputElement>) {
-    const fail = e.target.files?.[0];
-    if (!fail) return;
+  async function naikKp(sisi: "depan" | "belakang", fail: Blob) {
     setMuatNaik(sisi);
     const supabase = createClient();
-    const ext = fail.name.split(".").pop() || "jpg";
-    const path = `${crypto.randomUUID()}-${sisi}.${ext}`;
-    const { error } = await supabase.storage.from("salinan-kp").upload(path, fail);
+    const path = `${crypto.randomUUID()}-${sisi}.jpg`;
+    const { error } = await supabase.storage.from("salinan-kp").upload(path, fail, { contentType: (fail as any).type || "image/jpeg" });
     setMuatNaik("");
     if (error) { setSelesai({ ok: false, msg: `Gagal muat naik IC (${sisi}): ${error.message}` }); return; }
     if (sisi === "depan") setUrlDepan(`salinan-kp/${path}`); else setUrlBelakang(`salinan-kp/${path}`);
@@ -160,10 +158,10 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
         <F label="Nama Penuh *"><input className="inp" value={nama} onChange={(e) => setNama(e.target.value)} /></F>
         <F label="No. Kad Pengenalan *"><input className="inp" value={noKp} onChange={(e) => setNoKp(e.target.value)} /></F>
         <div>
-          <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (snap dengan kamera)</span>
+          <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (letak kad dalam kotak, kemudian snap)</span>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Snap label="IC Depan" sisi="depan" url={urlDepan} sedang={muatNaik === "depan"} onSnap={snap} />
-            <Snap label="IC Belakang" sisi="belakang" url={urlBelakang} sedang={muatNaik === "belakang"} onSnap={snap} />
+            <KameraKp label="IC Depan" ada={!!urlDepan} sedang={muatNaik === "depan"} onBlob={(b) => naikKp("depan", b)} />
+            <KameraKp label="IC Belakang" ada={!!urlBelakang} sedang={muatNaik === "belakang"} onBlob={(b) => naikKp("belakang", b)} />
           </div>
         </div>
         <F label="Alamat Dalam KP / Passport"><textarea className="inp" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value)} /></F>
@@ -320,13 +318,3 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
   return (<label className="block"><span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>{children}</label>);
 }
 
-function Snap({ label, sisi, url, sedang, onSnap }: { label: string; sisi: "depan" | "belakang"; url: string; sedang: boolean; onSnap: (s: "depan" | "belakang", e: React.ChangeEvent<HTMLInputElement>) => void }) {
-  return (
-    <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center hover:border-surau">
-      <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onSnap(sisi, e)} />
-      {url ? <span className="text-sm font-medium text-green-600">✓ {label} ada</span>
-        : sedang ? <span className="text-sm text-amber-600">Memuat naik…</span>
-        : <><span className="text-2xl">📷</span><span className="mt-1 text-sm font-medium text-slate-700">{label}</span><span className="text-xs text-slate-400">Ketik untuk snap</span></>}
-    </label>
-  );
-}

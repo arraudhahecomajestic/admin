@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="ms">
       <body>
-        <div className="border-b border-slate-200 bg-white">
+        <div className="print-hide border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={LOGO_SURAU} alt={namaSurau} className="h-12 w-auto sm:h-16" />
@@ -30,7 +30,7 @@ export default function RootLayout({
             </div>
           </div>
         </div>
-        <header className="bg-hitam text-white shadow">
+        <header className="print-hide bg-hitam text-white shadow">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="text-sm font-bold text-surau-light">
               Portal Kariah
@@ -61,7 +61,7 @@ export default function RootLayout({
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
-        <footer className="mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
+        <footer className="print-hide mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
           Jawatankuasa Surau Ar Raudhah, Eco Majestic
         </footer>
       </body>
