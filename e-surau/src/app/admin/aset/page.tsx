@@ -2,6 +2,7 @@ import { getProfil, isPentadbir } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
+import ButangHantar from "@/components/ButangHantar";
 import { rm, tarikhMs } from "@/lib/format";
 import { tambahAset, padamAset } from "./actions";
 
@@ -46,7 +47,7 @@ export default async function AsetPage() {
           <input name="nilai" type="number" step="0.01" min="0" placeholder="Nilai (RM)" className="inp" />
           <input name="catatan" placeholder="Catatan (pilihan)" className="inp" />
           <div className="sm:col-span-2">
-            <button className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Simpan Aset</button>
+            <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan Aset</ButangHantar>
           </div>
         </form>
       </section>

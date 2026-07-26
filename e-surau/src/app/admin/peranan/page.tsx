@@ -2,6 +2,7 @@ import { getProfil, isMaster } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
+import ButangHantar from "@/components/ButangHantar";
 import { tetapkanPeranan } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -68,7 +69,7 @@ export default async function PerananPage({ searchParams }: { searchParams: { ca
                     <label className="flex items-center gap-1 text-xs text-slate-600">
                       <input type="checkbox" name="master" defaultChecked={u.master} /> Master
                     </label>
-                    <button className="rounded-lg bg-hitam px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">Simpan</button>
+                    <ButangHantar className="rounded-lg bg-hitam px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50" pendingText="…">Simpan</ButangHantar>
                     {u.master && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">Master Admin</span>}
                   </form>
                 </td>

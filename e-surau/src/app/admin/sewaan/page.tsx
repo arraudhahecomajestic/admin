@@ -2,6 +2,7 @@ import { getProfil, isPentadbir } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
+import ButangHantar from "@/components/ButangHantar";
 import { rm, tarikhMs } from "@/lib/format";
 import { tetapkanStatusSewaan, padamSewaan } from "./actions";
 
@@ -111,7 +112,7 @@ function Butang({ id, status, label, warna }: { id: string; status: string; labe
     <form action={tetapkanStatusSewaan}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="status" value={status} />
-      <button className={`rounded-lg ${warna} px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90`}>{label}</button>
+      <ButangHantar className={`rounded-lg ${warna} px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50`} pendingText="…">{label}</ButangHantar>
     </form>
   );
 }

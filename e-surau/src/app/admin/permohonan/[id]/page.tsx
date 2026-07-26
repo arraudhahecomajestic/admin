@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { tarikhMs } from "@/lib/format";
 import GambarSulit from "@/components/GambarSulit";
+import ButangHantar from "@/components/ButangHantar";
 import { ulasanSU, ulasanNazir, keputusan } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -153,15 +154,15 @@ export default async function PermohonanPage({ params }: { params: { id: string 
           <div className="flex flex-wrap gap-2">
             <form action={keputusan.bind(null, a.id)}>
               <input type="hidden" name="keputusan" value="lulus" />
-              <button className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+              <ButangHantar className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60" pendingText="Memproses…">
                 ✓ Luluskan Permohonan
-              </button>
+              </ButangHantar>
             </form>
             <form action={keputusan.bind(null, a.id)}>
               <input type="hidden" name="keputusan" value="tolak" />
-              <button className="rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-200">
+              <ButangHantar className="rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-200 disabled:opacity-60" pendingText="Memproses…">
                 ✗ Tidak Luluskan
-              </button>
+              </ButangHantar>
             </form>
           </div>
         ) : (
@@ -212,9 +213,9 @@ function UlasanSeksyen({
           </label>
         </div>
         <input name="catatan" defaultValue={catatan ?? ""} placeholder="Catatan (pilihan)" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-surau" />
-        <button className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">
+        <ButangHantar className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">
           {sudah ? "Kemas kini ulasan" : "Simpan ulasan"}
-        </button>
+        </ButangHantar>
       </form>
     </section>
   );

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
 import { tarikhMs } from "@/lib/format";
+import ButangHantar from "@/components/ButangHantar";
 import { rsvpProgram } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function ProgramPage() {
                   <input name="telefon" placeholder="No. telefon" className="inp" />
                   <input name="bil_orang" type="number" min="1" defaultValue={1} title="Bilangan orang" className="inp" />
                   <div className="sm:col-span-4">
-                    <button className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Daftar Kehadiran →</button>
+                    <ButangHantar className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Mendaftar…">Daftar Kehadiran →</ButangHantar>
                   </div>
                 </form>
               ) : (

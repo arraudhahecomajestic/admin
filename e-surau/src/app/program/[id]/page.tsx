@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { tarikhMs } from "@/lib/format";
+import ButangHantar from "@/components/ButangHantar";
 import { rsvpProgram } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +49,7 @@ export default async function JemputanProgramPage({ params }: { params: { id: st
               <input name="nama" required placeholder="Nama anda" className="inp" />
               <input name="telefon" placeholder="No. telefon (WhatsApp)" className="inp" />
               <input name="bil_orang" type="number" min="1" defaultValue={1} title="Bilangan orang" className="inp" />
-              <button className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Sahkan Kehadiran →</button>
+              <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Sahkan Kehadiran →</ButangHantar>
             </form>
           ) : (
             <p className="mt-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">

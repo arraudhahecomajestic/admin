@@ -6,6 +6,7 @@ import { rm, tarikhMs } from "@/lib/format";
 import { sertaiKhairat } from "./actions";
 import PautRekodForm from "@/components/PautRekodForm";
 import BayarKhairatButton from "@/components/BayarKhairatButton";
+import ButangHantar from "@/components/ButangHantar";
 import { KHAIRAT_DIBUKA } from "@/lib/tetapan";
 
 export const dynamic = "force-dynamic";
@@ -149,7 +150,7 @@ export default async function AhliPage() {
             </p>
             <BayarKhairatButton label="Sertai & Bayar Yuran RM60 (Online) →" />
             <form action={sertaiKhairat}>
-              <button className="text-xs text-slate-500 underline">atau sertai dahulu & bayar tunai di kaunter</button>
+              <ButangHantar className="text-xs text-slate-500 underline disabled:opacity-50" pendingText="Sila tunggu…">atau sertai dahulu & bayar tunai di kaunter</ButangHantar>
             </form>
           </div>
         ) : kh.status === "aktif" && yuranTahunIni ? (

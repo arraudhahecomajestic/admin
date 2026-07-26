@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
 import TuntutanForm, { type KeahlianRingkas } from "@/components/TuntutanForm";
+import ButangHantar from "@/components/ButangHantar";
 import { bayarYuran, tukarStatusTuntutan } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -113,9 +114,9 @@ export default async function KhairatPage({
                             <option value="tunai">Tunai</option>
                             <option value="online">Online</option>
                           </select>
-                          <button className="rounded bg-surau px-2.5 py-1 text-xs font-semibold text-white hover:bg-surau-dark">
+                          <ButangHantar className="rounded bg-surau px-2.5 py-1 text-xs font-semibold text-white hover:bg-surau-dark disabled:opacity-50" pendingText="…">
                             Kutip RM60
-                          </button>
+                          </ButangHantar>
                         </form>
                       )}
                     </td>
@@ -197,7 +198,7 @@ export default async function KhairatPage({
 function Btn({ id, status, label, warna }: { id: string; status: "lulus" | "dibayar" | "tolak"; label: string; warna: string }) {
   return (
     <form action={tukarStatusTuntutan.bind(null, id, status)}>
-      <button className={`rounded px-2 py-1 text-xs font-semibold text-white ${warna}`}>{label}</button>
+      <ButangHantar className={`rounded px-2 py-1 text-xs font-semibold text-white ${warna} disabled:opacity-50`} pendingText="…">{label}</ButangHantar>
     </form>
   );
 }

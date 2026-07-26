@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
 import { CARA_BAYAR_BELANJA } from "@/lib/tetapan";
+import ButangHantar from "@/components/ButangHantar";
 import { tambahKutipan, tambahBelanja, padamKutipan, padamBelanja } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -93,9 +94,9 @@ export default async function KewanganPage() {
             </select>
             <input name="catatan" placeholder="Catatan (pilihan)" className="inp" />
             <input name="tarikh" type="date" defaultValue={hariIni()} className="inp" />
-            <button className="w-full rounded-lg bg-surau px-4 py-2 font-semibold text-white hover:bg-surau-dark">
+            <ButangHantar className="w-full rounded-lg bg-surau px-4 py-2 font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">
               Simpan Kutipan
-            </button>
+            </ButangHantar>
           </form>
         </section>
 
@@ -121,9 +122,9 @@ export default async function KewanganPage() {
               <input type="checkbox" name="dari_khairat" /> Keluar dari tabung khairat
             </label>
             <input name="tarikh" type="date" defaultValue={hariIni()} className="inp" />
-            <button className="w-full rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800">
+            <ButangHantar className="w-full rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-60" pendingText="Menyimpan…">
               Simpan Perbelanjaan
-            </button>
+            </ButangHantar>
           </form>
         </section>
       </div>

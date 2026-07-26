@@ -4,6 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import KongsiProgram from "@/components/KongsiProgram";
+import ButangHantar from "@/components/ButangHantar";
 import { tarikhMs } from "@/lib/format";
 import { tambahProgram, padamProgram } from "./actions";
 
@@ -38,7 +39,7 @@ export default async function ProgramAdminPage() {
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="rsvp_dibuka" defaultChecked /> Buka pendaftaran (RSVP)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="diterbitkan" defaultChecked /> Terbitkan di laman</label>
           <div className="sm:col-span-2">
-            <button className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Simpan Program</button>
+            <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan Program</ButangHantar>
           </div>
         </form>
       </section>
