@@ -15,9 +15,21 @@ type Ahli = {
   status: "menunggu" | "lulus" | "tolak";
   peringkat: "baru" | "disokong_su" | "disokong_nazir" | "selesai";
   maklumat_disahkan: boolean;
+  sumber: string;
   tarikh_daftar: string;
   tanggungan: { id: string }[];
   keahlian_khairat: { no_khairat: string | null }[];
+};
+
+// Kategori pemohon untuk penapisan
+function kategoriAhli(a: { sumber: string; maklumat_disahkan: boolean }): "baru" | "sedia" | "kemas" {
+  if (a.sumber === "baru") return "baru";
+  return a.maklumat_disahkan ? "kemas" : "sedia";
+}
+const kategoriLabel: Record<string, { t: string; c: string }> = {
+  baru: { t: "Pemohon Baru", c: "bg-emerald-100 text-emerald-700" },
+  sedia: { t: "Sedia Ada", c: "bg-slate-100 text-slate-600" },
+  kemas: { t: "Kemas Kini Data", c: "bg-blue-100 text-blue-700" },
 };
 
 const peringkatLabel: Record<string, { t: string; c: string }> = {
@@ -32,7 +44,7 @@ const statusLabel: Record<string, string> = {
   tolak: "bg-red-100 text-red-700",
 };
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: { tapis?: string } }) {
   if (!adminConfigured)
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
@@ -40,12 +52,14 @@ export default async function AdminPage() {
       </div>
     );
 
+  const tapis = searchParams?.tapis ?? "";
   let ahli: Ahli[] = [];
   let ralat: string | null = null;
   let namaStaf: string | undefined;
   let perananStaf: string | undefined;
   let masterStaf = false;
   let jum = { menunggu: 0, lulus: 0, khairat: 0, belumKemas: 0 };
+  let kira = { baru: 0, sedia: 0, kemas: 0 };
 
   try {
     const profil = await getProfil();
@@ -58,7 +72,7 @@ export default async function AdminPage() {
     const db = createAdminClient();
     const { data, error } = await db
       .from("ahli_kariah")
-      .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
+      .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, sumber, tarikh_daftar, tanggungan(id), keahlian_khairat(no_khairat)")
       .order("tarikh_daftar", { ascending: false });
     if (error) {
       ralat = error.message + (error.hint ? ` (${error.hint})` : "");
@@ -73,6 +87,11 @@ export default async function AdminPage() {
         lulus: ahli.filter((a) => a.status === "lulus").length,
         khairat: ahli.filter((a) => (a.keahlian_khairat?.length ?? 0) > 0).length,
         belumKemas: ahli.filter((a) => !a.maklumat_disahkan).length,
+      };
+      kira = {
+        baru: ahli.filter((a) => kategoriAhli(a) === "baru").length,
+        sedia: ahli.filter((a) => kategoriAhli(a) === "sedia").length,
+        kemas: ahli.filter((a) => kategoriAhli(a) === "kemas").length,
       };
     }
   } catch (e: any) {
@@ -94,6 +113,8 @@ export default async function AdminPage() {
       </div>
     );
 
+  const senarai = tapis ? ahli.filter((a) => kategoriAhli(a) === tapis) : ahli;
+
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin" nama={namaStaf} peranan={perananStaf} master={masterStaf} />
@@ -111,12 +132,21 @@ export default async function AdminPage() {
         <Stat label="Belum Kemas Kini" nilai={jum.belumKemas} warna="text-orange-600" />
       </div>
 
+      {/* Penapis kategori pemohon */}
+      <div className="flex flex-wrap gap-2">
+        <Tapis label="Semua" bil={ahli.length} href="/admin" aktif={!tapis} />
+        <Tapis label="Pemohon Baru" bil={kira.baru} href="/admin?tapis=baru" aktif={tapis === "baru"} />
+        <Tapis label="Sedia Ada (belum kemas kini)" bil={kira.sedia} href="/admin?tapis=sedia" aktif={tapis === "sedia"} />
+        <Tapis label="Kemas Kini Data" bil={kira.kemas} href="/admin?tapis=kemas" aktif={tapis === "kemas"} />
+      </div>
+
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">No. Ahli</th>
               <th className="px-4 py-3">Nama</th>
+              <th className="px-4 py-3">Kategori</th>
               <th className="px-4 py-3">Peringkat</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Maklumat</th>
@@ -124,15 +154,20 @@ export default async function AdminPage() {
             </tr>
           </thead>
           <tbody>
-            {ahli.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Tiada permohonan lagi.</td></tr>
+            {senarai.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">Tiada permohonan dalam kategori ini.</td></tr>
             )}
-            {ahli.map((a) => (
+            {senarai.map((a) => (
               <tr key={a.id} className="border-b last:border-0">
                 <td className="px-4 py-3 font-mono text-xs">{a.no_ahli}</td>
                 <td className="px-4 py-3">
                   <div className="font-medium text-slate-900">{a.nama}</div>
                   <div className="text-xs text-slate-400">{a.no_kp}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`rounded px-2 py-0.5 text-xs font-semibold ${kategoriLabel[kategoriAhli(a)]?.c}`}>
+                    {kategoriLabel[kategoriAhli(a)]?.t}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <span className={`rounded px-2 py-0.5 text-xs font-semibold ${peringkatLabel[a.peringkat]?.c}`}>
@@ -167,5 +202,16 @@ function Stat({ label, nilai, warna }: { label: string; nilai: number; warna: st
       <div className={`text-2xl font-bold ${warna}`}>{nilai}</div>
       <div className="text-xs text-slate-500">{label}</div>
     </div>
+  );
+}
+
+function Tapis({ label, bil, href, aktif }: { label: string; bil: number; href: string; aktif: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium ${aktif ? "bg-surau text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+    >
+      {label} <span className={`ml-1 rounded-full px-1.5 py-0.5 text-xs ${aktif ? "bg-white/25" : "bg-white"}`}>{bil}</span>
+    </Link>
   );
 }

@@ -7,6 +7,7 @@ import { NAMA_SURAU, KHAIRAT_DIBUKA, GELARAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
+import { semakKpDaftar, sediaEmelAhli } from "./actions";
 
 const namaSurau = NAMA_SURAU;
 const configured = Boolean(
@@ -27,6 +28,13 @@ const kosong = (): Tanggungan => ({
 });
 
 export default function DaftarPage() {
+  // Gate: semak No. KP dahulu sebelum borang penuh dipaparkan
+  const [peringkat, setPeringkat] = useState<"semak" | "baru" | "akaun">("semak");
+  const [semakNoKp, setSemakNoKp] = useState("");
+  const [semakSedang, setSemakSedang] = useState(false);
+  const [semakRalat, setSemakRalat] = useState("");
+  const [ahliNama, setAhliNama] = useState<string | null>(null);
+
   // Bahagian A
   const [gelaran, setGelaran] = useState("");
   const [nama, setNama] = useState("");
@@ -113,6 +121,67 @@ export default function DaftarPage() {
     return `salinan-kp/${path}`;
   }
 
+  // Gate: semak No. KP
+  async function semakKp(e: React.FormEvent) {
+    e.preventDefault();
+    setSemakRalat("");
+    const kp = semakNoKp.replace(/\D/g, "");
+    if (kp.length < 6) { setSemakRalat("Sila masukkan No. Kad Pengenalan yang sah."); return; }
+    setSemakSedang(true);
+    const res = await semakKpDaftar(kp);
+    setSemakSedang(false);
+    if (!res.ok) { setSemakRalat(res.msg ?? "Ralat semakan."); return; }
+    if (res.wujud) {
+      // Ahli sedia ada → terus set akaun (emel & kata laluan)
+      setAhliNama(res.nama ?? null);
+      setNoKp(kp);
+      setPeringkat("akaun");
+    } else {
+      // Belum ada → borang penuh, isi dari awal (No. KP dibawa masuk)
+      setNoKp(kp);
+      setPeringkat("baru");
+    }
+  }
+
+  // Ahli sedia ada: cipta akaun portal (emel + kata laluan) & paut ikut emel
+  async function daftarAkaun(e: React.FormEvent) {
+    e.preventDefault();
+    setSelesai(null);
+    if (!configured) { setSelesai({ ok: false, msg: "Sistem belum disambung ke pangkalan data." }); return; }
+    const e2 = emel.trim();
+    if (!e2) { setSelesai({ ok: false, msg: "Sila isi e-mel." }); return; }
+    // Kata laluan = No. Kad Pengenalan yang dikey-in di gate tadi.
+    const kp = noKp.replace(/\D/g, "");
+    if (kp.length < 6) { setSelesai({ ok: false, msg: "No. KP tidak sah. Sila semak semula." }); return; }
+    setHantar(true);
+    // 1) Tetapkan emel pada rekod ahli supaya trigger paut ikut emel
+    const paut = await sediaEmelAhli(kp, e2);
+    if (!paut.ok) { setHantar(false); setSelesai({ ok: false, msg: paut.msg ?? "Ralat." }); return; }
+    // 2) Cipta akaun auth (kata laluan = No. KP)
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: e2,
+      password: kp,
+      options: {
+        data: { nama: ahliNama ?? undefined },
+        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/selamat-datang` : undefined,
+      },
+    });
+    setHantar(false);
+    if (error) {
+      const dah = error.message?.toLowerCase().includes("already");
+      setSelesai({
+        ok: false,
+        msg: dah
+          ? "Akaun dengan e-mel ini sudah wujud. Sila log masuk guna e-mel + No. KP sebagai kata laluan, atau guna 'Lupa kata laluan'."
+          : "Ralat cipta akaun: " + error.message,
+      });
+      return;
+    }
+    setSelesai({ ok: true, msg: "Akaun anda berjaya dicipta! Sila semak e-mel untuk pengesahan, kemudian log masuk guna e-mel anda dengan No. Kad Pengenalan sebagai kata laluan." });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSelesai(null);
@@ -157,10 +226,12 @@ export default function DaftarPage() {
     let urlTtd = "";
     try { urlTtd = await uploadTtd(ttdBaru); }
     catch (err: any) { setHantar(false); setSelesai({ ok: false, msg: "Gagal simpan tandatangan: " + err.message }); return; }
+    const UP = (s: string) => (s || "").toUpperCase();
     const payload = {
       kariah: namaSurau,
-      gelaran, nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamatSekarang,
-      no_telefon_rumah: telRumah, telefon: hp, emel,
+      gelaran, nama: UP(nama), no_kp: noKp,
+      alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamatSekarang),
+      no_telefon_rumah: telRumah, telefon: hp, emel: emel.trim().toLowerCase(),
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       pengakuan, url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
@@ -168,7 +239,7 @@ export default function DaftarPage() {
       sertai_khairat: KHAIRAT_DIBUKA && sertaiKhairat,
       tanggungan: tanggungan
         .filter((t) => t.nama.trim() !== "")
-        .map((t) => ({ ...t, dilindungi_khairat: layakKhairat(t).layak })),
+        .map((t) => ({ ...t, nama: UP(t.nama), dilindungi_khairat: layakKhairat(t).layak })),
     };
     const { error } = await supabase.rpc("daftar_ahli", { payload });
     if (error) {
@@ -213,11 +284,84 @@ export default function DaftarPage() {
     );
   }
 
+  // ---------- PERINGKAT 1: Gate — semak No. KP ----------
+  if (peringkat === "semak") {
+    return (
+      <div className="mx-auto max-w-lg space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900">Pendaftaran Ahli Kariah</h1>
+          <p className="mt-1 text-sm text-slate-600">Kariah: <b>{namaSurau}</b></p>
+        </div>
+        <form onSubmit={semakKp} className="space-y-4 rounded-xl bg-white p-6 shadow-sm">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">No. Kad Pengenalan</label>
+            <input
+              className="inp"
+              value={semakNoKp}
+              onChange={(e) => setSemakNoKp(e.target.value)}
+              placeholder="cth: 850505015123"
+              inputMode="numeric"
+              autoFocus
+            />
+            <p className="mt-1 text-xs text-slate-500">Masukkan No. KP untuk semak status keahlian anda dahulu.</p>
+          </div>
+          {semakRalat && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{semakRalat}</div>}
+          <button disabled={semakSedang} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
+            {semakSedang ? "Menyemak…" : "Semak"}
+          </button>
+          <p className="text-center text-sm">
+            <Link href="/" className="text-slate-500 hover:underline">← Kembali ke laman utama</Link>
+          </p>
+        </form>
+        <style jsx global>{`.inp{width:100%;border-radius:.5rem;border:1px solid #cbd5e1;padding:.5rem .75rem;font-size:.875rem;outline:none}.inp:focus{border-color:#b8860b;box-shadow:0 0 0 2px rgba(184,134,11,.2)}`}</style>
+      </div>
+    );
+  }
+
+  // ---------- PERINGKAT 2b: Ahli sedia ada → set akaun (emel & kata laluan) ----------
+  if (peringkat === "akaun") {
+    return (
+      <div className="mx-auto max-w-lg space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900">Rekod Anda Telah Ada</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            {ahliNama ? <>Selamat datang, <b>{ahliNama}</b>. </> : null}
+            No. KP anda sudah berdaftar sebagai ahli kariah. Sila cipta akaun portal untuk log masuk.
+          </p>
+        </div>
+        {selesai && !selesai.ok && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{selesai.msg}</div>
+        )}
+        <form onSubmit={daftarAkaun} className="space-y-4 rounded-xl bg-white p-6 shadow-sm">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">E-mel *</label>
+            <input className="inp" type="email" value={emel} onChange={(e) => setEmel(e.target.value)} placeholder="emel@contoh.com" autoFocus />
+          </div>
+          <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+            🔑 Kata laluan anda ialah <b>No. Kad Pengenalan</b> anda ({noKp}). Log masuk nanti guna e-mel + No. KP ini.
+          </div>
+          <button disabled={hantar} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
+            {hantar ? "Menyimpan…" : "Cipta Akaun"}
+          </button>
+          <p className="text-center text-sm">
+            <button type="button" onClick={() => { setPeringkat("semak"); setSelesai(null); }} className="text-slate-500 hover:underline">← Semak No. KP lain</button>
+          </p>
+        </form>
+        <p className="text-center text-xs text-slate-500">
+          Sudah ada akaun? <Link href="/masuk" className="font-medium text-surau hover:underline">Log masuk di sini</Link>
+        </p>
+        <style jsx global>{`.inp{width:100%;border-radius:.5rem;border:1px solid #cbd5e1;padding:.5rem .75rem;font-size:.875rem;outline:none}.inp:focus{border-color:#b8860b;box-shadow:0 0 0 2px rgba(184,134,11,.2)}`}</style>
+      </div>
+    );
+  }
+
+  // ---------- PERINGKAT 2a: Belum ada → borang penuh ----------
   return (
     <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Borang Pendaftaran Ahli Kariah</h1>
         <p className="mt-1 text-sm text-slate-600">Kariah: <b>{namaSurau}</b> · Selaras borang rasmi JAIS. Medan bertanda * wajib.</p>
+        <button type="button" onClick={() => setPeringkat("semak")} className="mt-2 text-xs text-slate-500 hover:underline">← Semak No. KP semula</button>
       </div>
 
       {selesai && !selesai.ok && (
@@ -238,7 +382,7 @@ export default function DaftarPage() {
         </Field>
 
         <Field label="1. Nama Pemohon *">
-          <input className="inp" value={nama} onChange={(e) => setNama(e.target.value)} />
+          <input className="inp uppercase" value={nama} onChange={(e) => setNama(e.target.value.toUpperCase())} />
         </Field>
 
         <Field label="2. No. Kad Pengenalan *">
@@ -255,7 +399,7 @@ export default function DaftarPage() {
         </div>
 
         <Field label="3. Alamat Dalam Kad Pengenalan / Passport *">
-          <textarea className="inp" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value)} />
+          <textarea className="inp uppercase" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value.toUpperCase())} />
         </Field>
 
         <label className="flex items-center gap-2 text-sm text-slate-600">
@@ -268,7 +412,7 @@ export default function DaftarPage() {
         </label>
         {!alamatSama && (
           <Field label="4. Alamat Tempat Tinggal Sekarang *">
-            <textarea className="inp" rows={2} value={alamatSekarang} onChange={(e) => setAlamatSekarang(e.target.value)} />
+            <textarea className="inp uppercase" rows={2} value={alamatSekarang} onChange={(e) => setAlamatSekarang(e.target.value.toUpperCase())} />
           </Field>
         )}
 
@@ -331,7 +475,7 @@ export default function DaftarPage() {
               </select>
               <input className="inp" placeholder="No. KP / MyKid" value={t.no_kp} onChange={(e) => ubahKpTgg(i, e.target.value)} />
             </div>
-            <input className="inp" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
+            <input className="inp uppercase" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value.toUpperCase())} />
             {(() => {
               const dob = tarikhLahirDariKp(t.no_kp);
               const umur = umurDari(t.tarikh_lahir, t.no_kp);

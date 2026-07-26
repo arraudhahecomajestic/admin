@@ -115,13 +115,15 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
       try { ttdPath = await uploadTtd(ttdBaru); }
       catch (err: any) { setHantar(false); setSelesai({ ok: false, msg: `Gagal simpan tandatangan: ${err.message}` }); return; }
     }
+    const UP = (s: string) => (s || "").toUpperCase();
     const res = await simpanKemaskini({
-      gelaran, nama, no_kp: noKp, alamat_kp: alamatKp, alamat: alamatSama ? alamatKp : alamat, no_telefon_rumah: telRumah,
-      telefon: hp, emel, status_perkahwinan: statusKahwin,
+      gelaran, nama: UP(nama), no_kp: noKp,
+      alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamat), no_telefon_rumah: telRumah,
+      telefon: hp, emel: emel.trim().toLowerCase(), status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
       url_tandatangan: ttdPath, url_selfie: urlSelfie,
-      tanggungan: tanggungan.filter((t) => t.nama.trim()),
+      tanggungan: tanggungan.filter((t) => t.nama.trim()).map((t) => ({ ...t, nama: UP(t.nama) })),
     });
     setHantar(false);
     if (!res.ok) { setSelesai({ ok: false, msg: res.msg ?? "Ralat." }); return; }
@@ -155,7 +157,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
             {GELARAN.map((g) => (<option key={g} value={g}>{g}</option>))}
           </select>
         </F>
-        <F label="Nama Penuh *"><input className="inp" value={nama} onChange={(e) => setNama(e.target.value)} /></F>
+        <F label="Nama Penuh *"><input className="inp uppercase" value={nama} onChange={(e) => setNama(e.target.value.toUpperCase())} /></F>
         <F label="No. Kad Pengenalan *"><input className="inp" value={noKp} onChange={(e) => setNoKp(e.target.value)} /></F>
         <div>
           <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (letak kad dalam kotak, kemudian snap)</span>
@@ -164,7 +166,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
             <KameraKp label="IC Belakang" ada={!!urlBelakang} sedang={muatNaik === "belakang"} onBlob={(b) => naikKp("belakang", b)} />
           </div>
         </div>
-        <F label="Alamat Dalam KP / Passport"><textarea className="inp" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value)} /></F>
+        <F label="Alamat Dalam KP / Passport"><textarea className="inp uppercase" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value.toUpperCase())} /></F>
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
@@ -174,7 +176,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
           Alamat tempat tinggal sama seperti alamat dalam KP
         </label>
         {!alamatSama && (
-          <F label="Alamat Tempat Tinggal Sekarang"><textarea className="inp" rows={2} value={alamat} onChange={(e) => setAlamat(e.target.value)} /></F>
+          <F label="Alamat Tempat Tinggal Sekarang"><textarea className="inp uppercase" rows={2} value={alamat} onChange={(e) => setAlamat(e.target.value.toUpperCase())} /></F>
         )}
         <div className="grid gap-4 sm:grid-cols-3">
           <F label="No. Telefon Rumah"><input className="inp" value={telRumah} onChange={(e) => setTelRumah(e.target.value)} /></F>
@@ -231,7 +233,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
                 onBlur={(e) => cariNamaT(i, e.target.value)}
               />
             </div>
-            <input className="inp" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value)} />
+            <input className="inp uppercase" placeholder="Nama penuh" value={t.nama} onChange={(e) => ubahT(i, "nama", e.target.value.toUpperCase())} />
             {(() => {
               const dob = tarikhLahirDariKp(t.no_kp);
               const umur = umurDari(t.tarikh_lahir, t.no_kp);
