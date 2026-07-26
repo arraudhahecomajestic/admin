@@ -64,7 +64,7 @@ export default async function ProgramAdminPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Link href={`/admin/program/${p.id}`} className="text-xs font-semibold text-surau hover:underline">Edit</Link>
+                  <Link href={`/admin/program/${p.id}`} className="text-xs font-semibold text-surau hover:underline">Butiran / RSVP</Link>
                   <form action={padamProgram}>
                     <input type="hidden" name="id" value={p.id} />
                     <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
