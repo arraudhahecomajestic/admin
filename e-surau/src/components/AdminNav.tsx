@@ -5,6 +5,7 @@ const pautanPenuh = [
   { href: "/admin/ahli", label: "Jejak Ahli" },
   { href: "/admin/kewangan", label: "Kewangan" },
   { href: "/admin/program", label: "Program" },
+  { href: "/admin/tahlil", label: "Tahlil" },
   { href: "/admin/sewaan", label: "Sewaan" },
   { href: "/admin/aset", label: "Aset" },
   { href: "/admin/khairat", label: "Khairat" },

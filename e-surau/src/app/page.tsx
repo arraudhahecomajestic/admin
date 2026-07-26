@@ -154,6 +154,17 @@ export default async function Home() {
         </section>
       )}
 
+      {/* Yaasin & Tahlil malam Jumaat */}
+      <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+        <h2 className="font-semibold text-slate-900">Yaasin & Tahlil · Malam Jumaat</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Hantar nama arwah ahli keluarga untuk disebut dalam bacaan Yaasin & Tahlil selepas Maghrib.
+        </p>
+        <Link href="/tahlil" className="mt-3 inline-block rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">
+          Hantar Nama Arwah →
+        </Link>
+      </section>
+
       {/* Program akan datang */}
       {program.length > 0 && (
         <section>
