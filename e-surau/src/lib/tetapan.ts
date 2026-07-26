@@ -25,6 +25,13 @@ export const GELARAN = [
   "Tun",
 ];
 
+// Akaun bank surau untuk sumbangan (kemas kini dengan butiran sebenar)
+export const BANK_SURAU = {
+  bank: "Maybank",
+  no_akaun: "562526530675",
+  nama_akaun: "Surau Ar-Raudhah Eco Majestic",
+};
+
 export const LOGO_JAIS = "/logo-jais.png";
 export const LOGO_SELANGOR = "/logo-selangor.png";
 export const LOGO_SURAU = "/logo-surau-2.png"; // mendatar (header)

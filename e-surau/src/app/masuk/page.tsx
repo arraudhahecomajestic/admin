@@ -86,6 +86,9 @@ export default function MasukPage() {
         </form>
       </div>
       <p className="mt-4 text-center text-sm text-slate-500">
+        <Link href="/lupa-kata-laluan" className="font-medium text-surau hover:underline">Lupa kata laluan?</Link>
+      </p>
+      <p className="mt-2 text-center text-sm text-slate-500">
         Belum ada akaun / ahli baharu?{" "}
         <Link href="/daftar" className="font-medium text-surau hover:underline">Daftar di sini</Link>
       </p>

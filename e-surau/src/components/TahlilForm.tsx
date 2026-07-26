@@ -3,18 +3,22 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { tambahArwah } from "@/app/tahlil/actions";
+import { BANK_SURAU } from "@/lib/tetapan";
 
 export default function TahlilForm() {
   const router = useRouter();
   const [pemohon, setPemohon] = useState("");
   const [telefon, setTelefon] = useState("");
   const [senarai, setSenarai] = useState<string[]>([""]);
+  const [nakSumbang, setNakSumbang] = useState(false);
   const [hantar, setHantar] = useState(false);
   const [msg, setMsg] = useState<null | { ok: boolean; text: string }>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
+    if (!pemohon.trim()) { setMsg({ ok: false, text: "Sila isi nama anda." }); return; }
+    if (!telefon.trim()) { setMsg({ ok: false, text: "Sila isi no. telefon anda." }); return; }
     const isi = senarai.filter((s) => s.trim());
     if (isi.length === 0) { setMsg({ ok: false, text: "Sila isi sekurang-kurangnya satu nama arwah." }); return; }
     setHantar(true);
@@ -35,9 +39,9 @@ export default function TahlilForm() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block"><span className="mb-1 block text-sm font-medium text-slate-700">Nama Anda (pemohon)</span>
+        <label className="block"><span className="mb-1 block text-sm font-medium text-slate-700">Nama Anda (pemohon) *</span>
           <input className="inp" value={pemohon} onChange={(e) => setPemohon(e.target.value)} /></label>
-        <label className="block"><span className="mb-1 block text-sm font-medium text-slate-700">No. Telefon</span>
+        <label className="block"><span className="mb-1 block text-sm font-medium text-slate-700">No. Telefon *</span>
           <input className="inp" value={telefon} onChange={(e) => setTelefon(e.target.value)} /></label>
       </div>
 
@@ -58,6 +62,27 @@ export default function TahlilForm() {
           </div>
         ))}
         <button type="button" onClick={() => setSenarai((s) => [...s, ""])} className="rounded-lg bg-surau/10 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/20">+ Tambah nama</button>
+      </div>
+
+      {/* Sumbangan jamuan */}
+      <div className="rounded-lg border border-surau/30 bg-surau/5 p-3">
+        <label className="flex items-start gap-2 text-sm text-slate-700">
+          <input type="checkbox" className="mt-1" checked={nakSumbang} onChange={(e) => setNakSumbang(e.target.checked)} />
+          <span>Adakah anda ingin menyumbang untuk <b>jamuan Yaasin & Tahlil</b>?</span>
+        </label>
+        {nakSumbang && (
+          <div className="mt-3 rounded-lg bg-white p-3 text-sm">
+            <div className="font-semibold text-slate-900">Akaun Sumbangan Surau</div>
+            <div className="mt-1 text-slate-700">
+              <div>Bank: <b>{BANK_SURAU.bank}</b></div>
+              <div>No. Akaun: <b className="font-mono">{BANK_SURAU.no_akaun}</b></div>
+              <div>Nama: <b>{BANK_SURAU.nama_akaun}</b></div>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">
+              Sila bank in sumbangan anda & simpan resit. Semoga Allah membalas dengan kebaikan. Jazakumullah khairan.
+            </p>
+          </div>
+        )}
       </div>
 
       <button type="submit" disabled={hantar} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
