@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type Ahli = {
@@ -121,13 +122,14 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
               <th className="px-4 py-3">Nama</th>
               <th className="px-4 py-3">Telefon</th>
               <th className="px-4 py-3">Maklumat</th>
+              <th className="px-4 py-3">Butiran</th>
               <th className="px-4 py-3 text-right">Peringatan</th>
             </tr>
           </thead>
           <tbody>
             {ditapis.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">Tiada rekod padan.</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">Tiada rekod padan.</td>
               </tr>
             )}
             {ditapis.slice(0, 600).map((a) => {
@@ -146,6 +148,11 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
                     ) : (
                       <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">Belum</span>
                     )}
+                  </td>
+                  <td className="px-4 py-2">
+                    <Link href={`/admin/permohonan/${a.id}`} className="rounded-lg bg-surau px-3 py-1.5 text-xs font-semibold text-white hover:bg-surau-dark">
+                      Semak →
+                    </Link>
                   </td>
                   <td className="px-4 py-2 text-right">
                     {wa ? (

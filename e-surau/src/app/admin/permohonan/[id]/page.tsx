@@ -45,8 +45,11 @@ export default async function PermohonanPage({ params }: { params: { id: string 
       <div className="flex items-center justify-between">
         <div>
           <Link href="/admin" className="text-sm text-slate-500 hover:underline">← Senarai permohonan</Link>
-          <h1 className="text-2xl font-bold text-slate-900">{a.nama}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{[a.gelaran, a.nama].filter(Boolean).join(" ")}</h1>
           <p className="text-sm text-slate-500">{a.no_ahli} · {a.no_kp}</p>
+          {a.maklumat_disahkan
+            ? <p className="mt-1 text-xs font-medium text-green-600">✓ Maklumat disahkan{a.tarikh_kemaskini ? ` pada ${tarikhMs(a.tarikh_kemaskini)}` : ""}</p>
+            : <p className="mt-1 text-xs font-medium text-orange-600">Belum kemas kini maklumat</p>}
         </div>
         <span className={`rounded px-3 py-1 text-sm font-semibold ${a.status === "lulus" ? "bg-green-100 text-green-700" : a.status === "tolak" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
           {a.status}
