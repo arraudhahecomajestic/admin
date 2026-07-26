@@ -17,6 +17,7 @@ export default async function TetapanPage() {
   const t = await bacaTetapan();
   const khairatOn = t.khairat_dibuka === "true";
   const pampasan = t.pampasan_khairat || "1200";
+  const penajaOn = t.penaja_dipapar === "true";
 
   return (
     <div className="space-y-6">
@@ -57,6 +58,30 @@ export default async function TetapanPage() {
             <input name="nilai" type="number" min="0" defaultValue={pampasan} className="w-40 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           </label>
           <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan</ButangHantar>
+        </form>
+      </section>
+
+      {/* Suis Iklan / Penaja */}
+      <section className="rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-slate-900">Ruang Iklan / Penaja</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Bila <b>DIPAPAR</b>, strip logo penaja &ldquo;Laman ini dikuasakan oleh:&rdquo; muncul di atas setiap
+          halaman untuk umum. Urus senarai penaja di <b>Penaja</b>. Semasa ditutup, hanya staf boleh pratonton.
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${penajaOn ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>
+            Status sekarang: {penajaOn ? "DIPAPAR (Live)" : "DISOROK (pratonton staf sahaja)"}
+          </span>
+        </div>
+        <form action={setTetapan} className="mt-3">
+          <input type="hidden" name="kunci" value="penaja_dipapar" />
+          <input type="hidden" name="nilai" value={penajaOn ? "false" : "true"} />
+          <ButangHantar
+            className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 ${penajaOn ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+            pendingText="Menukar…"
+          >
+            {penajaOn ? "Sorok Ruang Iklan" : "Papar Ruang Iklan"}
+          </ButangHantar>
         </form>
       </section>
     </div>

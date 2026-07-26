@@ -27,8 +27,10 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Penaja Kami</h2>
-        <span className="text-xs text-slate-400">{contoh ? "Contoh (pratonton)" : "Tajaan"}</span>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Laman ini dikuasakan oleh:</h2>
+        <span className="text-xs text-slate-400">
+          {pratonton ? "👁️ Pratonton staf — orang ramai tak nampak" : contoh ? "Contoh" : "Tajaan"}
+        </span>
       </div>
 
       <div className="penaja-marquee">

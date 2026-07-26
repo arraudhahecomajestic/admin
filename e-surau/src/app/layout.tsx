@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU } from "@/lib/tetapan";
-import { khairatDibuka } from "@/lib/tetapanSistem";
+import { khairatDibuka, penajaDipapar } from "@/lib/tetapanSistem";
 import { getProfil, isStaf } from "@/lib/sesi";
+import PenajaStrip from "@/components/PenajaStrip";
 
 const namaSurau = NAMA_SURAU;
 
@@ -17,9 +18,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [khDibuka, profil] = await Promise.all([khairatDibuka(), getProfil()]);
-  const stafPreview = !khDibuka && isStaf(profil); // staf boleh pratonton walau belum dilancarkan
+  const [khDibuka, penajaOn, profil] = await Promise.all([khairatDibuka(), penajaDipapar(), getProfil()]);
+  const staf = isStaf(profil);
+  const stafPreview = !khDibuka && staf; // staf boleh pratonton walau belum dilancarkan
   const paparKhairat = khDibuka || stafPreview;
+  const penajaPreview = !penajaOn && staf; // staf pratonton iklan
+  const paparPenaja = penajaOn || penajaPreview;
   return (
     <html lang="ms">
       <body>
@@ -67,6 +71,11 @@ export default async function RootLayout({
             </nav>
           </div>
         </header>
+        {paparPenaja && (
+          <div className="print-hide mx-auto max-w-5xl px-4 pt-6">
+            <PenajaStrip pratonton={penajaPreview} />
+          </div>
+        )}
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <footer className="print-hide mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
           <div className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">

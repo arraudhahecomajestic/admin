@@ -1,8 +1,7 @@
 import Link from "next/link";
 import PrayerTimes from "@/components/PrayerTimes";
-import PenajaStrip from "@/components/PenajaStrip";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
-import { NAMA_SURAU, ZON_SOLAT, PENAJA_DIPAPAR, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
+import { NAMA_SURAU, ZON_SOLAT, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
 import { rm, tarikhMs } from "@/lib/format";
 
@@ -242,7 +241,6 @@ export default async function Home() {
         )}
       </section>
 
-      {PENAJA_DIPAPAR && <PenajaStrip />}
     </div>
   );
 }

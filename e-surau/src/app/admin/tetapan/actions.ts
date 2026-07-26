@@ -11,6 +11,7 @@ export async function setTetapan(formData: FormData) {
   if (!kunci) return;
   const db = createAdminClient();
   await db.from("tetapan_sistem").upsert({ kunci, nilai }, { onConflict: "kunci" });
+  revalidatePath("/", "layout"); // strip penaja + link khairat di layout (semua halaman)
   revalidatePath("/admin/tetapan");
   revalidatePath("/");
   revalidatePath("/ahli");

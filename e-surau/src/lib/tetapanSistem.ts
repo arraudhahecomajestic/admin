@@ -24,3 +24,8 @@ export async function pampasanKhairat(): Promise<number> {
   const n = Number(t.pampasan_khairat);
   return isNaN(n) || !n ? 1200 : n;
 }
+
+export async function penajaDipapar(): Promise<boolean> {
+  const t = await bacaTetapan();
+  return t.penaja_dipapar === "true";
+}
