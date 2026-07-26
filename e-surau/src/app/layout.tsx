@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU } from "@/lib/tetapan";
+import { khairatDibuka } from "@/lib/tetapanSistem";
+import { getProfil, isStaf } from "@/lib/sesi";
 
 const namaSurau = NAMA_SURAU;
 
@@ -10,11 +12,14 @@ export const metadata: Metadata = {
   description: "Pendaftaran ahli kariah, khairat kematian & pengurusan surau.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [khDibuka, profil] = await Promise.all([khairatDibuka(), getProfil()]);
+  const stafPreview = !khDibuka && isStaf(profil); // staf boleh pratonton walau belum dilancarkan
+  const paparKhairat = khDibuka || stafPreview;
   return (
     <html lang="ms">
       <body>
@@ -42,9 +47,11 @@ export default function RootLayout({
               <Link href="/daftar" className="hover:underline">
                 Daftar Ahli
               </Link>
-              <Link href="/khairat" className="font-semibold text-surau-light hover:underline">
-                Khairat
-              </Link>
+              {paparKhairat && (
+                <Link href="/khairat" className="font-semibold text-surau-light hover:underline">
+                  Khairat{stafPreview ? " ·pratonton" : ""}
+                </Link>
+              )}
               <Link href="/program" className="hover:underline">
                 Program
               </Link>

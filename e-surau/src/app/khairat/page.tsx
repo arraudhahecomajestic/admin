@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { NAMA_SURAU, YURAN_KHAIRAT_TAHUNAN, PAKEJ_KHAIRAT } from "@/lib/tetapan";
 import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
+import { getProfil, isStaf } from "@/lib/sesi";
 import { rm } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +14,14 @@ export const metadata = {
 };
 
 export default async function KhairatInfo() {
-  const [dibuka, pampasan] = await Promise.all([khairatDibuka(), pampasanKhairat()]);
+  const [dibuka, pampasan, profil] = await Promise.all([
+    khairatDibuka(),
+    pampasanKhairat(),
+    getProfil(),
+  ]);
+  const stafPreview = !dibuka && isStaf(profil);
+  // Belum dilancarkan & bukan staf → sorok sepenuhnya (orang ramai tak boleh baca).
+  if (!dibuka && !stafPreview) redirect("/");
 
   const faq = [
     {
@@ -70,10 +79,10 @@ export default async function KhairatInfo() {
             Sudah Ahli? Log Masuk
           </Link>
         </div>
-        {!dibuka && (
-          <p className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm text-teal-50">
-            ⏳ Pendaftaran skim khairat akan dibuka tidak lama lagi. Daftar sebagai ahli kariah dahulu supaya
-            anda dimaklumkan sebaik sahaja ia dilancarkan.
+        {stafPreview && (
+          <p className="mt-4 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-teal-900">
+            👁️ PRATONTON STAF — halaman ini belum dilancarkan. Orang ramai tidak nampak. Flip suis di
+            /admin/tetapan bila sedia untuk lancar.
           </p>
         )}
       </section>
