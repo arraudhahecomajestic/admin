@@ -88,8 +88,12 @@ export default function SignaturePad({ onChange }: { onChange: (dataUrl: string 
           cursor: "crosshair",
         }}
       />
-      <button type="button" onClick={padam} className="mt-1 text-xs text-slate-500 hover:underline">
-        Padam & tandatangan semula
+      <button
+        type="button"
+        onClick={padam}
+        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100"
+      >
+        ✕ Padam & tandatangan semula
       </button>
     </div>
   );

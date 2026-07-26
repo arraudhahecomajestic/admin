@@ -4,6 +4,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import ButangCetak from "@/components/ButangCetak";
 import { tarikhMs } from "@/lib/format";
 import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU_TEGAK } from "@/lib/tetapan";
+import GambarSulit from "@/components/GambarSulit";
 
 export const dynamic = "force-dynamic";
 
@@ -135,7 +136,7 @@ function Gambar({ tajuk, url }: { tajuk: string; url: string | null }) {
     <div className="text-center">
       <div className="mb-1 text-xs font-semibold">{tajuk}</div>
       {url
-        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={url} alt={tajuk} style={{ width: "100%", aspectRatio: "1.586", objectFit: "contain", background: "#fff", border: "1px solid #000" }} />
+        ? <GambarSulit src={url} alt={tajuk} className="border border-black" imgStyle={{ width: "100%", aspectRatio: "1.586", objectFit: "contain", background: "#fff" }} />
         : <div className="flex items-center justify-center border border-black text-xs text-slate-400" style={{ aspectRatio: "1.586" }}>Tiada</div>}
     </div>
   );

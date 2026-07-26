@@ -4,6 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { tarikhMs } from "@/lib/format";
+import GambarSulit from "@/components/GambarSulit";
 import { ulasanSU, ulasanNazir, keputusan } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -79,10 +80,8 @@ export default async function PermohonanPage({ params }: { params: { id: string 
           <div className="mt-4">
             <div className="mb-1 text-sm font-medium text-slate-700">Gambar Kad Pengenalan</div>
             <div className="flex flex-wrap gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {depan && <a href={depan} target="_blank"><img src={depan} alt="IC Depan" className="h-28 rounded border" /></a>}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {belakang && <a href={belakang} target="_blank"><img src={belakang} alt="IC Belakang" className="h-28 rounded border" /></a>}
+              {depan && <a href={depan} target="_blank"><GambarSulit src={depan} alt="IC Depan" className="rounded border" imgStyle={{ height: 112 }} /></a>}
+              {belakang && <a href={belakang} target="_blank"><GambarSulit src={belakang} alt="IC Belakang" className="rounded border" imgStyle={{ height: 112 }} /></a>}
             </div>
           </div>
         )}
@@ -95,8 +94,7 @@ export default async function PermohonanPage({ params }: { params: { id: string 
             <div className="flex flex-wrap items-start gap-4">
               {selfie && (
                 <div className="text-center text-xs text-slate-500">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <a href={selfie} target="_blank"><img src={selfie} alt="Swafoto" className="h-28 rounded border" /></a>
+                  <a href={selfie} target="_blank"><GambarSulit src={selfie} alt="Swafoto" className="rounded border" imgStyle={{ height: 112 }} /></a>
                   <div className="mt-1">Swafoto</div>
                 </div>
               )}
