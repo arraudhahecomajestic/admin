@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { rm } from "@/lib/format";
 import { RUANG, PERALATAN, STATUS_PEMOHON, JENIS_ACARA, KAEDAH_BAYAR, SYARAT_SEWAAN } from "@/lib/sewaan";
-import { mohonSewaan } from "@/app/sewaan/actions";
+import { mohonSewaan, mulaBayaranSewaan } from "@/app/sewaan/actions";
 import SignaturePad from "@/components/SignaturePad";
 
 export default function SewaanForm() {
@@ -19,6 +19,10 @@ export default function SewaanForm() {
   const [ttd, setTtd] = useState<string | null>(null);
   const [hantar, setHantar] = useState(false);
   const [selesai, setSelesai] = useState<null | { ok: boolean; msg: string }>(null);
+  const [sewaanId, setSewaanId] = useState<string>("");
+  const [bayarEmel, setBayarEmel] = useState<string>("");
+  const [bayarSedang, setBayarSedang] = useState(false);
+  const [bayarRalat, setBayarRalat] = useState("");
 
   const set = (k: string, v: any) => setF((s: any) => ({ ...s, [k]: v }));
   const toggleRuang = (nama: string) => setRuangSel((s) => { const n = new Set(s); n.has(nama) ? n.delete(nama) : n.add(nama); return n; });
@@ -55,16 +59,56 @@ export default function SewaanForm() {
     });
     setHantar(false);
     if (!res.ok) { setSelesai({ ok: false, msg: res.msg ?? "Ralat." }); return; }
+    setSewaanId(res.id ?? "");
+    setBayarEmel(f.emel || "");
     setSelesai({ ok: true, msg: `Permohonan berjaya dihantar! No. Rujukan: ${res.no}. AJK akan proses dalam 3–5 hari bekerja.` });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function bayarSekarang() {
+    setBayarRalat("");
+    if (!bayarEmel || !bayarEmel.includes("@")) { setBayarRalat("Sila isi e-mel yang sah untuk pembayaran & resit."); return; }
+    setBayarSedang(true);
+    const res = await mulaBayaranSewaan(sewaanId, bayarEmel);
+    if (!res.ok) { setBayarSedang(false); setBayarRalat(res.msg ?? "Ralat pembayaran."); return; }
+    if (res.checkout_url) window.location.href = res.checkout_url;
+  }
+
   if (selesai?.ok) {
+    const perluBayar = keseluruhan + deposit;
     return (
-      <div className="rounded-xl bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl">✓</div>
-        <h2 className="text-xl font-bold text-slate-900">Terima kasih!</h2>
-        <p className="mt-2 text-slate-600">{selesai.msg}</p>
+      <div className="space-y-4">
+        <div className="rounded-xl bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl">✓</div>
+          <h2 className="text-xl font-bold text-slate-900">Terima kasih!</h2>
+          <p className="mt-2 text-slate-600">{selesai.msg}</p>
+        </div>
+
+        {sewaanId && perluBayar > 0 && (
+          <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+            <h3 className="font-semibold text-surau">Bayar Sekarang (Online)</h3>
+            <div className="mt-2 space-y-1 text-sm text-slate-700">
+              <div className="flex justify-between"><span>Sewaan</span><span>{rm(keseluruhan)}</span></div>
+              <div className="flex justify-between"><span>Deposit (50%)</span><span>{rm(deposit)}</span></div>
+              <div className="flex justify-between border-t pt-1 font-bold text-slate-900"><span>Jumlah Perlu Dibayar</span><span>{rm(perluBayar)}</span></div>
+            </div>
+            <label className="mt-3 block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">E-mel (untuk resit)</span>
+              <input className="inp" type="email" value={bayarEmel} onChange={(e) => setBayarEmel(e.target.value)} placeholder="emel@contoh.com" />
+            </label>
+            {bayarRalat && <p className="mt-2 text-sm text-red-600">{bayarRalat}</p>}
+            <button
+              type="button"
+              onClick={bayarSekarang}
+              disabled={bayarSedang}
+              className="mt-3 w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60"
+            >
+              {bayarSedang ? "Menyambung ke gerbang bayaran…" : `Bayar ${rm(perluBayar)} (FPX / Kad / e-Wallet)`}
+            </button>
+            <p className="mt-2 text-center text-xs text-slate-500">Bayaran diproses oleh CHIP. Atau anda boleh bayar tunai di pejabat surau.</p>
+          </div>
+        )}
+        <style jsx global>{`.inp{width:100%;border-radius:.5rem;border:1px solid #cbd5e1;padding:.5rem .75rem;font-size:.875rem;outline:none}.inp:focus{border-color:#b8860b;box-shadow:0 0 0 2px rgba(184,134,11,.2)}`}</style>
       </div>
     );
   }

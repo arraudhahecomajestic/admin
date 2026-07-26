@@ -25,6 +25,17 @@ export default async function AdminSewaanPage() {
   const { data } = await db.from("sewaan").select("*").order("dicipta", { ascending: false }).limit(300);
   const senarai = (data as any[]) ?? [];
 
+  // Peta bayaran (CHIP) ikut rujukan_id
+  const { data: bayaranData } = await db
+    .from("bayaran")
+    .select("rujukan_id, status, jumlah, tarikh_bayar")
+    .eq("jenis", "sewaan")
+    .order("dicipta", { ascending: false });
+  const bayarMap: Record<string, any> = {};
+  for (const b of (bayaranData as any[]) ?? []) {
+    if (b.rujukan_id && !bayarMap[b.rujukan_id]) bayarMap[b.rujukan_id] = b;
+  }
+
   async function signed(path: string | null) {
     if (!path) return null;
     const rel = path.replace(/^salinan-kp\//, "");
@@ -65,6 +76,11 @@ export default async function AdminSewaanPage() {
                 <div className="text-right text-sm">
                   <div className="text-lg font-bold text-surau">{rm(s.jumlah_keseluruhan)}</div>
                   <div className="text-xs text-slate-500">Deposit: {rm(s.deposit)}</div>
+                  {bayarMap[s.id]?.status === "dibayar"
+                    ? <div className="mt-1 inline-block rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">✓ Dibayar online {rm(Number(bayarMap[s.id].jumlah || 0))}</div>
+                    : bayarMap[s.id]?.status === "menunggu"
+                    ? <div className="mt-1 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">Bayaran belum selesai</div>
+                    : null}
                 </div>
               </div>
 
