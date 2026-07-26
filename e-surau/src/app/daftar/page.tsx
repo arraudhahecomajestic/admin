@@ -49,6 +49,7 @@ export default function DaftarPage() {
   const [tempohNilai, setTempohNilai] = useState("");
   const [tempohUnit, setTempohUnit] = useState("tahun");
   const [pengakuan, setPengakuan] = useState(false);
+  const [setuju, setSetuju] = useState(false);
 
   // Salinan KP — snap kamera (depan & belakang)
   const [urlDepan, setUrlDepan] = useState("");
@@ -201,6 +202,10 @@ export default function DaftarPage() {
     if (!tempohNilai) { setSelesai({ ok: false, msg: "Sila isi Tempoh masa menetap." }); return; }
     if (!pengakuan) {
       setSelesai({ ok: false, msg: "Sila tandakan pengakuan (Bahagian A, no. 8)." });
+      return;
+    }
+    if (!setuju) {
+      setSelesai({ ok: false, msg: "Sila bersetuju dengan Dasar Privasi & Terma Penggunaan." });
       return;
     }
     if (!ttdBaru) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan." }); return; }
@@ -566,6 +571,15 @@ export default function DaftarPage() {
           <input type="checkbox" className="mt-1" checked={pengakuan} onChange={(e) => setPengakuan(e.target.checked)} />
           <span className="text-sm text-slate-700">
             <b>8.</b> Saya mengaku bahawa segala maklumat yang terkandung dalam Bahagian A adalah <b>benar</b>. *
+          </span>
+        </label>
+        <label className="mt-3 flex items-start gap-3 border-t pt-3">
+          <input type="checkbox" className="mt-1" checked={setuju} onChange={(e) => setSetuju(e.target.checked)} />
+          <span className="text-sm text-slate-700">
+            Saya telah membaca & bersetuju dengan{" "}
+            <a href="/dasar-privasi" target="_blank" className="font-medium text-surau hover:underline">Dasar Privasi</a> dan{" "}
+            <a href="/terma" target="_blank" className="font-medium text-surau hover:underline">Terma Penggunaan</a>,
+            serta memberi persetujuan pengumpulan data peribadi (termasuk swafoto & salinan IC) mengikut PDPA. *
           </span>
         </label>
       </section>

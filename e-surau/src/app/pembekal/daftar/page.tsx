@@ -31,6 +31,7 @@ export default function DaftarPembekalPage() {
   const [urlKatalog, setUrlKatalog] = useState("");
   const [kl, setKl] = useState("");
   const [kl2, setKl2] = useState("");
+  const [setuju, setSetuju] = useState(false);
   const [hantar, setHantar] = useState(false);
   const [selesai, setSelesai] = useState<null | { ok: boolean; msg: string }>(null);
   const set = (k: string, v: string) => setF((s: any) => ({ ...s, [k]: v }));
@@ -83,6 +84,7 @@ export default function DaftarPembekalPage() {
     }
     if (kl.length < 6) { setSelesai({ ok: false, msg: "Kata laluan minimum 6 aksara." }); return; }
     if (kl !== kl2) { setSelesai({ ok: false, msg: "Kata laluan tidak sepadan." }); return; }
+    if (!setuju) { setSelesai({ ok: false, msg: "Sila bersetuju dengan Dasar Privasi & Terma." }); return; }
 
     setHantar(true);
     const res = await simpanPembekal({
@@ -245,6 +247,16 @@ export default function DaftarPembekalPage() {
           <input className="inp" type="password" placeholder="Sahkan kata laluan" value={kl2} onChange={(e) => setKl2(e.target.value)} />
         </div>
       </section>
+
+      <label className="flex items-start gap-3 rounded-xl bg-white p-4 text-sm text-slate-700 shadow-sm">
+        <input type="checkbox" className="mt-1" checked={setuju} onChange={(e) => setSetuju(e.target.checked)} />
+        <span>
+          Saya bersetuju dengan{" "}
+          <a href="/dasar-privasi" target="_blank" className="font-medium text-surau hover:underline">Dasar Privasi</a> dan{" "}
+          <a href="/terma" target="_blank" className="font-medium text-surau hover:underline">Terma Penggunaan</a>,
+          serta membenarkan pengumpulan data mengikut PDPA. *
+        </span>
+      </label>
 
       <button type="submit" disabled={hantar} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {hantar ? "Mendaftar…" : "Daftar Pembekal"}

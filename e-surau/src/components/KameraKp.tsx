@@ -138,15 +138,19 @@ export default function KameraKp({
           ) : (
             <div className="py-1 text-2xl">🪪</div>
           )}
-          <button type="button" onClick={mula} className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">
-            {ada ? "Ambil semula" : "Buka Kamera & Snap"}
-          </button>
-          <div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pilihFail} />
-            <button type="button" onClick={() => fileRef.current?.click()} className="text-xs text-slate-500 underline">
-              atau muat naik fail
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pilihFail} />
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={mula} className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">
+              📷 Kamera
+            </button>
+            <button type="button" onClick={() => fileRef.current?.click()} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              📎 Muat Naik Fail
             </button>
           </div>
+          <p className="text-[11px] text-slate-400">
+            Guna telefon? Tekan <b>Kamera</b>. Guna laptop? <b>Muat Naik Fail</b> lebih mudah.
+            {ada ? " (Tekan mana-mana untuk ambil/muat semula.)" : ""}
+          </p>
           {ralat && <p className="text-xs text-red-600">{ralat}</p>}
         </div>
       )}

@@ -59,6 +59,11 @@ export default function RootLayout({
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <footer className="print-hide mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
+          <div className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+            <Link href="/dasar-privasi" className="hover:text-surau hover:underline">Dasar Privasi</Link>
+            <Link href="/terma" className="hover:text-surau hover:underline">Terma & Penafian</Link>
+            <Link href="/keselamatan" className="hover:text-surau hover:underline">Keselamatan</Link>
+          </div>
           Jawatankuasa Surau Ar Raudhah, Eco Majestic
         </footer>
       </body>
