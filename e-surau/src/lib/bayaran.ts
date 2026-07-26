@@ -5,6 +5,18 @@ import { statusPurchase, type Akaun } from "@/lib/chip";
 
 const tahunSemasa = () => new Date().getFullYear();
 
+// Pastikan kategori kutipan wujud; cipta jika belum. Pulangkan id.
+async function pastiKategori(db: any, nama: string, paparAwam = false): Promise<number | null> {
+  const { data } = await db.from("kategori_kutipan").select("id").eq("nama", nama).maybeSingle();
+  if (data?.id) return data.id;
+  const { data: baru } = await db
+    .from("kategori_kutipan")
+    .insert({ nama, jenis_khairat: false, papar_awam: paparAwam })
+    .select("id")
+    .maybeSingle();
+  return baru?.id ?? null;
+}
+
 // Sahkan status bayaran terus dari CHIP & laksanakan pemenuhan (fulfillment)
 // secara idempotent. Dipanggil oleh webhook DAN halaman pulangan (backup).
 export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: boolean }> {
@@ -60,11 +72,11 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
     }
   } else if (b.jenis === "sewaan" && b.rujukan_id) {
     await db.from("sewaan").update({ kaedah_bayar: "Online (CHIP)" }).eq("id", b.rujukan_id);
-    // Rekod income sewaan ke dalam Kewangan (kategori Sewaan Ruang)
-    const { data: kat } = await db.from("kategori_kutipan").select("id").eq("nama", "Sewaan Ruang").maybeSingle();
-    if (kat) {
+    // Rekod income sewaan ke dalam Kewangan (kategori Sewaan Ruang — auto-cipta jika belum ada)
+    const katId = await pastiKategori(db, "Sewaan Ruang", false);
+    if (katId) {
       await db.from("kutipan").insert({
-        kategori_id: (kat as any).id,
+        kategori_id: katId,
         jumlah: Number(b.jumlah || 0),
         kaedah: "online",
         catatan: `Sewaan ${b.no_rujukan ?? ""}${b.nama ? " — " + b.nama : ""} (CHIP)`.trim(),

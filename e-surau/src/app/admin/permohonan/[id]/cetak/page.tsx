@@ -98,6 +98,21 @@ export default async function CetakIndividuPage({ params }: { params: { id: stri
           <span>Tarikh: {tarikhMs(a.tarikh_esign || a.tarikh_kemaskini || a.tarikh_daftar)}</span>
         </div>
 
+        {/* BAHAGIAN B : ULASAN */}
+        <div className="mb-2 mt-3 inline-block bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">BAHAGIAN B : ULASAN</div>
+        <Ulasan tajuk="Ulasan Pengerusi MPKK / JPP / Setiausaha Masjid / Surau" sokong={a.ulasan_su_sokong} catatan={a.ulasan_su_catatan} oleh={a.ulasan_su_oleh} tarikh={a.ulasan_su_tarikh} />
+        <Ulasan tajuk="Ulasan Nazir Masjid / Pengerusi Surau" sokong={a.ulasan_nazir_sokong} catatan={a.ulasan_nazir_catatan} oleh={a.ulasan_nazir_oleh} tarikh={a.ulasan_nazir_tarikh} />
+
+        {/* BAHAGIAN C : KEPUTUSAN */}
+        <div className="mb-2 mt-3 inline-block bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">BAHAGIAN C : KEPUTUSAN PERMOHONAN</div>
+        <p className="text-xs">
+          Keputusan: {a.status === "lulus" ? "☑ Diluluskan" : a.status === "tolak" ? "☑ Tidak Diluluskan" : "☐ Diluluskan   ☐ Tidak Diluluskan"}
+        </p>
+        <div className="mt-2 flex justify-between text-xs">
+          <span>Pengerusi Mesyuarat JK Kariah / Surau: {a.keputusan_oleh || "____________________"}</span>
+          <span>Tarikh: {a.keputusan_tarikh ? tarikhMs(a.keputusan_tarikh) : "____________"}</span>
+        </div>
+
         {/* Salinan dokumen */}
         <div className="mt-4 border-t pt-3">
           <div className="mb-2 inline-block bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">SALINAN DOKUMEN PENGESAHAN</div>
@@ -127,6 +142,20 @@ function Baris({ label, nilai }: { label: string; nilai?: string | null }) {
     <div className="mb-2">
       <div className="text-xs font-semibold">{label}</div>
       <div className="kotak">{nilai || " "}</div>
+    </div>
+  );
+}
+
+function Ulasan({ tajuk, sokong, catatan, oleh, tarikh }: { tajuk: string; sokong: boolean | null; catatan: string | null; oleh: string | null; tarikh: string | null }) {
+  return (
+    <div className="mb-2 border-t pt-2 text-xs">
+      <div className="font-semibold">{tajuk}</div>
+      <div>Status: {sokong === null || sokong === undefined ? "☐ Menyokong   ☐ Tidak Menyokong" : sokong ? "☑ Menyokong" : "☑ Tidak Menyokong"}</div>
+      <div>Catatan: {catatan || "________________________________"}</div>
+      <div className="mt-1 flex justify-between">
+        <span>T/Tangan & Cop: {oleh || "____________________"}</span>
+        <span>Tarikh: {tarikh ? tarikhMs(tarikh) : "____________"}</span>
+      </div>
     </div>
   );
 }
