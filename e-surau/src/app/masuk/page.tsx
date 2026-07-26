@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+
+async function destIkutPeranan(supabase: any): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return "";
+  const { data: prof } = await supabase.from("profil").select("peranan").eq("id", user.id).single();
+  if (prof?.peranan === "bendahari") return "/admin/kewangan";
+  if (prof?.peranan === "imam") return "/admin/tahlil";
+  if (prof && ["admin", "ajk"].includes(prof.peranan)) return "/admin";
+  return "/ahli";
+}
 
 export default function MasukPage() {
   const router = useRouter();
@@ -11,6 +21,18 @@ export default function MasukPage() {
   const [kataLaluan, setKataLaluan] = useState("");
   const [ralat, setRalat] = useState("");
   const [sedang, setSedang] = useState(false);
+  const [semakSesi, setSemakSesi] = useState(true);
+
+  // Jika sudah log masuk, terus hantar ke ruang mengikut peranan.
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const dest = await destIkutPeranan(supabase);
+      if (dest) { router.replace(dest); router.refresh(); }
+      else setSemakSesi(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function masuk(e: React.FormEvent) {
     e.preventDefault();
@@ -27,17 +49,14 @@ export default function MasukPage() {
       return;
     }
     // Redirect ikut peranan: staf → /admin, ahli → /ahli
-    const { data: { user } } = await supabase.auth.getUser();
-    let dest = "/ahli";
-    if (user) {
-      const { data: prof } = await supabase.from("profil").select("peranan").eq("id", user.id).single();
-      if (prof?.peranan === "bendahari") dest = "/admin/kewangan";
-      else if (prof?.peranan === "imam") dest = "/admin/tahlil";
-      else if (prof && ["admin", "ajk"].includes(prof.peranan)) dest = "/admin";
-    }
+    const dest = (await destIkutPeranan(supabase)) || "/ahli";
     setSedang(false);
     router.push(dest);
     router.refresh();
+  }
+
+  if (semakSesi) {
+    return <div className="mx-auto max-w-sm py-16 text-center text-sm text-slate-400">Menyemak sesi…</div>;
   }
 
   return (

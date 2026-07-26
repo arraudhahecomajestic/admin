@@ -1,16 +1,24 @@
 // Integrasi CHIP Collect (chip-in.asia) — gerbang pembayaran.
-// Kunci disimpan sebagai Cloudflare Secret: CHIP_BRAND_ID & CHIP_SECRET_KEY.
+// Kunci disimpan sebagai Cloudflare Secret.
+//   Umum   : CHIP_BRAND_ID, CHIP_SECRET_KEY
+//   Khairat: CHIP_KHAIRAT_BRAND_ID, CHIP_KHAIRAT_SECRET_KEY (akaun bank berasingan)
+//            — jika tidak diset, fallback ke kunci umum (memudahkan testing).
 
 const BASE = "https://gate.chip-in.asia/api/v1";
 
-function cfg() {
-  const brand = process.env.CHIP_BRAND_ID;
-  const key = process.env.CHIP_SECRET_KEY;
-  return { brand, key };
+export type Akaun = "umum" | "khairat";
+
+function cfg(akaun: Akaun = "umum") {
+  if (akaun === "khairat") {
+    const brand = process.env.CHIP_KHAIRAT_BRAND_ID || process.env.CHIP_BRAND_ID;
+    const key = process.env.CHIP_KHAIRAT_SECRET_KEY || process.env.CHIP_SECRET_KEY;
+    return { brand, key };
+  }
+  return { brand: process.env.CHIP_BRAND_ID, key: process.env.CHIP_SECRET_KEY };
 }
 
-export function chipConfigured(): boolean {
-  const { brand, key } = cfg();
+export function chipConfigured(akaun: Akaun = "umum"): boolean {
+  const { brand, key } = cfg(akaun);
   return Boolean(brand && key);
 }
 
@@ -19,6 +27,7 @@ export function siteUrl(): string {
 }
 
 export type PurchaseOpts = {
+  akaun?: Akaun;
   email: string;
   nama?: string;
   telefon?: string;
@@ -30,10 +39,9 @@ export type PurchaseOpts = {
   success_callback: string;
 };
 
-// Cipta Purchase → pulangkan { id, checkout_url, status, ... }
 export async function ciptaPurchase(opts: PurchaseOpts): Promise<any> {
-  const { brand, key } = cfg();
-  if (!brand || !key) throw new Error("CHIP belum dikonfigurasi (CHIP_BRAND_ID / CHIP_SECRET_KEY).");
+  const { brand, key } = cfg(opts.akaun ?? "umum");
+  if (!brand || !key) throw new Error("CHIP belum dikonfigurasi (Brand ID / Secret Key).");
 
   const res = await fetch(`${BASE}/purchases/`, {
     method: "POST",
@@ -63,9 +71,8 @@ export async function ciptaPurchase(opts: PurchaseOpts): Promise<any> {
   return res.json();
 }
 
-// Semak status sebenar sesuatu Purchase terus dari CHIP (untuk sahkan bayaran).
-export async function statusPurchase(id: string): Promise<any> {
-  const { key } = cfg();
+export async function statusPurchase(id: string, akaun: Akaun = "umum"): Promise<any> {
+  const { key } = cfg(akaun);
   if (!key) throw new Error("CHIP belum dikonfigurasi.");
   const res = await fetch(`${BASE}/purchases/${id}/`, {
     headers: { Authorization: `Bearer ${key}` },

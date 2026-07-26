@@ -51,11 +51,8 @@ export default function RootLayout({
               <Link href="/vendor" className="hover:underline">
                 Vendor
               </Link>
-              <Link href="/ahli" className="hover:underline">
-                Portal Saya
-              </Link>
-              <Link href="/admin" className="hover:underline">
-                Admin
+              <Link href="/masuk" className="rounded bg-surau px-3 py-1 font-semibold text-white hover:bg-surau-dark">
+                Log Masuk
               </Link>
             </nav>
           </div>

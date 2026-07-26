@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { getProfil } from "@/lib/sesi";
+import { getProfil, isPentadbir } from "@/lib/sesi";
 import { PerluMasuk } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { rm, tarikhMs } from "@/lib/format";
 import { sertaiKhairat } from "./actions";
 import PautRekodForm from "@/components/PautRekodForm";
+import BayarKhairatButton from "@/components/BayarKhairatButton";
 import { KHAIRAT_DIBUKA } from "@/lib/tetapan";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +54,9 @@ export default async function AhliPage() {
   const kutipan = (kutipanRes.data as any[]) ?? [];
   const invois = (invoisRes.data as any[]) ?? [];
   const yuranTahunIni = kh?.yuran_khairat?.some((y: any) => y.tahun === TAHUN && y.lunas);
+  // Semasa ujian: khairat nampak untuk pentadbir walaupun belum dilancarkan umum.
+  const bolehKhairat = KHAIRAT_DIBUKA || isPentadbir(profil);
+  const modUjian = bolehKhairat && !KHAIRAT_DIBUKA;
 
   // Elak pertindihan: adakah ahli ini dilindungi sebagai tanggungan di bawah
   // khairat orang lain? (padan No. KP)
@@ -115,9 +119,9 @@ export default async function AhliPage() {
       )}
 
       {/* Status permohonan */}
-      <div className={`grid gap-4 ${KHAIRAT_DIBUKA ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
+      <div className={`grid gap-4 ${bolehKhairat ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
         <Kad label="Status Keahlian" nilai={a?.status === "lulus" ? "Diluluskan" : a?.status === "tolak" ? "Tidak Diluluskan" : "Menunggu"} warna={a?.status === "lulus" ? "text-green-600" : a?.status === "tolak" ? "text-red-600" : "text-amber-600"} />
-        {KHAIRAT_DIBUKA && (
+        {bolehKhairat && (
           <>
             <Kad label="Khairat Kematian" nilai={kh ? (kh.status === "aktif" ? "Aktif" : "Tertunggak") : dilindungiBawah ? "Dilindungi" : "Tidak sertai"} warna={kh?.status === "aktif" || dilindungiBawah ? "text-green-600" : "text-slate-500"} />
             <Kad label={`Yuran Khairat ${TAHUN}`} nilai={kh ? (yuranTahunIni ? "Lunas" : "Belum bayar") : "-"} warna={yuranTahunIni ? "text-green-600" : "text-red-600"} />
@@ -126,9 +130,12 @@ export default async function AhliPage() {
       </div>
 
       {/* Skim Khairat Kematian */}
-      {KHAIRAT_DIBUKA && (
+      {bolehKhairat && (
       <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
-        <h2 className="mb-2 font-semibold text-slate-900">Skim Khairat Kematian</h2>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="font-semibold text-slate-900">Skim Khairat Kematian</h2>
+          {modUjian && <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">Mod ujian (belum dilancarkan umum)</span>}
+        </div>
         {!kh && dilindungiBawah ? (
           <p className="text-sm text-slate-700">
             ✓ Anda <b className="text-green-700">dilindungi khairat</b> sebagai tanggungan di bawah{" "}
@@ -140,27 +147,24 @@ export default async function AhliPage() {
               Anda belum menyertai skim khairat. Yuran <b>RM60 setahun</b>, pampasan tetap
               <b> RM1,400</b> setiap kematian ahli atau tanggungan yang dilindungi.
             </p>
+            <BayarKhairatButton label="Sertai & Bayar Yuran RM60 (Online) →" />
             <form action={sertaiKhairat}>
-              <button className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">
-                Sertai Skim Khairat →
-              </button>
+              <button className="text-xs text-slate-500 underline">atau sertai dahulu & bayar tunai di kaunter</button>
             </form>
           </div>
-        ) : kh.status === "aktif" ? (
+        ) : kh.status === "aktif" && yuranTahunIni ? (
           <p className="text-sm text-slate-700">
             ✓ Keahlian khairat anda <b className="text-green-700">AKTIF</b>. No. Khairat: {kh.no_khairat}.
-            Yuran {TAHUN}: <b>{yuranTahunIni ? "Lunas" : "Belum bayar"}</b>.
+            Yuran {TAHUN}: <b>Lunas</b>.
           </p>
         ) : (
-          <div className="space-y-2 text-sm text-slate-700">
+          <div className="space-y-3 text-sm text-slate-700">
             <p>
-              Anda telah <b>memohon sertai</b> khairat (No. {kh.no_khairat}). Status:
-              <b className="text-amber-700"> Tertunggak</b>.
+              Keahlian khairat anda{kh.no_khairat ? ` (No. ${kh.no_khairat})` : ""} — Yuran {TAHUN}:
+              <b className="text-red-600"> Belum bayar</b>.
             </p>
-            <p className="rounded-lg bg-amber-50 p-3 text-amber-800">
-              Sila jelaskan yuran <b>RM60</b> kepada AJK / di kaunter surau untuk mengaktifkan keahlian.
-              Pembayaran atas talian akan datang tidak lama lagi.
-            </p>
+            <BayarKhairatButton label={`Bayar Yuran Khairat ${TAHUN} — RM60 (Online) →`} />
+            <p className="text-xs text-slate-500">Bayaran diproses oleh CHIP (FPX / kad / e-wallet). Atau bayar tunai di kaunter surau.</p>
           </div>
         )}
       </section>
