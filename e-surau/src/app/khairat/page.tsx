@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NAMA_SURAU, YURAN_KHAIRAT_TAHUNAN, PAKEJ_KHAIRAT } from "@/lib/tetapan";
 import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isMaster } from "@/lib/sesi";
 import { rm } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +19,8 @@ export default async function KhairatInfo() {
     pampasanKhairat(),
     getProfil(),
   ]);
-  const stafPreview = !dibuka && isStaf(profil);
-  // Belum dilancarkan & bukan staf → sorok sepenuhnya (orang ramai tak boleh baca).
+  const stafPreview = !dibuka && isMaster(profil);
+  // Belum dilancarkan & bukan super admin → sorok sepenuhnya (orang ramai tak boleh baca).
   if (!dibuka && !stafPreview) redirect("/");
 
   const faq = [
@@ -81,7 +81,7 @@ export default async function KhairatInfo() {
         </div>
         {stafPreview && (
           <p className="mt-4 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-teal-900">
-            👁️ PRATONTON STAF — halaman ini belum dilancarkan. Orang ramai tidak nampak. Flip suis di
+            👁️ PRATONTON SUPER ADMIN — halaman ini belum dilancarkan. Orang lain tidak nampak. Flip suis di
             /admin/tetapan bila sedia untuk lancar.
           </p>
         )}

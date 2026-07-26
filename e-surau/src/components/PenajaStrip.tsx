@@ -29,7 +29,7 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Laman ini dikuasakan oleh:</h2>
         <span className="text-xs text-slate-400">
-          {pratonton ? "👁️ Pratonton staf — orang ramai tak nampak" : contoh ? "Contoh" : "Tajaan"}
+          {pratonton ? "👁️ Pratonton super admin — orang lain tak nampak" : contoh ? "Contoh" : "Tajaan"}
         </span>
       </div>
 

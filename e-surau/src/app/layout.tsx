@@ -3,7 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU } from "@/lib/tetapan";
 import { khairatDibuka, penajaDipapar } from "@/lib/tetapanSistem";
-import { getProfil, isStaf } from "@/lib/sesi";
+import { getProfil, isMaster } from "@/lib/sesi";
 import PenajaStrip from "@/components/PenajaStrip";
 
 const namaSurau = NAMA_SURAU;
@@ -19,10 +19,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const [khDibuka, penajaOn, profil] = await Promise.all([khairatDibuka(), penajaDipapar(), getProfil()]);
-  const staf = isStaf(profil);
-  const stafPreview = !khDibuka && staf; // staf boleh pratonton walau belum dilancarkan
+  const master = isMaster(profil); // hanya super admin boleh pratonton
+  const stafPreview = !khDibuka && master; // super admin pratonton khairat walau belum dilancarkan
   const paparKhairat = khDibuka || stafPreview;
-  const penajaPreview = !penajaOn && staf; // staf pratonton iklan
+  const penajaPreview = !penajaOn && master; // super admin pratonton iklan
   const paparPenaja = penajaOn || penajaPreview;
   return (
     <html lang="ms">
