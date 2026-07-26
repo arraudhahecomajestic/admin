@@ -25,12 +25,19 @@ export default function MasukPage() {
 
   // Jika sudah log masuk, terus hantar ke ruang mengikut peranan.
   useEffect(() => {
+    let batal = false;
     (async () => {
-      const supabase = createClient();
-      const dest = await destIkutPeranan(supabase);
-      if (dest) { router.replace(dest); router.refresh(); }
-      else setSemakSesi(false);
+      try {
+        const supabase = createClient();
+        const dest = await destIkutPeranan(supabase);
+        if (batal) return;
+        if (dest) { router.replace(dest); router.refresh(); return; }
+      } catch { /* abaikan — tunjuk borang login */ }
+      if (!batal) setSemakSesi(false);
     })();
+    // Fallback: jangan sekali-kali tersangkut lebih 4 saat
+    const t = setTimeout(() => { if (!batal) setSemakSesi(false); }, 4000);
+    return () => { batal = true; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
