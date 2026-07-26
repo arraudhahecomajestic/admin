@@ -69,37 +69,18 @@ export default async function Home() {
           program surau.
         </p>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {/* Ahli baharu */}
-          <div className="rounded-xl border border-slate-200 p-4">
-            <div className="text-sm font-semibold text-slate-900">Ahli baharu?</div>
-            <p className="mt-1 text-sm text-slate-500">
-              Belum pernah daftar sebagai ahli kariah. Isi borang pendaftaran penuh.
-            </p>
-            <Link
-              href="/daftar"
-              className="mt-3 inline-block rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark"
-            >
-              Daftar Ahli Kariah →
-            </Link>
-          </div>
-
-          {/* Ahli sedia ada */}
-          <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-4">
-            <div className="text-sm font-semibold text-slate-900">Sudah ahli kariah?</div>
-            <p className="mt-1 text-sm text-slate-600">
-              Akaun anda <b>sudah didaftarkan</b>. Log masuk untuk kemas kini maklumat anda.
-            </p>
-            <Link
-              href="/masuk"
-              className="mt-3 inline-block rounded-lg bg-hitam px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-            >
-              Log Masuk & Kemas Kini →
-            </Link>
-            <p className="mt-2 text-xs text-slate-500">
-              Kata laluan kali pertama = <b>No. Kad Pengenalan anda</b> (tanpa sengkang).
-            </p>
-          </div>
+        <div className="mt-5 rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+          <div className="text-base font-semibold text-slate-900">Daftar Ahli Kariah</div>
+          <p className="mt-1 text-sm text-slate-600">
+            Masukkan No. Kad Pengenalan anda — sistem akan semak sama ada anda sudah berdaftar atau belum.
+            Jika belum, isi borang pendaftaran. Jika sudah, teruskan untuk akses portal & kemas kini maklumat.
+          </p>
+          <Link
+            href="/daftar"
+            className="mt-3 inline-block rounded-lg bg-surau px-6 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark"
+          >
+            Daftar / Semak Keahlian →
+          </Link>
         </div>
       </section>
 
