@@ -2,37 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { jantinaDariNama } from "@/lib/arwah";
 import { tambahArwah } from "@/app/tahlil/actions";
-
-type Baris = { nama: string; jantina: string };
 
 export default function TahlilForm() {
   const router = useRouter();
   const [pemohon, setPemohon] = useState("");
   const [telefon, setTelefon] = useState("");
-  const [senarai, setSenarai] = useState<Baris[]>([{ nama: "", jantina: "tidak_pasti" }]);
+  const [senarai, setSenarai] = useState<string[]>([""]);
   const [hantar, setHantar] = useState(false);
   const [msg, setMsg] = useState<null | { ok: boolean; text: string }>(null);
-
-  function ubah(i: number, nama: string) {
-    setSenarai((s) => s.map((r, idx) => (idx === i ? { nama, jantina: jantinaDariNama(nama) } : r)));
-  }
-  function ubahJantina(i: number, jantina: string) {
-    setSenarai((s) => s.map((r, idx) => (idx === i ? { ...r, jantina } : r)));
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
-    const isi = senarai.filter((s) => s.nama.trim());
+    const isi = senarai.filter((s) => s.trim());
     if (isi.length === 0) { setMsg({ ok: false, text: "Sila isi sekurang-kurangnya satu nama arwah." }); return; }
     setHantar(true);
-    const res = await tambahArwah({ pemohon, telefon, senarai: isi });
+    const res = await tambahArwah({ pemohon, telefon, senarai: isi.map((nama) => ({ nama })) });
     setHantar(false);
     if (!res.ok) { setMsg({ ok: false, text: res.msg ?? "Ralat." }); return; }
     setMsg({ ok: true, text: `Terima kasih. ${res.bil} nama arwah telah dihantar. Semoga Allah mencucuri rahmat.` });
-    setSenarai([{ nama: "", jantina: "tidak_pasti" }]);
+    setSenarai([""]);
     router.refresh();
   }
 
@@ -53,21 +43,21 @@ export default function TahlilForm() {
 
       <div className="space-y-2">
         <span className="block text-sm font-medium text-slate-700">Nama Arwah</span>
-        <p className="text-xs text-slate-500">Tulis nama penuh dengan <b>bin / binti</b> — sistem akan asingkan lelaki/perempuan automatik.</p>
-        {senarai.map((b, i) => (
+        <p className="text-xs text-slate-500">Tulis nama penuh dengan <b>bin / binti</b>.</p>
+        {senarai.map((nama, i) => (
           <div key={i} className="flex items-center gap-2">
-            <input className="inp flex-1" placeholder="cth: Ahmad bin Ismail" value={b.nama} onChange={(e) => ubah(i, e.target.value)} />
-            <select className="inp w-32" value={b.jantina} onChange={(e) => ubahJantina(i, e.target.value)}>
-              <option value="lelaki">Lelaki</option>
-              <option value="perempuan">Perempuan</option>
-              <option value="tidak_pasti">Tak pasti</option>
-            </select>
+            <input
+              className="inp flex-1"
+              placeholder="cth: Ahmad bin Ismail / Fatimah binti Ali"
+              value={nama}
+              onChange={(e) => setSenarai((s) => s.map((r, idx) => (idx === i ? e.target.value : r)))}
+            />
             {senarai.length > 1 && (
               <button type="button" onClick={() => setSenarai((s) => s.filter((_, idx) => idx !== i))} className="text-sm font-medium text-red-600 hover:underline">✕</button>
             )}
           </div>
         ))}
-        <button type="button" onClick={() => setSenarai((s) => [...s, { nama: "", jantina: "tidak_pasti" }])} className="rounded-lg bg-surau/10 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/20">+ Tambah nama</button>
+        <button type="button" onClick={() => setSenarai((s) => [...s, ""])} className="rounded-lg bg-surau/10 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/20">+ Tambah nama</button>
       </div>
 
       <button type="submit" disabled={hantar} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">

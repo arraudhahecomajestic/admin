@@ -48,9 +48,6 @@ export default function RootLayout({
               <Link href="/sewaan" className="hover:underline">
                 Sewaan
               </Link>
-              <Link href="/tahlil" className="hover:underline">
-                Tahlil
-              </Link>
               <Link href="/ahli" className="hover:underline">
                 Portal Saya
               </Link>

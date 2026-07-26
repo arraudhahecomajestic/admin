@@ -19,6 +19,17 @@ export default async function ProgramPage() {
         <p className="mt-1 text-sm text-slate-600">Sertai program akan datang. Daftar kehadiran anda di bawah.</p>
       </div>
 
+      {/* Program tetap: Yaasin & Tahlil */}
+      <Link href="/tahlil" className="block rounded-xl border-2 border-surau/30 bg-surau/5 p-5 hover:bg-surau/10">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="font-semibold text-slate-900">Yaasin & Tahlil · Malam Jumaat</div>
+            <p className="mt-1 text-sm text-slate-600">Program mingguan — hantar nama arwah ahli keluarga untuk dibacakan.</p>
+          </div>
+          <span className="shrink-0 rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white">Hantar Nama →</span>
+        </div>
+      </Link>
+
       {program.length === 0 && (
         <p className="rounded-lg bg-white p-6 text-center text-slate-400 shadow-sm">Tiada program akan datang buat masa ini.</p>
       )}
