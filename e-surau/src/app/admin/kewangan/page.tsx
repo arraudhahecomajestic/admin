@@ -4,6 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
+import { CARA_BAYAR_BELANJA } from "@/lib/tetapan";
 import { tambahKutipan, tambahBelanja, padamKutipan, padamBelanja } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function KewanganPage() {
     db.from("kategori_kutipan").select("id, nama, jenis_khairat").order("id"),
     db.from("kategori_belanja").select("id, nama").order("id"),
     db.from("kutipan").select("id, no_resit, jumlah, kaedah, tarikh, catatan, kategori:kategori_kutipan(nama, jenis_khairat), ahli:ahli_kariah(nama)").order("dicipta", { ascending: false }).limit(200),
-    db.from("perbelanjaan").select("id, jumlah, keterangan, tarikh, dari_khairat, kategori:kategori_belanja(nama)").order("dicipta", { ascending: false }).limit(200),
+    db.from("perbelanjaan").select("id, no_baucer, jumlah, keterangan, tarikh, dari_khairat, kategori:kategori_belanja(nama)").order("dicipta", { ascending: false }).limit(200),
     db.from("tuntutan_khairat").select("jumlah_pampasan, status").eq("status", "dibayar"),
     db.from("ahli_kariah").select("id, nama, no_ahli").eq("status", "lulus").order("nama"),
   ]);
@@ -108,7 +109,14 @@ export default async function KewanganPage() {
               ))}
             </select>
             <input name="jumlah" type="number" step="0.01" min="0.01" placeholder="Jumlah (RM)" required className="inp" />
-            <input name="keterangan" placeholder="Keterangan" required className="inp" />
+            <input name="keterangan" placeholder="Keterangan / butiran" required className="inp" />
+            <input name="bayar_kepada" placeholder="Bayar kepada (nama penerima)" className="inp" />
+            <div className="grid grid-cols-2 gap-3">
+              <select name="cara_bayar" className="inp">
+                {CARA_BAYAR_BELANJA.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <input name="no_rujukan_bayar" placeholder="No. rujukan bayaran" className="inp" />
+            </div>
             <label className="flex items-center gap-2 text-sm text-slate-600">
               <input type="checkbox" name="dari_khairat" /> Keluar dari tabung khairat
             </label>
@@ -188,10 +196,13 @@ export default async function KewanganPage() {
                   <td className="px-4 py-2">{b.dari_khairat ? "Khairat" : "Am"}</td>
                   <td className="px-4 py-2 text-right font-medium text-red-600">{rm(b.jumlah)}</td>
                   <td className="px-4 py-2 text-right">
-                    <form action={padamBelanja}>
-                      <input type="hidden" name="id" value={b.id} />
-                      <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
-                    </form>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link href={`/admin/kewangan/baucer/${b.id}`} target="_blank" className="text-xs font-semibold text-surau hover:underline">Baucer</Link>
+                      <form action={padamBelanja}>
+                        <input type="hidden" name="id" value={b.id} />
+                        <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

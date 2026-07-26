@@ -11,6 +11,43 @@ export function rm(nilai: number | string | null | undefined): string {
   }
 }
 
+// Nombor → perkataan Bahasa Melayu (untuk baucer/resit)
+const _satuan = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan", "sepuluh", "sebelas"];
+function _ratus(n: number): string {
+  let s = "";
+  const r = Math.floor(n / 100), b = n % 100;
+  if (r) s += r === 1 ? "seratus" : _satuan[r] + " ratus";
+  if (b) {
+    if (s) s += " ";
+    if (b < 12) s += _satuan[b];
+    else if (b < 20) s += _satuan[b - 10] + " belas";
+    else {
+      const p = Math.floor(b / 10), u = b % 10;
+      s += p === 1 ? "sepuluh" : _satuan[p] + " puluh";
+      if (u) s += " " + _satuan[u];
+    }
+  }
+  return s;
+}
+function _perkataan(n: number): string {
+  if (n === 0) return "kosong";
+  let s = "";
+  const juta = Math.floor(n / 1000000); n %= 1000000;
+  const ribu = Math.floor(n / 1000); n %= 1000;
+  if (juta) s += (juta === 1 ? "satu juta" : _ratus(juta) + " juta");
+  if (ribu) { if (s) s += " "; s += ribu === 1 ? "seribu" : _ratus(ribu) + " ribu"; }
+  if (n) { if (s) s += " "; s += _ratus(n); }
+  return s.trim();
+}
+export function ringgitPerkataan(amount: number | string | null | undefined): string {
+  const sen100 = Math.round(Number(amount ?? 0) * 100);
+  const ringgit = Math.floor(sen100 / 100), sen = sen100 % 100;
+  let s = "Ringgit Malaysia " + _perkataan(ringgit);
+  if (sen) s += " dan " + _perkataan(sen) + " sen";
+  s += " sahaja";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function tarikhMs(d: string | Date | null | undefined): string {
   if (!d) return "-";
   const date = typeof d === "string" ? new Date(d) : d;

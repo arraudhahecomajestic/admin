@@ -32,6 +32,12 @@ export const BANK_SURAU = {
   nama_akaun: "Surau Ar-Raudhah Eco Majestic",
 };
 
+// Maklumat rasmi surau untuk baucer/resit
+export const ALAMAT_SURAU = "Jalan Eco Majestic 2/5, Eco Majestic, 43500 Semenyih, Selangor Darul Ehsan";
+export const EMEL_SURAU = "arraudhah.ecomajestic@gmail.com";
+export const WEB_SURAU = "https://ar-raudhah.mimbar.my/";
+export const CARA_BAYAR_BELANJA = ["Pindahan Atas Talian", "Tunai", "Cek"];
+
 export const LOGO_JAIS = "/logo-jais.png";
 export const LOGO_SELANGOR = "/logo-selangor.png";
 export const LOGO_SURAU = "/logo-surau-2.png"; // mendatar (header)
