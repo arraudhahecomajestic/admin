@@ -106,6 +106,7 @@ export default function SewaanForm() {
               {bayarSedang ? "Menyambung ke gerbang bayaran…" : `Bayar ${rm(perluBayar)} (FPX / Kad / e-Wallet)`}
             </button>
             <p className="mt-2 text-center text-xs text-slate-500">Bayaran diproses oleh CHIP. Atau anda boleh bayar tunai di pejabat surau.</p>
+            <p className="text-center text-xs text-slate-500">Dengan membayar, anda bersetuju dengan <a href="/polisi-bayaran-balik" target="_blank" className="text-surau underline">Polisi Bayaran Balik & Pembatalan</a>.</p>
           </div>
         )}
         <style jsx global>{`.inp{width:100%;border-radius:.5rem;border:1px solid #cbd5e1;padding:.5rem .75rem;font-size:.875rem;outline:none}.inp:focus{border-color:#b8860b;box-shadow:0 0 0 2px rgba(184,134,11,.2)}`}</style>
@@ -193,6 +194,9 @@ export default function SewaanForm() {
         <ol className="list-decimal space-y-1 pl-5 text-slate-600">
           {SYARAT_SEWAAN.map((s, i) => <li key={i}>{s}</li>)}
         </ol>
+        <p className="mt-2 text-xs text-slate-500">
+          Rujuk <a href="/polisi-bayaran-balik" target="_blank" className="font-medium text-surau underline">Polisi Bayaran Balik & Pembatalan</a> untuk terma refund deposit & pembatalan.
+        </p>
       </section>
 
       <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">

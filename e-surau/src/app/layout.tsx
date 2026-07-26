@@ -63,6 +63,7 @@ export default function RootLayout({
             <Link href="/dasar-privasi" className="hover:text-surau hover:underline">Dasar Privasi</Link>
             <Link href="/terma" className="hover:text-surau hover:underline">Terma & Penafian</Link>
             <Link href="/keselamatan" className="hover:text-surau hover:underline">Keselamatan</Link>
+            <Link href="/polisi-bayaran-balik" className="hover:text-surau hover:underline">Bayaran Balik</Link>
           </div>
           Jawatankuasa Surau Ar Raudhah, Eco Majestic
         </footer>
