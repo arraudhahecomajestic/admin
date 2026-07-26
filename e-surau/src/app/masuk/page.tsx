@@ -8,10 +8,11 @@ import { createClient } from "@/lib/supabase/client";
 async function destIkutPeranan(supabase: any): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return "";
-  const { data: prof } = await supabase.from("profil").select("peranan").eq("id", user.id).single();
+  const { data: prof } = await supabase.from("profil").select("peranan, pembekal_id").eq("id", user.id).single();
   if (prof?.peranan === "bendahari") return "/admin/kewangan";
   if (prof?.peranan === "imam") return "/admin/tahlil";
   if (prof && ["admin", "ajk"].includes(prof.peranan)) return "/admin";
+  if (prof?.pembekal_id) return "/pembekal/portal";
   return "/ahli";
 }
 
@@ -118,6 +119,10 @@ export default function MasukPage() {
       <p className="mt-2 text-center text-sm text-slate-500">
         Belum ada akaun / ahli baharu?{" "}
         <Link href="/daftar" className="font-medium text-surau hover:underline">Daftar di sini</Link>
+      </p>
+      <p className="mt-1 text-center text-sm text-slate-500">
+        Vendor / Imam / Bilal / Supplier?{" "}
+        <Link href="/pembekal/daftar" className="font-medium text-surau hover:underline">Daftar Pembekal</Link>
       </p>
       <p className="mt-2 text-center text-sm text-slate-500">
         <Link href="/" className="hover:underline">← Kembali ke laman utama</Link>

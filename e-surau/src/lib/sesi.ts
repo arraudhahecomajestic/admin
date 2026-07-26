@@ -5,6 +5,7 @@ export type Profil = {
   nama: string | null;
   emel: string | null;
   ahli_id: string | null;
+  pembekal_id: string | null;
   peranan: "admin" | "bendahari" | "ajk" | "ahli" | "imam";
   master: boolean;
 };
@@ -21,7 +22,7 @@ export async function getProfil(): Promise<Profil | null> {
 
     const { data } = await supabase
       .from("profil")
-      .select("id, nama, emel, ahli_id, peranan, master")
+      .select("id, nama, emel, ahli_id, pembekal_id, peranan, master")
       .eq("id", user.id)
       .single();
 

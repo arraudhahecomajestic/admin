@@ -38,6 +38,13 @@ export const EMEL_SURAU = "arraudhah.ecomajestic@gmail.com";
 export const WEB_SURAU = "https://ar-raudhah.mimbar.my/";
 export const CARA_BAYAR_BELANJA = ["Pindahan Atas Talian", "Tunai", "Cek"];
 
+export const SENARAI_BANK = [
+  "Maybank", "CIMB Bank", "Bank Islam", "RHB Bank", "Public Bank",
+  "Bank Simpanan Nasional (BSN)", "Bank Rakyat", "AmBank", "Hong Leong Bank",
+  "Affin Bank", "Bank Muamalat", "OCBC Bank", "HSBC", "UOB", "Standard Chartered",
+  "Alliance Bank", "MBSB Bank", "Agrobank", "Al-Rajhi Bank", "Lain-lain",
+];
+
 export const LOGO_JAIS = "/logo-jais.png";
 export const LOGO_SELANGOR = "/logo-selangor.png";
 export const LOGO_SURAU = "/logo-surau-2.png"; // mendatar (header)

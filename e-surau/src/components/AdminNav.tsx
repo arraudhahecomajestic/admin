@@ -10,9 +10,13 @@ const pautanPenuh = [
   { href: "/admin/vendor", label: "Vendor" },
   { href: "/admin/aset", label: "Aset" },
   { href: "/admin/khairat", label: "Khairat" },
+  { href: "/admin/tuntutan", label: "Tuntutan" },
   { href: "/admin/cetak", label: "Cetak Borang" },
 ];
-const pautanBendahari = [{ href: "/admin/kewangan", label: "Kewangan" }];
+const pautanBendahari = [
+  { href: "/admin/kewangan", label: "Kewangan" },
+  { href: "/admin/tuntutan", label: "Tuntutan" },
+];
 const pautanImam = [{ href: "/admin/tahlil", label: "Tahlil" }];
 
 export default function AdminNav({ aktif, nama, peranan, master }: { aktif: string; nama?: string; peranan?: string; master?: boolean }) {
