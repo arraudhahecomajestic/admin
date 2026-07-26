@@ -27,8 +27,8 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
   const p = await getProfil();
   if (!p?.ahli_id) return { ok: false, msg: "Sesi tamat. Sila log masuk semula." };
 
-  // Pengesahan wajib (server-side) — swafoto & e-tandatangan tidak boleh dilangkau
-  // walaupun semakan di pelayar diakali.
+  // Pengesahan wajib (server-side) — tidak boleh dilangkau walaupun semakan di pelayar diakali.
+  if (!data.url_kp_depan || !data.url_kp_belakang) return { ok: false, msg: "Gambar Kad Pengenalan (depan & belakang) wajib." };
   if (!data.url_selfie) return { ok: false, msg: "Swafoto (selfie) wajib untuk pengesahan." };
   if (!data.url_tandatangan) return { ok: false, msg: "e-Tandatangan wajib untuk pengesahan." };
 

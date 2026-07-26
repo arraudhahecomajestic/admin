@@ -107,6 +107,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!nama || !noKp || !hp) { setSelesai({ ok: false, msg: "Sila lengkapkan Nama, No. KP dan No. H/P." }); return; }
+    if (!urlDepan || !urlBelakang) { setSelesai({ ok: false, msg: "Sila muat naik gambar Kad Pengenalan (depan & belakang)." }); return; }
     if (!ttdBaru && !urlTtd) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan anda." }); return; }
     if (!urlSelfie) { setSelesai({ ok: false, msg: "Sila ambil swafoto (selfie) untuk pengesahan." }); return; }
     setHantar(true);
