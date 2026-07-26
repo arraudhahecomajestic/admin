@@ -45,6 +45,9 @@ export default function RootLayout({
               <Link href="/program" className="hover:underline">
                 Program
               </Link>
+              <Link href="/sewaan" className="hover:underline">
+                Sewaan
+              </Link>
               <Link href="/ahli" className="hover:underline">
                 Portal Saya
               </Link>

@@ -121,10 +121,16 @@ export default function DaftarPage() {
       setSelesai({ ok: false, msg: "Sistem belum disambung ke pangkalan data." });
       return;
     }
+    if (!gelaran) { setSelesai({ ok: false, msg: "Sila pilih Gelaran." }); return; }
     if (!nama || !noKp || !hp) {
       setSelesai({ ok: false, msg: "Sila isi Nama, No. KP dan No. H/P." });
       return;
     }
+    if (!emel) { setSelesai({ ok: false, msg: "Sila isi E-mel." }); return; }
+    if (!urlDepan || !urlBelakang) { setSelesai({ ok: false, msg: "Sila snap gambar IC depan & belakang." }); return; }
+    if (!alamatKp) { setSelesai({ ok: false, msg: "Sila isi Alamat dalam Kad Pengenalan." }); return; }
+    if (!alamatSama && !alamatSekarang) { setSelesai({ ok: false, msg: "Sila isi Alamat tempat tinggal sekarang." }); return; }
+    if (!tempohNilai) { setSelesai({ ok: false, msg: "Sila isi Tempoh masa menetap." }); return; }
     if (!pengakuan) {
       setSelesai({ ok: false, msg: "Sila tandakan pengakuan (Bahagian A, no. 8)." });
       return;
@@ -223,7 +229,7 @@ export default function DaftarPage() {
       <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-surau">BAHAGIAN A · Butiran Ahli Kariah</h2>
 
-        <Field label="Gelaran">
+        <Field label="Gelaran *">
           <select className="inp" value={gelaran} onChange={(e) => setGelaran(e.target.value)}>
             <option value="">— Tiada —</option>
             {GELARAN.map((g) => (
@@ -241,7 +247,7 @@ export default function DaftarPage() {
         </Field>
 
         <div>
-          <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (snap terus dengan kamera)</span>
+          <span className="mb-1 block text-sm font-medium text-slate-700">Gambar Kad Pengenalan (snap terus dengan kamera) *</span>
           <div className="grid gap-3 sm:grid-cols-2">
             <SnapKad label="IC Depan" sisi="depan" url={urlDepan} sedang={muatNaik === "depan"} onSnap={snap} />
             <SnapKad label="IC Belakang" sisi="belakang" url={urlBelakang} sedang={muatNaik === "belakang"} onSnap={snap} />
@@ -249,7 +255,7 @@ export default function DaftarPage() {
           <p className="mt-1 text-xs text-slate-500">Di telefon, ia akan buka kamera terus. Pastikan gambar jelas & tidak silau.</p>
         </div>
 
-        <Field label="3. Alamat Dalam Kad Pengenalan / Passport">
+        <Field label="3. Alamat Dalam Kad Pengenalan / Passport *">
           <textarea className="inp" rows={2} value={alamatKp} onChange={(e) => setAlamatKp(e.target.value)} />
         </Field>
 
@@ -262,7 +268,7 @@ export default function DaftarPage() {
           Alamat tempat tinggal sama seperti alamat dalam KP
         </label>
         {!alamatSama && (
-          <Field label="4. Alamat Tempat Tinggal Sekarang">
+          <Field label="4. Alamat Tempat Tinggal Sekarang *">
             <textarea className="inp" rows={2} value={alamatSekarang} onChange={(e) => setAlamatSekarang(e.target.value)} />
           </Field>
         )}
@@ -274,7 +280,7 @@ export default function DaftarPage() {
           <Field label="No. H/P *">
             <input className="inp" value={hp} onChange={(e) => setHp(e.target.value)} />
           </Field>
-          <Field label="E-mel">
+          <Field label="E-mel *">
             <input className="inp" type="email" value={emel} onChange={(e) => setEmel(e.target.value)} />
           </Field>
         </div>
@@ -288,7 +294,7 @@ export default function DaftarPage() {
               <option value="janda">Janda</option>
             </select>
           </Field>
-          <Field label="7. Tempoh Masa Telah Menetap">
+          <Field label="7. Tempoh Masa Telah Menetap *">
             <div className="flex gap-2">
               <input className="inp" type="number" min="0" value={tempohNilai} onChange={(e) => setTempohNilai(e.target.value)} />
               <select className="inp w-28" value={tempohUnit} onChange={(e) => setTempohUnit(e.target.value)}>
