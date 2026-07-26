@@ -60,6 +60,19 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
     }
   } else if (b.jenis === "sewaan" && b.rujukan_id) {
     await db.from("sewaan").update({ kaedah_bayar: "Online (CHIP)" }).eq("id", b.rujukan_id);
+  } else if (b.jenis === "jamuan") {
+    // Sumbangan jamuan tahlil / doa selamat → rekod dalam Tabung Khas
+    const { data: kat } = await db.from("kategori_kutipan").select("id").eq("nama", "Tabung Khas").maybeSingle();
+    if (kat) {
+      await db.from("kutipan").insert({
+        kategori_id: (kat as any).id,
+        jumlah: Number(b.jumlah || 0),
+        kaedah: "online",
+        catatan: `Sumbangan jamuan/doa selamat${b.nama ? " — " + b.nama : ""} (CHIP)`,
+        tarikh: new Date().toISOString().slice(0, 10),
+        direkod_oleh: "CHIP",
+      });
+    }
   }
 
   return { dibayar: true };

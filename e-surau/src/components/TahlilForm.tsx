@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { tambahArwah } from "@/app/tahlil/actions";
+import { tambahArwah, mulaSumbanganTahlil } from "@/app/tahlil/actions";
 import { BANK_SURAU } from "@/lib/tetapan";
 
 export default function TahlilForm() {
@@ -11,8 +11,23 @@ export default function TahlilForm() {
   const [telefon, setTelefon] = useState("");
   const [senarai, setSenarai] = useState<string[]>([""]);
   const [nakSumbang, setNakSumbang] = useState(false);
+  const [jumlah, setJumlah] = useState("");
+  const [emelSumbang, setEmelSumbang] = useState("");
+  const [bayarSedang, setBayarSedang] = useState(false);
+  const [bayarRalat, setBayarRalat] = useState("");
   const [hantar, setHantar] = useState(false);
   const [msg, setMsg] = useState<null | { ok: boolean; text: string }>(null);
+
+  async function bayarSumbangan() {
+    setBayarRalat("");
+    const amt = Number(jumlah);
+    if (!amt || amt < 1) { setBayarRalat("Sila masukkan jumlah sumbangan (minimum RM1)."); return; }
+    if (!emelSumbang.includes("@")) { setBayarRalat("Sila isi e-mel yang sah untuk resit."); return; }
+    setBayarSedang(true);
+    const res = await mulaSumbanganTahlil({ nama: pemohon, emel: emelSumbang, telefon, amount: amt });
+    if (!res.ok) { setBayarSedang(false); setBayarRalat(res.msg ?? "Ralat pembayaran."); return; }
+    if (res.checkout_url) window.location.href = res.checkout_url;
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,16 +86,25 @@ export default function TahlilForm() {
           <span>Adakah anda ingin menyumbang untuk <b>jamuan Yaasin & Tahlil</b>?</span>
         </label>
         {nakSumbang && (
-          <div className="mt-3 rounded-lg bg-white p-3 text-sm">
-            <div className="font-semibold text-slate-900">Akaun Sumbangan Surau</div>
-            <div className="mt-1 text-slate-700">
-              <div>Bank: <b>{BANK_SURAU.bank}</b></div>
-              <div>No. Akaun: <b className="font-mono">{BANK_SURAU.no_akaun}</b></div>
-              <div>Nama: <b>{BANK_SURAU.nama_akaun}</b></div>
+          <div className="mt-3 space-y-3 rounded-lg bg-white p-3 text-sm">
+            <div className="font-semibold text-slate-900">Bayar Sumbangan Online</div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">Jumlah Sumbangan (RM)</span>
+                <input className="inp" type="number" min="1" step="1" placeholder="cth: 50" value={jumlah} onChange={(e) => setJumlah(e.target.value)} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">E-mel (untuk resit)</span>
+                <input className="inp" type="email" placeholder="emel@contoh.com" value={emelSumbang} onChange={(e) => setEmelSumbang(e.target.value)} />
+              </label>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Sila bank in sumbangan anda & simpan resit. Semoga Allah membalas dengan kebaikan. Jazakumullah khairan.
-            </p>
+            {bayarRalat && <p className="text-sm text-red-600">{bayarRalat}</p>}
+            <button type="button" onClick={bayarSumbangan} disabled={bayarSedang} className="w-full rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
+              {bayarSedang ? "Menyambung ke gerbang bayaran…" : "Bayar Sumbangan (FPX / Kad / e-Wallet)"}
+            </button>
+            <div className="rounded-lg bg-slate-50 p-2 text-xs text-slate-500">
+              Atau transfer manual: <b>{BANK_SURAU.bank}</b> · <b className="font-mono">{BANK_SURAU.no_akaun}</b> · {BANK_SURAU.nama_akaun}. Jazakumullah khairan.
+            </div>
           </div>
         )}
       </div>
