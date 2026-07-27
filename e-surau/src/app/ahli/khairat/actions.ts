@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil } from "@/lib/sesi";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
+import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 import { YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 
 const tahunSemasa = () => new Date().getFullYear();
@@ -11,6 +12,8 @@ const tahunSemasa = () => new Date().getFullYear();
 export async function mulaBayaranKhairat(tahunBil: number = 1): Promise<{ ok: boolean; msg?: string; checkout_url?: string }> {
   const p = await getProfil();
   if (!p?.ahli_id) return { ok: false, msg: "Sesi tamat atau akaun belum dipautkan. Sila log masuk semula." };
+  if (!(await bayaranOnlineDibuka()))
+    return { ok: false, msg: "Bayaran online sedang diselenggara. Sila bayar tunai di kaunter surau." };
   if (!chipConfigured("khairat"))
     return { ok: false, msg: "Gerbang pembayaran khairat belum disediakan. Sila hubungi admin surau." };
   const bilTahun = [1, 3, 5, 10].includes(Number(tahunBil)) ? Number(tahunBil) : 1;

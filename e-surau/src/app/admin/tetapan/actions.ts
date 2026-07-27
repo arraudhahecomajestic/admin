@@ -16,4 +16,6 @@ export async function setTetapan(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/ahli");
   revalidatePath("/khairat");
+  revalidatePath("/tahlil");
+  revalidatePath("/sewaan");
 }

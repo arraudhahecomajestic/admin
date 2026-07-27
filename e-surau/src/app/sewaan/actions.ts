@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
+import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export async function mohonSewaan(data: any): Promise<{ ok: boolean; msg?: string; no?: string; id?: string }> {
   if (!data?.nama_pemohon?.trim()) return { ok: false, msg: "Sila isi nama pemohon." };
@@ -51,6 +52,8 @@ export async function mulaBayaranSewaan(
   sewaanId: string,
   emel: string
 ): Promise<{ ok: boolean; msg?: string; checkout_url?: string }> {
+  if (!(await bayaranOnlineDibuka()))
+    return { ok: false, msg: "Bayaran online sedang diselenggara. Sila bayar tunai di pejabat surau atau pindahan bank." };
   if (!chipConfigured())
     return { ok: false, msg: "Gerbang pembayaran belum disediakan. Sila hubungi admin surau." };
   const e = (emel || "").trim().toLowerCase();

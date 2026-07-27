@@ -4,9 +4,18 @@ import { useState } from "react";
 import { mulaBayaranKhairat } from "@/app/ahli/khairat/actions";
 import { PAKEJ_KHAIRAT, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 
-export default function BayarKhairatButton() {
+export default function BayarKhairatButton({ bayaranDibuka = false }: { bayaranDibuka?: boolean }) {
   const [sedang, setSedang] = useState<number | null>(null);
   const [ralat, setRalat] = useState("");
+
+  if (!bayaranDibuka) {
+    return (
+      <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+        Bayaran online sedang diselenggara buat sementara waktu. Sila jelaskan yuran khairat secara{" "}
+        <b>tunai di kaunter surau</b> atau pindahan bank. Terima kasih.
+      </div>
+    );
+  }
 
   async function bayar(tahun: number) {
     setRalat("");

@@ -18,6 +18,7 @@ export default async function TetapanPage() {
   const khairatOn = t.khairat_dibuka === "true";
   const pampasan = t.pampasan_khairat || "1200";
   const penajaOn = t.penaja_dipapar === "true";
+  const bayaranOnlineOn = t.bayaran_online === "true";
 
   return (
     <div className="space-y-6">
@@ -81,6 +82,31 @@ export default async function TetapanPage() {
             pendingText="Menukar…"
           >
             {penajaOn ? "Sorok Ruang Iklan" : "Papar Ruang Iklan"}
+          </ButangHantar>
+        </form>
+      </section>
+
+      {/* SUIS BESAR — Bayaran Online (CHIP) untuk SEMUA modul */}
+      <section className="rounded-xl border-2 border-surau/40 bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-slate-900">🔌 Suis Besar — Bayaran Online (CHIP)</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Satu suis kawal <b>semua</b> butang bayaran online sekali gus — <b>Tahlil / Doa Selamat</b>,
+          <b> Sewaan</b>, dan <b>Khairat</b>. Bila <b>DITUTUP</b>, semua butang bayaran online disorok &amp;
+          pengguna dipaparkan pilihan pindahan bank / bayar tunai di surau. Bila <b>DIBUKA</b>, semua aktif serentak.
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${bayaranOnlineOn ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>
+            Status sekarang: {bayaranOnlineOn ? "DIBUKA — semua bayaran online AKTIF" : "DITUTUP — bank/tunai sahaja"}
+          </span>
+        </div>
+        <form action={setTetapan} className="mt-3">
+          <input type="hidden" name="kunci" value="bayaran_online" />
+          <input type="hidden" name="nilai" value={bayaranOnlineOn ? "false" : "true"} />
+          <ButangHantar
+            className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 ${bayaranOnlineOn ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+            pendingText="Menukar…"
+          >
+            {bayaranOnlineOn ? "Kunci SEMUA Bayaran Online" : "Buka SEMUA Bayaran Online"}
           </ButangHantar>
         </form>
       </section>

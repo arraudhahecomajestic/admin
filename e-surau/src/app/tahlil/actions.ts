@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { jantinaDariNama, khamisAkan } from "@/lib/arwah";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
+import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 // Sumbangan jamuan tahlil / doa selamat — amount ditetapkan penyumbang sendiri.
 export async function mulaSumbanganTahlil(data: {
@@ -12,6 +13,8 @@ export async function mulaSumbanganTahlil(data: {
   telefon?: string;
   amount?: number | string;
 }): Promise<{ ok: boolean; msg?: string; checkout_url?: string }> {
+  if (!(await bayaranOnlineDibuka()))
+    return { ok: false, msg: "Bayaran online sedang diselenggara. Sila salurkan sumbangan melalui pindahan bank." };
   if (!chipConfigured("umum"))
     return { ok: false, msg: "Gerbang pembayaran belum disediakan. Sila hubungi admin surau." };
   const emel = (data.emel || "").trim().toLowerCase();

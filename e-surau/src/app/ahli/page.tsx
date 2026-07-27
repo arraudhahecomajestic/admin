@@ -7,7 +7,7 @@ import { sertaiKhairat } from "./actions";
 import PautRekodForm from "@/components/PautRekodForm";
 import BayarKhairatButton from "@/components/BayarKhairatButton";
 import ButangHantar from "@/components/ButangHantar";
-import { khairatDibuka } from "@/lib/tetapanSistem";
+import { khairatDibuka, bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +57,7 @@ export default async function AhliPage() {
   const yuranTahunIni = kh?.yuran_khairat?.some((y: any) => y.tahun === TAHUN && y.lunas);
   // Semasa ujian: khairat nampak untuk pentadbir walaupun belum dilancarkan umum.
   const dibuka = await khairatDibuka();
+  const bayaranDibuka = await bayaranOnlineDibuka();
   const bolehKhairat = dibuka || isPentadbir(profil);
   const modUjian = bolehKhairat && !dibuka;
 
@@ -149,7 +150,7 @@ export default async function AhliPage() {
               Anda belum menyertai skim khairat. Yuran <b>RM60 setahun</b>, pampasan tetap
               <b> RM1,400</b> setiap kematian ahli atau tanggungan yang dilindungi.
             </p>
-            <BayarKhairatButton />
+            <BayarKhairatButton bayaranDibuka={bayaranDibuka} />
             <form action={sertaiKhairat}>
               <ButangHantar className="text-xs text-slate-500 underline disabled:opacity-50" pendingText="Sila tunggu…">atau sertai dahulu & bayar tunai di kaunter</ButangHantar>
             </form>
@@ -165,7 +166,7 @@ export default async function AhliPage() {
               Keahlian khairat anda{kh.no_khairat ? ` (No. ${kh.no_khairat})` : ""} — Yuran {TAHUN}:
               <b className="text-red-600"> Belum bayar</b>.
             </p>
-            <BayarKhairatButton />
+            <BayarKhairatButton bayaranDibuka={bayaranDibuka} />
             <p className="text-xs text-slate-500">Bayaran diproses oleh CHIP (FPX / kad / e-wallet). Atau bayar tunai di kaunter surau.</p>
           </div>
         )}

@@ -4,10 +4,11 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { rm } from "@/lib/format";
 import { RUANG, PERALATAN, STATUS_PEMOHON, JENIS_ACARA, KAEDAH_BAYAR, SYARAT_SEWAAN } from "@/lib/sewaan";
+import { BANK_SURAU } from "@/lib/tetapan";
 import { mohonSewaan, mulaBayaranSewaan } from "@/app/sewaan/actions";
 import SignaturePad from "@/components/SignaturePad";
 
-export default function SewaanForm() {
+export default function SewaanForm({ bayaranDibuka = false }: { bayaranDibuka?: boolean }) {
   const [f, setF] = useState<any>({
     nama_pemohon: "", no_kp: "", status_pemohon: "Ahli Kariah SAR", alamat: "", telefon: "", whatsapp: "", emel: "",
     nama_program: "", jenis_acara: "Majlis Akad Nikah", tarikh_acara: "", masa_mula: "", masa_tamat: "",
@@ -84,7 +85,19 @@ export default function SewaanForm() {
           <p className="mt-2 text-slate-600">{selesai.msg}</p>
         </div>
 
-        {sewaanId && perluBayar > 0 && (
+        {sewaanId && perluBayar > 0 && !bayaranDibuka && (
+          <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5 text-sm">
+            <h3 className="font-semibold text-surau">Cara Pembayaran</h3>
+            <div className="mt-2 flex justify-between font-bold text-slate-900"><span>Jumlah Perlu Dibayar</span><span>{rm(perluBayar)}</span></div>
+            <p className="mt-2 text-xs text-slate-500">Bayaran online sedang diselenggara buat sementara waktu. Sila bayar melalui:</p>
+            <div className="mt-2 rounded-lg bg-white p-3 leading-relaxed">
+              <div><span className="text-slate-500">Pindahan bank:</span> <b>{BANK_SURAU.bank}</b> · <b className="font-mono">{BANK_SURAU.no_akaun}</b> · {BANK_SURAU.nama_akaun}</div>
+              <div className="mt-1 text-slate-600">Atau bayar <b>tunai di pejabat surau</b>.</div>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">Sila simpan resit &amp; kemukakan kepada AJK. Rujuk <a href="/polisi-bayaran-balik" target="_blank" className="text-surau underline">Polisi Bayaran Balik</a>.</p>
+          </div>
+        )}
+        {sewaanId && perluBayar > 0 && bayaranDibuka && (
           <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
             <h3 className="font-semibold text-surau">Bayar Sekarang (Online)</h3>
             <div className="mt-2 space-y-1 text-sm text-slate-700">

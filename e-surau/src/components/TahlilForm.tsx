@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { tambahArwah, mulaSumbanganTahlil } from "@/app/tahlil/actions";
 import { BANK_SURAU } from "@/lib/tetapan";
 
-export default function TahlilForm() {
+export default function TahlilForm({ bayaranDibuka = false }: { bayaranDibuka?: boolean }) {
   const router = useRouter();
   const [pemohon, setPemohon] = useState("");
   const [telefon, setTelefon] = useState("");
@@ -85,7 +85,7 @@ export default function TahlilForm() {
           <input type="checkbox" className="mt-1" checked={nakSumbang} onChange={(e) => setNakSumbang(e.target.checked)} />
           <span>Adakah anda ingin menyumbang untuk <b>jamuan Yaasin & Tahlil</b>?</span>
         </label>
-        {nakSumbang && (
+        {nakSumbang && bayaranDibuka && (
           <div className="mt-3 space-y-3 rounded-lg bg-white p-3 text-sm">
             <div className="font-semibold text-slate-900">Bayar Sumbangan Online</div>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -105,6 +105,22 @@ export default function TahlilForm() {
             <div className="rounded-lg bg-slate-50 p-2 text-xs text-slate-500">
               Atau transfer manual: <b>{BANK_SURAU.bank}</b> · <b className="font-mono">{BANK_SURAU.no_akaun}</b> · {BANK_SURAU.nama_akaun}. Jazakumullah khairan.
             </div>
+          </div>
+        )}
+        {nakSumbang && !bayaranDibuka && (
+          <div className="mt-3 space-y-2 rounded-lg bg-white p-3 text-sm">
+            <div className="font-semibold text-slate-900">Sumbangan melalui Pindahan Bank</div>
+            <p className="text-xs text-slate-500">
+              Bayaran online sedang diselenggara buat sementara waktu. Sila salurkan sumbangan terus ke akaun surau:
+            </p>
+            <div className="rounded-lg bg-surau/5 p-3 leading-relaxed">
+              <div><span className="text-slate-500">Bank:</span> <b>{BANK_SURAU.bank}</b></div>
+              <div><span className="text-slate-500">No. Akaun:</span> <b className="font-mono">{BANK_SURAU.no_akaun}</b></div>
+              <div><span className="text-slate-500">Nama:</span> <b>{BANK_SURAU.nama_akaun}</b></div>
+            </div>
+            <p className="text-xs text-slate-500">
+              Sila simpan resit pindahan &amp; maklumkan kepada AJK surau. Jazakumullah khairan.
+            </p>
           </div>
         )}
       </div>

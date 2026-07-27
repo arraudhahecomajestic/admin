@@ -3,11 +3,13 @@ import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
 import { khamisAkan } from "@/lib/arwah";
 import { tarikhMs } from "@/lib/format";
 import TahlilForm from "@/components/TahlilForm";
+import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
 
 export default async function TahlilPage() {
   const minggu = khamisAkan();
+  const bayaranDibuka = await bayaranOnlineDibuka();
   let arwah: any[] = [];
   if (supabaseConfigured) {
     const { data } = await supabase.from("v_arwah_akan").select("*").eq("minggu", minggu);
@@ -31,7 +33,7 @@ export default async function TahlilPage() {
         </div>
       </div>
 
-      <TahlilForm />
+      <TahlilForm bayaranDibuka={bayaranDibuka} />
 
       <section className="grid gap-4 sm:grid-cols-2">
         <SenaraiArwah tajuk="Al-Marhum (Lelaki)" senarai={lelaki} />

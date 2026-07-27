@@ -29,3 +29,11 @@ export async function penajaDipapar(): Promise<boolean> {
   const t = await bacaTetapan();
   return t.penaja_dipapar === "true";
 }
+
+// Suis BESAR: bayaran online (CHIP) untuk SEMUA modul (tahlil/doa selamat,
+// sewaan, khairat). Lalai: false (terkunci) → tunjuk transfer bank/tunai sahaja.
+// Satu suis kawal semua sekali gus.
+export async function bayaranOnlineDibuka(): Promise<boolean> {
+  const t = await bacaTetapan();
+  return t.bayaran_online === "true";
+}
