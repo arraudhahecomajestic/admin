@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { NAMA_SURAU, GELARAN, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
+import { noTelefon } from "@/lib/format";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
 import { semakKpDaftar, sediaEmelAhli } from "./actions";
@@ -255,7 +256,7 @@ export default function DaftarPage() {
       kariah: namaSurau,
       gelaran, nama: UP(nama), no_kp: noKp,
       alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamatSekarang),
-      no_telefon_rumah: telRumah, telefon: hp, emel: emel.trim().toLowerCase(),
+      no_telefon_rumah: noTelefon(telRumah), telefon: noTelefon(hp), emel: emel.trim().toLowerCase(),
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       pengakuan, url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,

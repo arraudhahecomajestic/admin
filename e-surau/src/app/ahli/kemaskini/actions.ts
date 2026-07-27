@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil } from "@/lib/sesi";
 import { layakKhairat } from "@/lib/khairat";
+import { noTelefon } from "@/lib/format";
 
 // Cari nama ahli sedia ada ikut No. KP (untuk auto-isi tanggungan yang juga ahli kariah).
 export async function cariAhliIkutKp(noKp: string): Promise<{ ok: boolean; nama?: string }> {
@@ -40,8 +41,8 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
     no_kp: data.no_kp,
     alamat_kp: data.alamat_kp || null,
     alamat: data.alamat || null,
-    no_telefon_rumah: data.no_telefon_rumah || null,
-    telefon: data.telefon || null,
+    no_telefon_rumah: noTelefon(data.no_telefon_rumah) || null,
+    telefon: noTelefon(data.telefon) || null,
     emel: data.emel || null,
     status_perkahwinan: data.status_perkahwinan || null,
     tempoh_menetap_nilai: data.tempoh_menetap_nilai ? Number(data.tempoh_menetap_nilai) : null,

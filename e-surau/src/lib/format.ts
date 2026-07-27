@@ -1,3 +1,13 @@
+// Nombor telefon Malaysia → format antarabangsa piawai (60XXXXXXXXX), tanpa dash/ruang.
+// Contoh: "0124030663" → "60124030663", "019-3509417" → "60193509417", "6019-2385485" → "60192385485".
+export function noTelefon(raw: string | null | undefined): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("60")) return d;
+  if (d.startsWith("0")) return "60" + d.slice(1);
+  return "60" + d;
+}
+
 export function rm(nilai: number | string | null | undefined): string {
   const n = Number(nilai ?? 0);
   const v = isNaN(n) ? 0 : n;
