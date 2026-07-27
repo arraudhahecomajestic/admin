@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const PERANAN = [
   { v: "ahli", t: "Ahli" },
+  { v: "kerani", t: "Kerani (semak senarai sahaja)" },
   { v: "imam", t: "Imam" },
   { v: "ajk", t: "AJK" },
   { v: "bendahari", t: "Bendahari" },

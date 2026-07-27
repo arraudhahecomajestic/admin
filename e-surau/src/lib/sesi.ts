@@ -6,7 +6,7 @@ export type Profil = {
   emel: string | null;
   ahli_id: string | null;
   pembekal_id: string | null;
-  peranan: "admin" | "bendahari" | "ajk" | "ahli" | "imam";
+  peranan: "admin" | "bendahari" | "ajk" | "ahli" | "imam" | "kerani";
   master: boolean;
 };
 
@@ -34,6 +34,12 @@ export async function getProfil(): Promise<Profil | null> {
 
 export function isStaf(p: Profil | null): boolean {
   return !!p && ["admin", "bendahari", "ajk"].includes(p.peranan);
+}
+
+// Kerani surau — akses TERHAD: hanya carian/semak senarai ahli untuk tally
+// hardcopy. TIADA akses ke mana-mana panel admin lain & tiada muat turun.
+export function isKerani(p: Profil | null): boolean {
+  return !!p && p.peranan === "kerani";
 }
 
 export function isAdminAtauBendahari(p: Profil | null): boolean {

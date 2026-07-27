@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil, isMaster } from "@/lib/sesi";
 
-const PERANAN_SAH = ["ahli", "imam", "ajk", "bendahari", "admin"];
+const PERANAN_SAH = ["ahli", "kerani", "imam", "ajk", "bendahari", "admin"];
 
 export async function tetapkanPeranan(formData: FormData) {
   const saya = await getProfil();

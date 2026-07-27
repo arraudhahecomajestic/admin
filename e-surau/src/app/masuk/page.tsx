@@ -10,6 +10,7 @@ async function destIkutPeranan(supabase: any): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return "";
   const { data: prof } = await supabase.from("profil").select("peranan, pembekal_id").eq("id", user.id).single();
+  if (prof?.peranan === "kerani") return "/kerani";
   if (prof?.peranan === "bendahari") return "/admin/kewangan";
   if (prof?.peranan === "imam") return "/admin/tahlil";
   if (prof && ["admin", "ajk"].includes(prof.peranan)) return "/admin";
