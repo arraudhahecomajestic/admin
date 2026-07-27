@@ -126,7 +126,7 @@ export default async function AhliPage() {
         {bolehKhairat && (
           <>
             <Kad label="Khairat Kematian" nilai={kh ? (kh.status === "aktif" ? "Aktif" : "Tertunggak") : dilindungiBawah ? "Dilindungi" : "Tidak sertai"} warna={kh?.status === "aktif" || dilindungiBawah ? "text-green-600" : "text-slate-500"} />
-            <Kad label={`Yuran Khairat ${TAHUN}`} nilai={kh ? (yuranTahunIni ? "Lunas" : "Belum bayar") : "-"} warna={yuranTahunIni ? "text-green-600" : "text-red-600"} />
+            <Kad label={`Yuran Khairat ${TAHUN}`} nilai={kh ? (yuranTahunIni ? "Selesai" : "Belum bayar") : "-"} warna={yuranTahunIni ? "text-green-600" : "text-red-600"} />
           </>
         )}
       </div>
@@ -157,7 +157,7 @@ export default async function AhliPage() {
         ) : kh.status === "aktif" && yuranTahunIni ? (
           <p className="text-sm text-slate-700">
             ✓ Keahlian khairat anda <b className="text-green-700">AKTIF</b>. No. Khairat: {kh.no_khairat}.
-            Yuran {TAHUN}: <b>Lunas</b>.
+            Yuran {TAHUN}: <b>Selesai</b>.
           </p>
         ) : (
           <div className="space-y-3 text-sm text-slate-700">

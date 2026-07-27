@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { buatT, bahasaCookieKlien, type Bahasa } from "@/lib/i18n";
 
 async function destIkutPeranan(supabase: any): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,6 +24,9 @@ export default function MasukPage() {
   const [ralat, setRalat] = useState("");
   const [sedang, setSedang] = useState(false);
   const [semakSesi, setSemakSesi] = useState(true);
+  const [lang, setLang] = useState<Bahasa>("ms");
+  useEffect(() => { setLang(bahasaCookieKlien()); }, []);
+  const tr = buatT(lang);
 
   // Jika sudah log masuk, terus hantar ke ruang mengikut peranan.
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function MasukPage() {
     });
     if (error) {
       setSedang(false);
-      setRalat("Emel atau kata laluan salah.");
+      setRalat(tr("Emel atau kata laluan salah.", "Incorrect email or password."));
       return;
     }
     // Redirect ikut peranan: staf → /admin, ahli → /ahli
@@ -64,19 +68,21 @@ export default function MasukPage() {
   }
 
   if (semakSesi) {
-    return <div className="mx-auto max-w-sm py-16 text-center text-sm text-slate-400">Menyemak sesi…</div>;
+    return <div className="mx-auto max-w-sm py-16 text-center text-sm text-slate-400">{tr("Menyemak sesi…", "Checking session…")}</div>;
   }
 
   return (
     <div className="mx-auto max-w-sm">
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-slate-900">Log Masuk</h1>
+        <h1 className="text-xl font-bold text-slate-900">{tr("Log Masuk", "Login")}</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Untuk ahli kariah, AJK, bendahari & admin surau.
+          {tr("Untuk ahli kariah, AJK, bendahari & admin surau.", "For community members, committee, treasurer & surau admins.")}
         </p>
         <div className="mt-3 rounded-lg border border-surau/30 bg-surau/5 p-3 text-xs text-slate-600">
-          <b>Ahli sedia ada:</b> guna emel anda, kata laluan = <b>No. Kad Pengenalan</b> anda
-          (tanpa sengkang). Sila tukar kata laluan selepas log masuk.
+          {tr(
+            "Ahli sedia ada: guna emel anda, kata laluan = No. Kad Pengenalan anda (tanpa sengkang). Sila tukar kata laluan selepas log masuk.",
+            "Existing members: use your email, password = your IC number (without dashes). Please change your password after logging in.",
+          )}
         </div>
 
         <form onSubmit={masuk} className="mt-4 space-y-3">
@@ -86,7 +92,7 @@ export default function MasukPage() {
             </div>
           )}
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">Emel</span>
+            <span className="mb-1 block text-sm font-medium text-slate-700">{tr("Emel", "Email")}</span>
             <input
               type="email"
               required
@@ -96,7 +102,7 @@ export default function MasukPage() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">Kata Laluan</span>
+            <span className="mb-1 block text-sm font-medium text-slate-700">{tr("Kata Laluan", "Password")}</span>
             <input
               type="password"
               required
@@ -109,23 +115,23 @@ export default function MasukPage() {
             disabled={sedang}
             className="w-full rounded-lg bg-surau px-4 py-2 font-semibold text-white hover:bg-surau-dark disabled:opacity-60"
           >
-            {sedang ? "Sedang masuk…" : "Log Masuk"}
+            {sedang ? tr("Sedang masuk…", "Logging in…") : tr("Log Masuk", "Login")}
           </button>
         </form>
       </div>
       <p className="mt-4 text-center text-sm text-slate-500">
-        <Link href="/lupa-kata-laluan" className="font-medium text-surau hover:underline">Lupa kata laluan?</Link>
+        <Link href="/lupa-kata-laluan" className="font-medium text-surau hover:underline">{tr("Lupa kata laluan?", "Forgot password?")}</Link>
       </p>
       <p className="mt-2 text-center text-sm text-slate-500">
-        Belum ada akaun / ahli baharu?{" "}
-        <Link href="/daftar" className="font-medium text-surau hover:underline">Daftar di sini</Link>
+        {tr("Belum ada akaun / ahli baharu?", "No account yet / new member?")}{" "}
+        <Link href="/daftar" className="font-medium text-surau hover:underline">{tr("Daftar di sini", "Register here")}</Link>
       </p>
       <p className="mt-1 text-center text-sm text-slate-500">
-        Vendor / Imam / Bilal / Supplier?{" "}
-        <Link href="/pembekal/daftar" className="font-medium text-surau hover:underline">Daftar Pembekal</Link>
+        {tr("Vendor / Imam / Bilal / Pembekal?", "Vendor / Imam / Bilal / Supplier?")}{" "}
+        <Link href="/pembekal/daftar" className="font-medium text-surau hover:underline">{tr("Daftar Pembekal", "Register as Supplier")}</Link>
       </p>
       <p className="mt-2 text-center text-sm text-slate-500">
-        <Link href="/" className="hover:underline">← Kembali ke laman utama</Link>
+        <Link href="/" className="hover:underline">{tr("← Kembali ke laman utama", "← Back to home")}</Link>
       </p>
     </div>
   );
