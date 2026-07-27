@@ -67,7 +67,7 @@ export default async function RootLayout({
               <Link href="/sewaan" className="hover:underline">
                 {t("Sewaan", "Rental")}
               </Link>
-              <Link href="/vendor" className="hover:underline">
+              <Link href="/pembekal/daftar" className="hover:underline">
                 {t("Vendor", "Vendors")}
               </Link>
               <Link href="/masuk" className="rounded bg-surau px-3 py-1 font-semibold text-white hover:bg-surau-dark">
