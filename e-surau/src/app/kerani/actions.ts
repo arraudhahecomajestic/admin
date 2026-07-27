@@ -46,3 +46,60 @@ export async function cariAhliKerani(
   if (error) return { ok: false, msg: error.message, senarai: [] };
   return { ok: true, senarai: (data as AhliKerani[]) ?? [] };
 }
+
+// Tambah rekod ASAS ahli (dari borang hardcopy yang belum ada dalam sistem):
+// hanya Nama, No. KP & E-mel. Ditanda "belum disahkan" supaya ahli lengkapkan
+// sendiri kemudian. Menyemak pendua No. KP dahulu.
+export async function tambahAhliRingkas(input: {
+  nama: string;
+  noKp: string;
+  emel: string;
+}): Promise<{ ok: boolean; msg?: string; dup?: boolean; no_ahli?: string | null }> {
+  const p = await getProfil();
+  if (!(isKerani(p) || isMaster(p))) return { ok: false, msg: "Tiada akses." };
+
+  const nama = (input.nama || "").trim().replace(/\s+/g, " ").toUpperCase();
+  const noKp = (input.noKp || "").replace(/\D/g, "");
+  const emel = (input.emel || "").trim().toLowerCase();
+
+  if (nama.length < 3) return { ok: false, msg: "Nama tidak sah (terlalu pendek)." };
+  if (noKp.length < 6) return { ok: false, msg: "No. Kad Pengenalan tidak sah." };
+  if (emel && !emel.includes("@")) return { ok: false, msg: "E-mel tidak sah." };
+
+  const db = createAdminClient();
+
+  // Semak pendua — jika No. KP sudah ada, itu memang kes "hardcopy + dah dlm sistem".
+  const { data: sedia } = await db
+    .from("ahli_kariah")
+    .select("no_ahli, nama")
+    .eq("no_kp", noKp)
+    .maybeSingle();
+  if (sedia) {
+    return {
+      ok: false,
+      dup: true,
+      msg: `No. KP ini sudah ada dalam sistem (No. Ahli ${(sedia as any).no_ahli ?? "-"} — ${(sedia as any).nama ?? ""}). Tak perlu tambah; suruh ahli kemas kini sahaja.`,
+    };
+  }
+
+  const { data, error } = await db
+    .from("ahli_kariah")
+    .insert({
+      nama,
+      no_kp: noKp,
+      telefon: "", // wajib not-null; ahli lengkapkan masa kemas kini
+      emel: emel || null,
+      sumber: "Hardcopy (Kerani)",
+      maklumat_disahkan: false,
+    })
+    .select("no_ahli")
+    .maybeSingle();
+
+  if (error) {
+    return {
+      ok: false,
+      msg: error.message.includes("duplicate") ? "No. KP ini sudah wujud." : error.message,
+    };
+  }
+  return { ok: true, no_ahli: (data as any)?.no_ahli ?? null };
+}

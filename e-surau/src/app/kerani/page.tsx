@@ -2,6 +2,7 @@ import { getProfil, isKerani, isMaster } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { adminConfigured } from "@/lib/supabaseAdmin";
 import KeraniCarian from "@/components/KeraniCarian";
+import KeraniTambah from "@/components/KeraniTambah";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function KeraniPage() {
         </div>
       </div>
 
+      <KeraniTambah />
       <KeraniCarian />
     </div>
   );
