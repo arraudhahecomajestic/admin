@@ -2,7 +2,8 @@ import Link from "next/link";
 import PrayerTimes from "@/components/PrayerTimes";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
 import { NAMA_SURAU, ZON_SOLAT, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
-import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
+import { khairatDibuka, pampasanKhairat, kewanganAwamDibuka } from "@/lib/tetapanSistem";
+import { getProfil, isStaf } from "@/lib/sesi";
 import { rm, tarikhMs } from "@/lib/format";
 import { bahasaSemasa } from "@/lib/bahasa";
 import { buatT } from "@/lib/i18n";
@@ -60,13 +61,17 @@ export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
   const tr = buatT(bahasaSemasa());
-  const [pengumuman, tabung, program, khDibuka, pampasan] = await Promise.all([
+  const [pengumuman, tabung, program, khDibuka, pampasan, kewanganAwam, profil] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
     ambilProgram(),
     khairatDibuka(),
     pampasanKhairat(),
+    kewanganAwamDibuka(),
+    getProfil(),
   ]);
+  const stafKewangan = isStaf(profil); // SU/Pengerusi/AJK + Bendahari
+  const paparKewangan = kewanganAwam || stafKewangan; // awam nampak hanya bila diterbitkan
 
   return (
     <div className="space-y-8">
@@ -139,9 +144,14 @@ export default async function Home() {
 
       <PrayerTimes zon={zon} />
 
-      {/* Tabung Kutipan Surau */}
-      {tabung.length > 0 && (
+      {/* Tabung Kutipan Surau — disorok dari umum sehingga diterbitkan (suis admin) */}
+      {tabung.length > 0 && paparKewangan && (
         <section>
+          {stafKewangan && !kewanganAwam && (
+            <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
+              👁️ PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
+            </div>
+          )}
           <h2 className="mb-3 text-xl font-bold text-slate-900">{tr("Kutipan Tabung Surau", "Surau Fund Collections")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {tabung.map((t) => {

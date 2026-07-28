@@ -1,4 +1,4 @@
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isMaster } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -14,7 +14,7 @@ export default async function AdminPenajaPage() {
   if (!adminConfigured) return <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Supabase belum dikonfigurasi.</div>;
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isPentadbir(profil)) return <TiadaAkses />;
+  if (!isMaster(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
   const { data } = await db.from("penaja").select("*").order("susunan").order("dicipta", { ascending: false });
@@ -45,9 +45,12 @@ export default async function AdminPenajaPage() {
         <h2 className="mb-3 font-semibold text-slate-900">Tambah Penaja</h2>
         <form action={tambahPenaja} className="grid gap-3 sm:grid-cols-2">
           <input name="nama" required placeholder="Nama penaja / syarikat *" className="inp sm:col-span-2" />
-          <input name="pautan" placeholder="Pautan laman web (https://…)" className="inp" />
-          <input name="kategori" placeholder="Kategori (cth: Makanan, Kedai)" className="inp" />
-          <input name="keterangan" placeholder="Keterangan ringkas" className="inp sm:col-span-2" />
+          <input name="pautan" placeholder="Pautan laman web / WhatsApp (https://…)" className="inp" />
+          <input name="kategori" placeholder="Kategori (cth: Makanan, Klinik, Servis Rumah)" className="inp" />
+          <input name="telefon" placeholder="No. telefon / WhatsApp" className="inp" />
+          <input name="keterangan" placeholder="Keterangan ringkas bisnes" className="inp" />
+          <input name="tawaran" placeholder="Tawaran untuk ahli kariah (cth: 10% diskaun)" className="inp" />
+          <input name="kod_promo" placeholder="Kod promo (cth: SURAU10)" className="inp" />
           <label className="text-sm text-slate-600">Tarikh Mula<input name="tarikh_mula" type="date" className="inp" /></label>
           <label className="text-sm text-slate-600">Tarikh Tamat Langganan<input name="tarikh_tamat" type="date" className="inp" /></label>
           <label className="text-sm text-slate-600 sm:col-span-2">Logo penaja (gambar)

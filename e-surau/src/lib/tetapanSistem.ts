@@ -30,6 +30,12 @@ export async function penajaDipapar(): Promise<boolean> {
   return t.penaja_dipapar === "true";
 }
 
+// Penyata kewangan dipapar kepada orang ramai? Lalai: false (staf semak dulu).
+export async function kewanganAwamDibuka(): Promise<boolean> {
+  const t = await bacaTetapan();
+  return t.kewangan_awam === "true";
+}
+
 // Suis BESAR: bayaran online (CHIP) untuk SEMUA modul (tahlil/doa selamat,
 // sewaan, khairat). Lalai: false (terkunci) → tunjuk transfer bank/tunai sahaja.
 // Satu suis kawal semua sekali gus.

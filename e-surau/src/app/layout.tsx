@@ -85,6 +85,7 @@ export default async function RootLayout({
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <footer className="print-hide mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
           <div className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+            {paparPenaja && <Link href="/rakan" className="font-medium text-surau hover:underline">{t("Rakan Surau", "Our Partners")}</Link>}
             <Link href="/dasar-privasi" className="hover:text-surau hover:underline">{t("Dasar Privasi", "Privacy Policy")}</Link>
             <Link href="/terma" className="hover:text-surau hover:underline">{t("Terma & Penafian", "Terms & Disclaimer")}</Link>
             <Link href="/keselamatan" className="hover:text-surau hover:underline">{t("Keselamatan", "Security")}</Link>

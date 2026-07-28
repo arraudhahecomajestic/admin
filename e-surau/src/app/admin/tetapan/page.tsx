@@ -19,6 +19,7 @@ export default async function TetapanPage() {
   const pampasan = t.pampasan_khairat || "1200";
   const penajaOn = t.penaja_dipapar === "true";
   const bayaranOnlineOn = t.bayaran_online === "true";
+  const kewanganAwamOn = t.kewangan_awam === "true";
 
   return (
     <div className="space-y-6">
@@ -82,6 +83,30 @@ export default async function TetapanPage() {
             pendingText="Menukar…"
           >
             {penajaOn ? "Sorok Ruang Iklan" : "Papar Ruang Iklan"}
+          </ButangHantar>
+        </form>
+      </section>
+
+      {/* Suis Penyata Kewangan Awam */}
+      <section className="rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-slate-900">Penyata Kewangan — Paparan Awam</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Bila <b>DITUTUP</b>, jumlah tabung/kutipan di laman utama <b>tersorok dari orang ramai</b> — hanya
+          SU/Pengerusi/AJK &amp; Bendahari boleh pratonton. Bila <b>DITERBITKAN</b>, orang ramai nampak.
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${kewanganAwamOn ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>
+            Status sekarang: {kewanganAwamOn ? "DITERBITKAN (umum nampak)" : "DITUTUP (staf sahaja)"}
+          </span>
+        </div>
+        <form action={setTetapan} className="mt-3">
+          <input type="hidden" name="kunci" value="kewangan_awam" />
+          <input type="hidden" name="nilai" value={kewanganAwamOn ? "false" : "true"} />
+          <ButangHantar
+            className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 ${kewanganAwamOn ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+            pendingText="Menukar…"
+          >
+            {kewanganAwamOn ? "Sorok Penyata Dari Umum" : "Terbitkan Penyata Kepada Umum"}
           </ButangHantar>
         </form>
       </section>

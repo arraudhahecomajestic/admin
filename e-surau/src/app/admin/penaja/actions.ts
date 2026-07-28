@@ -2,15 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isMaster } from "@/lib/sesi";
 
 function segar() {
   revalidatePath("/admin/penaja");
   revalidatePath("/");
+  revalidatePath("/rakan");
 }
 
 export async function tambahPenaja(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  if (!isMaster(await getProfil())) return;
   const db = createAdminClient();
 
   let logoUrl: string | null = null;
@@ -28,6 +29,9 @@ export async function tambahPenaja(formData: FormData) {
     pautan: String(formData.get("pautan") ?? "") || null,
     keterangan: String(formData.get("keterangan") ?? "") || null,
     kategori: String(formData.get("kategori") ?? "") || null,
+    telefon: String(formData.get("telefon") ?? "") || null,
+    tawaran: String(formData.get("tawaran") ?? "") || null,
+    kod_promo: String(formData.get("kod_promo") ?? "").toUpperCase().trim() || null,
     susunan: formData.get("susunan") ? Number(formData.get("susunan")) : 100,
     tarikh_mula: String(formData.get("tarikh_mula") ?? "") || null,
     tarikh_tamat: String(formData.get("tarikh_tamat") ?? "") || null,
@@ -37,7 +41,7 @@ export async function tambahPenaja(formData: FormData) {
 }
 
 export async function togglePenaja(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  if (!isMaster(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   const aktif = String(formData.get("aktif") ?? "") === "true";
   if (!id) return;
@@ -47,7 +51,7 @@ export async function togglePenaja(formData: FormData) {
 }
 
 export async function padamPenaja(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  if (!isMaster(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();

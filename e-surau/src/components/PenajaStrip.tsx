@@ -26,11 +26,15 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
 
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Laman ini dikuasakan oleh:</h2>
-        <span className="text-xs text-slate-400">
-          {pratonton ? "👁️ Pratonton super admin — orang lain tak nampak" : contoh ? "Contoh" : "Tajaan"}
-        </span>
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/rakan" className="whitespace-nowrap text-xs font-medium text-surau hover:underline">Rakan Surau →</a>
+          <span className="hidden text-xs text-slate-400 sm:inline">
+            {pratonton ? "👁️ Pratonton" : contoh ? "Contoh" : "Tajaan"}
+          </span>
+        </div>
       </div>
 
       <div className="penaja-marquee">
