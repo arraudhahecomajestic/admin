@@ -15,6 +15,18 @@ type Ahli = {
 
 type Tapis = "semua" | "disahkan" | "belum";
 
+// Topeng data sensitif — papar hanya 4/3 digit akhir. Admin tekan "Papar" untuk lihat penuh.
+function topengKp(kp: string | null): string {
+  const d = (kp || "").replace(/\s/g, "");
+  if (!d) return "—";
+  return d.length <= 4 ? "••••" : "•".repeat(d.length - 4) + d.slice(-4);
+}
+function topengTel(tel: string | null): string {
+  const d = (tel || "").trim();
+  if (!d) return "—";
+  return d.length <= 3 ? "•••" : "•".repeat(d.length - 3) + d.slice(-3);
+}
+
 // Nombor telefon Malaysia → format antarabangsa untuk wa.me
 function waNombor(tel: string | null): string {
   let d = (tel || "").replace(/\D/g, "");
@@ -33,6 +45,7 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
   const [q, setQ] = useState("");
   const [tapis, setTapis] = useState<Tapis>("semua");
   const [disalin, setDisalin] = useState(false);
+  const [papar, setPapar] = useState(false); // IC & telefon ditopeng sehingga admin tekan "Papar"
 
   const jumDisahkan = useMemo(() => senarai.filter((a) => a.maklumat_disahkan).length, [senarai]);
   const total = senarai.length;
@@ -104,6 +117,13 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
         {btn("belum", `Belum (${total - jumDisahkan})`, "bg-orange-500 text-white")}
         {btn("disahkan", `Disahkan (${jumDisahkan})`, "bg-green-600 text-white")}
         <button
+          onClick={() => setPapar((v) => !v)}
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${papar ? "bg-amber-500 text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-100"}`}
+          title="Papar / sorok No. KP & telefon"
+        >
+          {papar ? "🙈 Sorok IC & Telefon" : "👁 Papar IC & Telefon"}
+        </button>
+        <button
           onClick={salinSenarai}
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
         >
@@ -139,9 +159,9 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
                   <td className="px-4 py-2 font-mono text-xs">{a.no_ahli}</td>
                   <td className="px-4 py-2">
                     <div className="font-medium text-slate-900">{a.nama}</div>
-                    <div className="text-xs text-slate-400">{a.no_kp}</div>
+                    <div className="font-mono text-xs text-slate-400">{papar ? (a.no_kp || "—") : topengKp(a.no_kp)}</div>
                   </td>
-                  <td className="px-4 py-2">{a.telefon || "—"}</td>
+                  <td className="px-4 py-2 font-mono">{papar ? (a.telefon || "—") : topengTel(a.telefon)}</td>
                   <td className="px-4 py-2">
                     {a.maklumat_disahkan ? (
                       <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Disahkan</span>

@@ -51,6 +51,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
   );
   const [hantar, setHantar] = useState(false);
   const [selesai, setSelesai] = useState<null | { ok: boolean; msg: string }>(null);
+  const [setuju, setSetuju] = useState(false);
 
   function ubahT(i: number, k: keyof Tgg, v: any) {
     setTanggungan((t) => t.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
@@ -110,6 +111,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     if (!urlDepan || !urlBelakang) { setSelesai({ ok: false, msg: "Sila muat naik gambar Kad Pengenalan (depan & belakang)." }); return; }
     if (!ttdBaru && !urlTtd) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan anda." }); return; }
     if (!urlSelfie) { setSelesai({ ok: false, msg: "Sila ambil swafoto (selfie) untuk pengesahan." }); return; }
+    if (!setuju) { setSelesai({ ok: false, msg: "Sila bersetuju dengan Dasar Privasi & Terma Penggunaan sebelum menghantar." }); return; }
     setHantar(true);
     let ttdPath = urlTtd;
     if (ttdBaru) {
@@ -304,6 +306,17 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
           </label>
         </div>
       </section>
+
+      {/* Persetujuan PDPA — wajib sebelum hantar */}
+      <label className="flex items-start gap-3 rounded-xl border-2 border-surau/30 bg-surau/5 p-4 text-sm text-slate-700">
+        <input type="checkbox" className="mt-1" checked={setuju} onChange={(e) => setSetuju(e.target.checked)} />
+        <span>
+          Saya telah membaca &amp; bersetuju dengan{" "}
+          <a href="/dasar-privasi" target="_blank" className="font-medium text-surau hover:underline">Dasar Privasi</a> dan{" "}
+          <a href="/terma" target="_blank" className="font-medium text-surau hover:underline">Terma Penggunaan</a>,
+          serta memberi persetujuan pengumpulan data peribadi (termasuk swafoto &amp; salinan IC) mengikut PDPA. <span className="text-red-500">*</span>
+        </span>
+      </label>
 
       <button type="submit" disabled={hantar || muatNaik !== "" || muatSelfie} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {hantar ? "Menyimpan…" : "Simpan & Sahkan Maklumat"}

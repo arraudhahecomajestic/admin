@@ -13,7 +13,7 @@ type Ahli = {
   no_kp: string;
   telefon: string;
   status: "menunggu" | "lulus" | "tolak";
-  peringkat: "baru" | "disokong_su" | "disokong_nazir" | "selesai";
+  peringkat: "baru" | "disokong_su" | "disokong_nazir" | "ditolak_su" | "ditolak_nazir" | "selesai";
   maklumat_disahkan: boolean;
   sumber: string;
   tarikh_daftar: string;
@@ -36,6 +36,8 @@ const peringkatLabel: Record<string, { t: string; c: string }> = {
   baru: { t: "Baru dihantar", c: "bg-slate-100 text-slate-600" },
   disokong_su: { t: "Disokong Setiausaha", c: "bg-blue-100 text-blue-700" },
   disokong_nazir: { t: "Disokong Nazir", c: "bg-indigo-100 text-indigo-700" },
+  ditolak_su: { t: "Tidak Disokong (SU)", c: "bg-red-100 text-red-700" },
+  ditolak_nazir: { t: "Tidak Disokong (Nazir)", c: "bg-red-100 text-red-700" },
   selesai: { t: "Selesai", c: "bg-green-100 text-green-700" },
 };
 const statusLabel: Record<string, string> = {

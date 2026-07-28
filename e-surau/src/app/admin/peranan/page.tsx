@@ -23,7 +23,8 @@ export default async function PerananPage({ searchParams }: { searchParams: { ca
   if (!profil) return <PerluMasuk />;
   if (!isMaster(profil)) return <TiadaAkses />;
 
-  const cari = (searchParams.cari ?? "").trim();
+  // Buang aksara khas PostgREST (,()%*) supaya input carian tak boleh manipulasi penapis.
+  const cari = (searchParams.cari ?? "").replace(/[,()%*]/g, " ").trim();
   const db = createAdminClient();
   let q = db.from("profil").select("id, nama, emel, peranan, master").order("peranan").limit(200);
   if (cari) q = q.or(`emel.ilike.%${cari}%,nama.ilike.%${cari}%`);

@@ -133,6 +133,36 @@ export default async function AhliPage() {
       </div>
 
       {/* Skim Khairat Kematian */}
+      {/* Maklum balas semakan — supaya pemohon tahu keputusan & ulasan */}
+      {(a?.status === "tolak" || a?.ulasan_su_sokong != null || a?.ulasan_nazir_sokong != null) && (
+        <section className="rounded-xl bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-semibold text-slate-900">Maklum Balas Semakan Permohonan</h2>
+          <div className="space-y-2">
+            <BarisSemakan
+              tajuk="Semakan Setiausaha (SU)"
+              sokong={a?.ulasan_su_sokong}
+              catatan={a?.ulasan_su_catatan}
+            />
+            <BarisSemakan
+              tajuk="Semakan Nazir / Pengerusi"
+              sokong={a?.ulasan_nazir_sokong}
+              catatan={a?.ulasan_nazir_catatan}
+            />
+            {a?.status === "tolak" && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                <b>✗ Permohonan anda TIDAK diluluskan.</b> Sila hubungi pejabat surau (arraudhah.ecomajestic@gmail.com)
+                untuk penjelasan lanjut atau maklumat tambahan yang diperlukan.
+              </div>
+            )}
+            {a?.status === "lulus" && (
+              <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                <b>✓ Permohonan anda telah diluluskan.</b> Selamat datang sebagai ahli kariah.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {bolehKhairat && (
       <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -256,6 +286,21 @@ function Row({ k, v }: { k: string; v?: string | null }) {
     <div className="flex justify-between border-b border-slate-100 py-1">
       <dt className="text-slate-500">{k}</dt>
       <dd className="text-right font-medium text-slate-800">{v || "-"}</dd>
+    </div>
+  );
+}
+
+function BarisSemakan({ tajuk, sokong, catatan }: { tajuk: string; sokong?: boolean | null; catatan?: string | null }) {
+  const belum = sokong === null || sokong === undefined;
+  const warna = belum ? "bg-slate-50 text-slate-500" : sokong ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700";
+  const label = belum ? "Belum disemak" : sokong ? "☑ Disokong" : "☒ Tidak disokong";
+  return (
+    <div className={`rounded-lg p-3 text-sm ${warna}`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-slate-700">{tajuk}</span>
+        <b>{label}</b>
+      </div>
+      {!belum && catatan && <div className="mt-1 text-xs">Ulasan: {catatan}</div>}
     </div>
   );
 }
