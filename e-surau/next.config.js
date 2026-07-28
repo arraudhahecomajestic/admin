@@ -29,6 +29,10 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Naikkan had saiz Server Action supaya muat naik logo penaja (imej) tak ditolak.
+  experimental: {
+    serverActions: { bodySizeLimit: "8mb" },
+  },
   async headers() {
     return [
       {

@@ -230,22 +230,20 @@ export default function DaftarPage() {
     }
     if (!ttdBaru) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan." }); return; }
     if (!urlSelfie) { setSelesai({ ok: false, msg: "Sila ambil swafoto (selfie) untuk pengesahan." }); return; }
-    // Jika nak cipta akaun, sahkan kata laluan
-    const nakAkaun = kataLaluan.trim() !== "";
-    if (nakAkaun) {
-      if (!emel) {
-        setSelesai({ ok: false, msg: "Sila isi E-mel untuk cipta akaun portal ahli." });
-        return;
-      }
-      if (kataLaluan.length < 6) {
-        setSelesai({ ok: false, msg: "Kata laluan mestilah sekurang-kurangnya 6 aksara." });
-        return;
-      }
-      if (kataLaluan !== kataLaluan2) {
-        setSelesai({ ok: false, msg: "Kata laluan tidak sepadan." });
-        return;
-      }
+    // Akaun portal WAJIB untuk semua ahli baharu
+    if (!emel || !emel.includes("@")) {
+      setSelesai({ ok: false, msg: "Sila isi E-mel yang sah — akaun portal wajib untuk semua ahli." });
+      return;
     }
+    if (kataLaluan.length < 6) {
+      setSelesai({ ok: false, msg: "Sila cipta kata laluan (sekurang-kurangnya 6 aksara)." });
+      return;
+    }
+    if (kataLaluan !== kataLaluan2) {
+      setSelesai({ ok: false, msg: "Kata laluan tidak sepadan." });
+      return;
+    }
+    const nakAkaun = true;
     setHantar(true);
     const supabase = createClient();
     let urlTtd = "";
@@ -553,16 +551,16 @@ export default function DaftarPage() {
         </section>
       )}
 
-      {/* Akaun Portal Ahli (pilihan) */}
-      <section className="space-y-3 rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="font-semibold text-slate-900">Akaun Portal Ahli <span className="text-sm font-normal text-slate-500">(pilihan)</span></h2>
+      {/* Akaun Portal Ahli (WAJIB) */}
+      <section className="space-y-3 rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+        <h2 className="font-semibold text-slate-900">Akaun Portal Ahli <span className="text-sm font-semibold text-red-600">(wajib)</span></h2>
         <p className="text-sm text-slate-600">
-          Isi kata laluan untuk cipta akaun portal — anda boleh log masuk semak status keahlian,
+          Cipta kata laluan untuk akaun portal anda — anda perlu log masuk untuk semak status keahlian,
           khairat, resit & sumbangan. Akaun guna <b>E-mel</b> yang anda isi di atas.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <input className="inp" type="password" placeholder="Kata laluan (min. 6 aksara)" value={kataLaluan} onChange={(e) => setKataLaluan(e.target.value)} />
-          <input className="inp" type="password" placeholder="Sahkan kata laluan" value={kataLaluan2} onChange={(e) => setKataLaluan2(e.target.value)} />
+          <input className="inp" type="password" required placeholder="Kata laluan (min. 6 aksara) *" value={kataLaluan} onChange={(e) => setKataLaluan(e.target.value)} />
+          <input className="inp" type="password" required placeholder="Sahkan kata laluan *" value={kataLaluan2} onChange={(e) => setKataLaluan2(e.target.value)} />
         </div>
       </section>
 

@@ -70,7 +70,7 @@ export async function tambahArwah(data: {
   const minggu = khamisAkan();
   const db = createAdminClient();
   const baris = senarai.map((s) => ({
-    nama: s.nama.trim(),
+    nama: s.nama.trim().replace(/\s+/g, " ").toUpperCase(),
     jantina: s.jantina && s.jantina !== "tidak_pasti" ? s.jantina : jantinaDariNama(s.nama),
     pemohon: data.pemohon?.trim() || null,
     telefon: data.telefon?.trim() || null,

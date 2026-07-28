@@ -3,6 +3,7 @@ import { getProfil, isPentadbir } from "@/lib/sesi";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
+import SulitTeks from "@/components/SulitTeks";
 
 export const dynamic = "force-dynamic";
 
@@ -164,7 +165,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { tapi
                 <td className="px-4 py-3 font-mono text-xs">{a.no_ahli}</td>
                 <td className="px-4 py-3">
                   <div className="font-medium text-slate-900">{a.nama}</div>
-                  <div className="text-xs text-slate-400">{a.no_kp}</div>
+                  <div className="text-xs text-slate-400"><SulitTeks nilai={a.no_kp} jenis="kp" /></div>
                 </td>
                 <td className="px-4 py-3">
                   <span className={`rounded px-2 py-0.5 text-xs font-semibold ${kategoriLabel[kategoriAhli(a)]?.c}`}>

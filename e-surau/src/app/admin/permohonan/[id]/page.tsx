@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { tarikhMs } from "@/lib/format";
 import GambarSulit from "@/components/GambarSulit";
+import SulitTeks from "@/components/SulitTeks";
 import ButangHantar from "@/components/ButangHantar";
 import { ulasanSU, ulasanNazir, keputusan } from "./actions";
 
@@ -48,7 +49,7 @@ export default async function PermohonanPage({ params }: { params: { id: string 
         <div>
           <Link href="/admin" className="text-sm text-slate-500 hover:underline">← Senarai permohonan</Link>
           <h1 className="text-2xl font-bold text-slate-900">{[a.gelaran, a.nama].filter(Boolean).join(" ")}</h1>
-          <p className="text-sm text-slate-500">{a.no_ahli} · {a.no_kp}</p>
+          <p className="flex items-center gap-1 text-sm text-slate-500">{a.no_ahli} · <SulitTeks nilai={a.no_kp} jenis="kp" /></p>
           {a.maklumat_disahkan
             ? <p className="mt-1 text-xs font-medium text-green-600">✓ Maklumat disahkan{a.tarikh_kemaskini ? ` pada ${tarikhMs(a.tarikh_kemaskini)}` : ""}</p>
             : <p className="mt-1 text-xs font-medium text-orange-600">Belum kemas kini maklumat</p>}
@@ -69,8 +70,8 @@ export default async function PermohonanPage({ params }: { params: { id: string 
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
           <Row k="Alamat dalam KP" v={a.alamat_kp} />
           <Row k="Alamat sekarang" v={a.alamat} />
-          <Row k="Telefon Rumah" v={a.no_telefon_rumah} />
-          <Row k="No. H/P" v={a.telefon} />
+          <div className="flex justify-between border-b border-slate-100 py-1"><dt className="text-slate-500">Telefon Rumah</dt><dd className="text-right font-medium text-slate-800"><SulitTeks nilai={a.no_telefon_rumah} jenis="tel" /></dd></div>
+          <div className="flex justify-between border-b border-slate-100 py-1"><dt className="text-slate-500">No. H/P</dt><dd className="text-right font-medium text-slate-800"><SulitTeks nilai={a.telefon} jenis="tel" /></dd></div>
           <Row k="E-mel" v={a.emel} />
           <Row k="Status Perkahwinan" v={a.status_perkahwinan} />
           <Row k="Tempoh Menetap" v={tempoh} />
