@@ -13,7 +13,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co",
+  "connect-src 'self' https://*.supabase.co data: blob:",
   "media-src 'self' blob: data:",
   "upgrade-insecure-requests",
 ].join("; ");
