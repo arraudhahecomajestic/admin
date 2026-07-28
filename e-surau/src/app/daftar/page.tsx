@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { NAMA_SURAU, GELARAN, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
-import { noTelefon } from "@/lib/format";
+import { noTelefon, dataURLtoBlob } from "@/lib/format";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
 import { semakKpDaftar, sediaEmelAhli } from "./actions";
@@ -135,7 +135,7 @@ export default function DaftarPage() {
 
   async function uploadTtd(dataUrl: string): Promise<string> {
     const supabase = createClient();
-    const blob = await (await fetch(dataUrl)).blob();
+    const blob = dataURLtoBlob(dataUrl);
     const path = `${crypto.randomUUID()}-ttd.png`;
     const { error } = await supabase.storage.from("salinan-kp").upload(path, blob, { contentType: "image/png" });
     if (error) throw new Error(error.message);
@@ -274,7 +274,7 @@ export default function DaftarPage() {
 
     // Cipta akaun portal ahli (jika kata laluan diisi). Rekod ahli dicipta
     // dahulu supaya trigger auto-pautkan akaun ikut emel.
-    let mesej = "Permohonan berjaya dihantar! Menunggu sokongan & kelulusan Jawatankuasa Surau.";
+    let mesej = "Permohonan anda berjaya dihantar! 📧 Kami telah menghantar pautan pengesahan ke e-mel anda. Sila SEMAK E-MEL (termasuk folder Spam/Promosi), klik pautan untuk mengesahkan akaun, kemudian LOG MASUK untuk menyemak status permohonan anda (Menunggu → Diluluskan).";
     if (nakAkaun) {
       const { error: eSignup } = await supabase.auth.signUp({
         email: emel,
@@ -286,9 +286,7 @@ export default function DaftarPage() {
         },
       });
       if (eSignup) {
-        mesej += ` (Nota: akaun portal tidak dapat dicipta — ${eSignup.message}. Anda boleh cuba log masuk atau hubungi admin.)`;
-      } else {
-        mesej += " Akaun portal ahli anda telah dicipta — sila semak emel untuk pengesahan, kemudian log masuk.";
+        mesej = `Permohonan anda telah direkod, tetapi akaun portal tidak dapat dicipta — ${eSignup.message}. Sila pastikan e-mel anda betul, atau hubungi admin surau.`;
       }
     }
     setHantar(false);
@@ -301,8 +299,11 @@ export default function DaftarPage() {
       <div className="mx-auto max-w-lg rounded-xl bg-white p-8 text-center shadow-sm">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl">✓</div>
         <h1 className="text-xl font-bold text-slate-900">Terima kasih!</h1>
-        <p className="mt-2 text-slate-600">{selesai.msg}</p>
-        <Link href="/" className="mt-6 inline-block rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark">Kembali ke Utama</Link>
+        <p className="mt-2 text-left text-slate-600">{selesai.msg}</p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link href="/masuk" className="inline-block rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark">Log Masuk Portal</Link>
+          <Link href="/" className="inline-block rounded-lg border border-surau/40 px-5 py-2.5 font-semibold text-surau hover:bg-surau/10">Kembali ke Utama</Link>
+        </div>
       </div>
     );
   }
@@ -570,7 +571,7 @@ export default function DaftarPage() {
         <p className="text-xs text-slate-500">Sila turunkan tandatangan & ambil swafoto sebagai bukti pengesahan diri.</p>
         <div>
           <span className="mb-1 block text-sm font-medium text-slate-700">e-Tandatangan *</span>
-          <SignaturePad onChange={setTtdBaru} />
+          <SignaturePad onChange={(v) => { setTtdBaru(v); if (selesai && !selesai.ok) setSelesai(null); }} />
         </div>
         <div>
           <span className="mb-1 block text-sm font-medium text-slate-700">Swafoto (Selfie) *</span>

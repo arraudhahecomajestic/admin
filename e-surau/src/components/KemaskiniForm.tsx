@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import { GELARAN } from "@/lib/tetapan";
+import { dataURLtoBlob } from "@/lib/format";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
 
@@ -98,7 +99,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
 
   async function uploadTtd(dataUrl: string): Promise<string> {
     const supabase = createClient();
-    const blob = await (await fetch(dataUrl)).blob();
+    const blob = dataURLtoBlob(dataUrl);
     const path = `${crypto.randomUUID()}-ttd.png`;
     const { error } = await supabase.storage.from("salinan-kp").upload(path, blob, { contentType: "image/png" });
     if (error) throw new Error(error.message);

@@ -1,3 +1,14 @@
+// Tukar data URL (cth dari canvas tandatangan) → Blob TANPA fetch().
+// Elak isu CSP connect-src yang boleh blok fetch('data:...').
+export function dataURLtoBlob(dataurl: string): Blob {
+  const [head, b64] = (dataurl || "").split(",");
+  const mime = head.match(/:(.*?);/)?.[1] || "image/png";
+  const bin = atob(b64 || "");
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
 // Nombor telefon Malaysia → format antarabangsa piawai (60XXXXXXXXX), tanpa dash/ruang.
 // Contoh: "0124030663" → "60124030663", "019-3509417" → "60193509417", "6019-2385485" → "60192385485".
 export function noTelefon(raw: string | null | undefined): string {

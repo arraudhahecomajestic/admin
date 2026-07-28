@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { rm } from "@/lib/format";
+import { rm, dataURLtoBlob } from "@/lib/format";
 import { RUANG, PERALATAN, STATUS_PEMOHON, JENIS_ACARA, KAEDAH_BAYAR, SYARAT_SEWAAN } from "@/lib/sewaan";
 import { BANK_SURAU } from "@/lib/tetapan";
 import { mohonSewaan, mulaBayaranSewaan } from "@/app/sewaan/actions";
@@ -35,7 +35,7 @@ export default function SewaanForm({ bayaranDibuka = false }: { bayaranDibuka?: 
 
   async function uploadTtd(dataUrl: string): Promise<string> {
     const supabase = createClient();
-    const blob = await (await fetch(dataUrl)).blob();
+    const blob = dataURLtoBlob(dataUrl);
     const path = `${crypto.randomUUID()}-sewaan-ttd.png`;
     const { error } = await supabase.storage.from("salinan-kp").upload(path, blob, { contentType: "image/png" });
     if (error) throw new Error(error.message);
