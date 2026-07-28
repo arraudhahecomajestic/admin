@@ -54,7 +54,7 @@ function SenaraiArwah({ tajuk, senarai }: { tajuk: string; senarai: any[] }) {
       <h2 className="border-b px-4 py-2 font-semibold text-slate-900">{tajuk} <span className="text-sm font-normal text-slate-400">({senarai.length})</span></h2>
       <ol className="list-decimal space-y-1 px-8 py-3 text-sm text-slate-700">
         {senarai.length === 0 && <p className="list-none text-slate-400">Tiada nama lagi.</p>}
-        {senarai.map((a) => <li key={a.id}>{a.nama}</li>)}
+        {senarai.map((a) => <li key={a.id}>{(a.nama || "").toUpperCase()}</li>)}
       </ol>
     </div>
   );

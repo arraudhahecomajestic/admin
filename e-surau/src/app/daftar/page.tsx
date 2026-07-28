@@ -602,6 +602,11 @@ export default function DaftarPage() {
         </label>
       </section>
 
+      {selesai && !selesai.ok && (
+        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-700">
+          ⚠️ {selesai.msg}
+        </div>
+      )}
       <button type="submit" disabled={hantar || muatNaik !== ""} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {hantar ? "Menghantar…" : "Hantar Permohonan"}
       </button>

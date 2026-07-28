@@ -5,7 +5,7 @@ import AdminNav from "@/components/AdminNav";
 import ButangCetak from "@/components/ButangCetak";
 import { khamisAkan } from "@/lib/arwah";
 import { tarikhMs } from "@/lib/format";
-import { padamArwah } from "./actions";
+import ArwahEditRow from "@/components/ArwahEditRow";
 
 export const dynamic = "force-dynamic";
 
@@ -70,14 +70,7 @@ function Blok({ tajuk, senarai }: { tajuk: string; senarai: any[] }) {
       <ol className="list-decimal space-y-1 pl-6 text-sm text-slate-700">
         {senarai.length === 0 && <p className="list-none text-slate-400">Tiada.</p>}
         {senarai.map((a) => (
-          <li key={a.id} className="group">
-            {a.nama}
-            {a.pemohon && <span className="text-xs text-slate-400"> · {a.pemohon}</span>}
-            <form action={padamArwah} className="ml-2 inline no-print">
-              <input type="hidden" name="id" value={a.id} />
-              <button className="text-xs text-red-500 opacity-0 hover:underline group-hover:opacity-100">padam</button>
-            </form>
-          </li>
+          <ArwahEditRow key={a.id} id={a.id} nama={a.nama} jantina={a.jantina} pemohon={a.pemohon} />
         ))}
       </ol>
     </div>
