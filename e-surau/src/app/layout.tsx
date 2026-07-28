@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU } from "@/lib/tetapan";
-import { khairatDibuka, penajaDipapar } from "@/lib/tetapanSistem";
+import { khairatDibuka, penajaDipapar, infaqDipapar } from "@/lib/tetapanSistem";
 import { getProfil, isMaster } from "@/lib/sesi";
 import PenajaStrip from "@/components/PenajaStrip";
 import ToggleBahasa from "@/components/ToggleBahasa";
@@ -21,8 +21,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [khDibuka, penajaOn, profil] = await Promise.all([khairatDibuka(), penajaDipapar(), getProfil()]);
+  const [khDibuka, penajaOn, infaqOn, profil] = await Promise.all([khairatDibuka(), penajaDipapar(), infaqDipapar(), getProfil()]);
   const master = isMaster(profil); // hanya super admin boleh pratonton
+  const paparInfaq = infaqOn || master; // master boleh pratonton walau belum dilancarkan
   const stafPreview = !khDibuka && master; // super admin pratonton khairat walau belum dilancarkan
   const paparKhairat = khDibuka || stafPreview;
   const penajaPreview = !penajaOn && master; // super admin pratonton iklan
@@ -85,6 +86,7 @@ export default async function RootLayout({
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <footer className="print-hide mt-16 border-t bg-white py-6 text-center text-xs text-slate-500">
           <div className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+            {paparInfaq && <Link href="/infaq" className="font-medium text-surau hover:underline">{t("Infaq", "Infaq")}{!infaqOn && master ? " ·pratonton" : ""}</Link>}
             {paparPenaja && <Link href="/rakan" className="font-medium text-surau hover:underline">{t("Rakan Surau", "Our Partners")}</Link>}
             <Link href="/dasar-privasi" className="hover:text-surau hover:underline">{t("Dasar Privasi", "Privacy Policy")}</Link>
             <Link href="/terma" className="hover:text-surau hover:underline">{t("Terma & Penafian", "Terms & Disclaimer")}</Link>

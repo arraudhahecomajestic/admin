@@ -51,6 +51,11 @@ export const PAKEJ_KHAIRAT = [
   { tahun: 10, label: "10 Tahun" },
 ];
 
+// Pakej Infaq (langganan/satu-tap) — halaman /infaq
+export const PAKEJ_INFAQ_SUBUH = [2, 5, 7, 10, 15, 20, 50]; // RM tiap infaq subuh
+export const INFAQ_JAMUAN_SELOT = 10;   // RM satu lot jamuan Yassin & Tahlil
+export const INFAQ_JAMUAN_MAX_LOT = 35; // 35 lot × RM10 = RM350 belanja jamuan/malam Jumaat
+
 export const SENARAI_BANK = [
   "Maybank", "CIMB Bank", "Bank Islam", "RHB Bank", "Public Bank",
   "Bank Simpanan Nasional (BSN)", "Bank Rakyat", "AmBank", "Hong Leong Bank",

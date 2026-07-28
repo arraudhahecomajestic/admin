@@ -20,6 +20,7 @@ export default async function TetapanPage() {
   const penajaOn = t.penaja_dipapar === "true";
   const bayaranOnlineOn = t.bayaran_online === "true";
   const kewanganAwamOn = t.kewangan_awam === "true";
+  const infaqOn = t.infaq_dipapar === "true";
 
   return (
     <div className="space-y-6">
@@ -107,6 +108,30 @@ export default async function TetapanPage() {
             pendingText="Menukar…"
           >
             {kewanganAwamOn ? "Sorok Penyata Dari Umum" : "Terbitkan Penyata Kepada Umum"}
+          </ButangHantar>
+        </form>
+      </section>
+
+      {/* Suis Halaman Infaq */}
+      <section className="rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-slate-900">Halaman Infaq (Subuh & Jamuan)</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Bila <b>DITUTUP</b>, halaman <code>/infaq</code> disorok dari orang ramai — master sahaja boleh pratonton.
+          Bila <b>DIPAPAR</b>, orang ramai boleh akses & berinfaq.
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${infaqOn ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>
+            Status sekarang: {infaqOn ? "DIPAPAR (Live)" : "DISOROK (pratonton master)"}
+          </span>
+        </div>
+        <form action={setTetapan} className="mt-3">
+          <input type="hidden" name="kunci" value="infaq_dipapar" />
+          <input type="hidden" name="nilai" value={infaqOn ? "false" : "true"} />
+          <ButangHantar
+            className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 ${infaqOn ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+            pendingText="Menukar…"
+          >
+            {infaqOn ? "Sorok Halaman Infaq" : "Papar Halaman Infaq"}
           </ButangHantar>
         </form>
       </section>

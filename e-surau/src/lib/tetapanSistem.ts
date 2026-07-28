@@ -30,6 +30,12 @@ export async function penajaDipapar(): Promise<boolean> {
   return t.penaja_dipapar === "true";
 }
 
+// Papar halaman Infaq kepada orang ramai? Lalai false (master pratonton dulu).
+export async function infaqDipapar(): Promise<boolean> {
+  const t = await bacaTetapan();
+  return t.infaq_dipapar === "true";
+}
+
 // Penyata kewangan dipapar kepada orang ramai? Lalai: false (staf semak dulu).
 export async function kewanganAwamDibuka(): Promise<boolean> {
   const t = await bacaTetapan();

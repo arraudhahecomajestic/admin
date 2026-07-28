@@ -89,6 +89,22 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
         direkod_oleh: "CHIP",
       });
     }
+  } else if (b.jenis === "infaq") {
+    // Infaq Subuh / Infaq Jamuan — rekod dalam kategori masing-masing (tak papar awam).
+    const nama = String(b.no_rujukan || "").includes("JAMUAN")
+      ? "Infaq Jamuan Yassin & Tahlil"
+      : "Infaq Subuh";
+    const katId = await pastiKategori(db, nama, false);
+    if (katId) {
+      await db.from("kutipan").insert({
+        kategori_id: katId,
+        jumlah: Number(b.jumlah || 0),
+        kaedah: "online",
+        catatan: `${nama}${b.nama ? " — " + b.nama : ""} (CHIP)`,
+        tarikh: new Date().toISOString().slice(0, 10),
+        direkod_oleh: "CHIP",
+      });
+    }
   } else if (b.jenis === "jamuan") {
     // Sumbangan jamuan tahlil / doa selamat → rekod dalam Tabung Khas
     const { data: kat } = await db.from("kategori_kutipan").select("id").eq("nama", "Tabung Khas").maybeSingle();
