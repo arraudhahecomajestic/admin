@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Surau · Architecture Briefing</title>
+<style>
+  :root{
+    --gold:#b8860b; --gold-l:#d9a92e; --ink:#0f172a; --ink2:#1e293b;
+    --slate:#475569; --slate-l:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+    --teal:#0f766e; --blue:#1d4ed8; --violet:#6d28d9; --rose:#be123c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px 64px}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#2a2410 100%);color:#fff;padding:44px 0 40px;border-bottom:3px solid var(--gold)}
+  .hero .wrap{padding-bottom:0}
+  .kicker{color:var(--gold-l);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
+  h1{font-size:34px;font-weight:800;margin:8px 0 6px;line-height:1.1}
+  .sub{color:#cbd5e1;font-size:15px;max-width:680px}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:999px;padding:5px 12px;font-size:12.5px;color:#e2e8f0}
+  section{margin-top:40px}
+  h2{font-size:20px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+  h2::before{content:"";width:6px;height:20px;background:var(--gold);border-radius:2px;display:inline-block}
+  .lead{color:var(--slate);font-size:14px;margin-bottom:18px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:720px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .card p{font-size:13px;color:var(--slate)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:#f1f5f9;color:var(--slate)}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+  /* Flow diagram */
+  .flow{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
+  .layer{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;background:#fff}
+  .layer .lbl{position:absolute;top:-9px;left:14px;background:#fff;padding:0 8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-l)}
+  .layer-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+  .node{flex:1;min-width:150px;border-radius:10px;padding:10px 12px;color:#fff;font-size:13px}
+  .node b{display:block;font-size:13.5px;font-weight:700}
+  .node small{display:block;font-size:11.5px;opacity:.85;margin-top:2px}
+  .arrow{text-align:center;color:var(--gold);font-size:22px;line-height:1;margin:8px 0;font-weight:700}
+  .n-client{background:linear-gradient(135deg,#334155,#475569)}
+  .n-edge{background:linear-gradient(135deg,#c2410c,#ea580c)}
+  .n-app{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
+  .n-data{background:linear-gradient(135deg,#0f766e,#14b8a6)}
+  .n-ext{background:linear-gradient(135deg,#6d28d9,#8b5cf6)}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  th{background:#f1f5f9;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-l)}
+  tr:last-child td{border-bottom:0}
+  td b{color:var(--ink)}
+  code{background:#0f172a;color:#e2e8f0;padding:1.5px 6px;border-radius:5px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+  .stat b{display:block;font-size:30px;font-weight:800;color:var(--gold);line-height:1}
+  .stat small{display:block;font-size:12px;color:var(--slate);margin-top:6px}
+  ul.clean{list-style:none;display:grid;gap:8px}
+  ul.clean li{font-size:13.5px;color:var(--slate);padding-left:22px;position:relative}
+  ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--gold);font-weight:700}
+  ul.clean li b{color:var(--ink)}
+  footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--slate-l);text-align:center}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .pill{font-size:12px;font-weight:600;padding:5px 11px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .pill i{font-style:normal;color:var(--slate-l);font-weight:400}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">System Architecture Briefing</div>
+    <h1>e-Surau — Surau Management Platform</h1>
+    <p class="sub">Full-stack, serverless, edge-deployed web application for community (kariah) administration: membership, death-benefit scheme (khairat), finances, facility rental, vendors, and programmes. This document maps the stack &amp; backend for developer review.</p>
+    <div class="meta">
+      <span>🏛️ Surau Ar Raudhah, Eco Majestic</span>
+      <span>~540 members</span>
+      <span>Single-tenant · production</span>
+      <span>Prepared for developer handover</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- STACK AT A GLANCE -->
+  <section>
+    <h2>Stack at a glance</h2>
+    <p class="lead">Modern TypeScript stack — one language end-to-end, serverless runtime, managed Postgres.</p>
+    <div class="grid g4">
+      <div class="card"><h3><span class="dot" style="background:#1d4ed8"></span>Language</h3><p><b>TypeScript</b> everywhere (frontend + server). No separate backend language.</p></div>
+      <div class="card"><h3><span class="dot" style="background:#0f172a"></span>Framework</h3><p><b>Next.js 14</b> (App Router) with React 18 Server Components.</p></div>
+      <div class="card"><h3><span class="dot" style="background:#c2410c"></span>Runtime</h3><p><b>Cloudflare Workers</b> (edge, serverless) via OpenNext adapter.</p></div>
+      <div class="card"><h3><span class="dot" style="background:#0f766e"></span>Data</h3><p><b>Supabase</b> — PostgreSQL, Auth, Storage, Row-Level Security.</p></div>
+    </div>
+  </section>
+
+  <!-- REQUEST FLOW -->
+  <section>
+    <h2>How a request flows (backend mapping)</h2>
+    <p class="lead">There is no separate REST API tier. The browser talks to server-rendered pages &amp; <b>Server Actions</b>; those talk directly to Postgres through Supabase. Payments go out to CHIP and come back via webhook.</p>
+    <div class="flow">
+      <div class="layer" style="border-color:#94a3b8">
+        <span class="lbl">1 · Client</span>
+        <div class="layer-row">
+          <div class="node n-client"><b>Browser / Mobile Web</b><small>React 18 UI · Tailwind CSS · bilingual (BM / EN via cookie)</small></div>
+        </div>
+      </div>
+      <div class="arrow">↓ &nbsp;HTTPS</div>
+      <div class="layer" style="border-color:#fb923c">
+        <span class="lbl">2 · Edge Runtime</span>
+        <div class="layer-row">
+          <div class="node n-edge"><b>Cloudflare Workers</b><small>Global edge · static assets (CDN) · secrets vault</small></div>
+          <div class="node n-edge"><b>OpenNext Adapter</b><small>Runs Next.js output on Workers · <code>nodejs_compat</code></small></div>
+        </div>
+      </div>
+      <div class="arrow">↓ &nbsp;renders / invokes</div>
+      <div class="layer" style="border-color:#60a5fa">
+        <span class="lbl">3 · Application (Next.js 14)</span>
+        <div class="layer-row">
+          <div class="node n-app"><b>Server Components (RSC)</b><small>Data fetched on the server, HTML streamed to client</small></div>
+          <div class="node n-app"><b>Server Actions</b><small>Type-safe mutations (forms) — no manual API endpoints</small></div>
+          <div class="node n-app"><b>Route Handler</b><small><code>/api/chip/webhook</code> — payment callback</small></div>
+        </div>
+      </div>
+      <div class="arrow">↓ &nbsp;SQL / Auth / Storage (server-side keys)</div>
+      <div class="layer" style="border-color:#2dd4bf">
+        <span class="lbl">4 · Data &amp; Services (Supabase)</span>
+        <div class="layer-row">
+          <div class="node n-data"><b>PostgreSQL</b><small>28 tables · views · RPC · Row-Level Security</small></div>
+          <div class="node n-data"><b>Auth</b><small>Email/password · role in JWT · SSR cookies</small></div>
+          <div class="node n-data"><b>Storage</b><small>IC/selfie (private) · sponsor logos (public)</small></div>
+        </div>
+      </div>
+      <div class="arrow">⇅ &nbsp;REST (Bearer) + webhook</div>
+      <div class="layer" style="border-color:#a78bfa">
+        <span class="lbl">5 · External Integration</span>
+        <div class="layer-row">
+          <div class="node n-ext"><b>CHIP Collect</b><small>Malaysian payment gateway · FPX / card / e-wallet · verify via re-fetch + webhook</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH TABLE -->
+  <section>
+    <h2>Technology &amp; versions</h2>
+    <p class="lead">Pinned from <code>package.json</code> / <code>wrangler.json</code>.</p>
+    <table>
+      <tr><th>Layer</th><th>Technology</th><th>Version</th><th>Role</th></tr>
+      <tr><td>Language</td><td><b>TypeScript</b></td><td>5.5</td><td>End-to-end typing, front &amp; back</td></tr>
+      <tr><td>Framework</td><td><b>Next.js</b> (App Router)</td><td>14.2</td><td>SSR, Server Components, Server Actions</td></tr>
+      <tr><td>UI</td><td><b>React</b></td><td>18.3</td><td>Component rendering</td></tr>
+      <tr><td>Styling</td><td><b>Tailwind CSS</b></td><td>3.4</td><td>Utility-first styling (PostCSS)</td></tr>
+      <tr><td>Runtime/Host</td><td><b>Cloudflare Workers</b></td><td>compat 2024-12-30</td><td>Serverless edge execution + CDN</td></tr>
+      <tr><td>Adapter</td><td><b>@opennextjs/cloudflare</b></td><td>1.3</td><td>Builds Next.js for Workers</td></tr>
+      <tr><td>Deploy CLI</td><td><b>Wrangler</b></td><td>4.20</td><td>Build &amp; ship to Cloudflare</td></tr>
+      <tr><td>Database</td><td><b>Supabase PostgreSQL</b></td><td>PG 15</td><td>Primary datastore</td></tr>
+      <tr><td>DB access</td><td><b>@supabase/supabase-js</b> + <b>ssr</b></td><td>2.45 / 0.5</td><td>Client + cookie-based SSR auth</td></tr>
+      <tr><td>Payments</td><td><b>CHIP Collect API</b></td><td>v1 REST</td><td>Online collections (FPX/card/e-wallet)</td></tr>
+    </table>
+  </section>
+
+  <!-- SECURITY -->
+  <section>
+    <h2>Security &amp; access-control model</h2>
+    <p class="lead">Defence in depth — enforced at the database, not just the UI.</p>
+    <div class="grid g2">
+      <div class="card"><h3>🔐 Row-Level Security (RLS)</h3><p>Postgres RLS policies gate every table. A member can only read their own records; staff access is granted by role — enforced in the DB even if the app layer is bypassed.</p></div>
+      <div class="card"><h3>👥 Role-based access (RBAC)</h3><p>Postgres enum <code>peranan_jenis</code>: admin, bendahari (treasurer), ajk (committee), imam, <b>kerani</b> (view-only clerk), ahli (member) + a <code>master</code> super-admin flag.</p></div>
+      <div class="card"><h3>🛡️ Security-definer RPC</h3><p>Sensitive writes (registration, linking, claims) run through vetted PostgreSQL functions with fixed <code>search_path</code> — not raw table writes from the client.</p></div>
+      <div class="card"><h3>🔑 Secrets management</h3><p>Payment keys stored as <b>Cloudflare Secrets</b> (encrypted), never plaintext vars. Service-role key used only in server actions, never shipped to the browser.</p></div>
+      <div class="card"><h3>🗂️ Private storage</h3><p>IC images &amp; selfies live in a <b>private</b> bucket (<code>salinan-kp</code>); only sponsor logos are public. Signed access server-side.</p></div>
+      <div class="card"><h3>⚖️ PDPA-aligned</h3><p>Consent capture, e-signature, biometric selfie treated as sensitive data, retention &amp; disclosure policy pages, data shared only with JAIS.</p></div>
+    </div>
+  </section>
+
+  <!-- RUNTIME CONFIG -->
+  <section>
+    <h2>Runtime configuration (no-redeploy switches)</h2>
+    <p class="lead">Operational flags live in a DB table (<code>tetapan_sistem</code>), toggled by the super-admin — no code deploy needed.</p>
+    <div class="pill-row">
+      <span class="pill">Khairat campaign <i>on/off + banner</i></span>
+      <span class="pill">Sponsor / ad strip <i>on/off</i></span>
+      <span class="pill">Master payment switch <i>all gateways</i></span>
+      <span class="pill">Compensation amount <i>editable</i></span>
+      <span class="pill">Language <i>BM / EN cookie</i></span>
+    </div>
+  </section>
+
+  <!-- MODULES -->
+  <section>
+    <h2>Functional modules</h2>
+    <div class="grid g3">
+      <div class="card"><h3>👤 Membership</h3><p>Gated registration by IC, guided IC camera + watermark, e-signature, kemas kini → SU → chairman → approve workflow.</p></div>
+      <div class="card"><h3>⚰️ Khairat (death benefit)</h3><p>Opt-in scheme, multi-year packages (1/3/5/10 yr), dependants coverage, compensation payout tracking.</p></div>
+      <div class="card"><h3>💰 Finance</h3><p>Collections, expenses, categories, payment vouchers (baucer), fund/tabung summaries, receipts.</p></div>
+      <div class="card"><h3>🏛️ Rental (sewaan)</h3><p>Space/equipment booking, calendar, cost calc, deposit, online or cash payment, refund policy.</p></div>
+      <div class="card"><h3>🤝 Vendors / Suppliers</h3><p>Gated self-registration (individual vs company), claims → verify → voucher → pay → slip match.</p></div>
+      <div class="card"><h3>🕌 Programmes &amp; Tahlil</h3><p>Events with RSVP &amp; closed invitations, weekly Yaasin &amp; Tahlil deceased-name submissions.</p></div>
+    </div>
+  </section>
+
+  <!-- DATA MODEL -->
+  <section>
+    <h2>Data model (28 tables)</h2>
+    <p class="lead">Delivered as <b>31 versioned SQL migrations</b> (phased <code>fasa1 → fasa30</code>) applied via Supabase SQL Editor.</p>
+    <div class="grid g4">
+      <div class="card"><h3>Members</h3><p>ahli_kariah · tanggungan · profil · online_transfer</p></div>
+      <div class="card"><h3>Khairat</h3><p>keahlian_khairat · yuran_khairat · tuntutan_khairat</p></div>
+      <div class="card"><h3>Finance</h3><p>kutipan · perbelanjaan · kategori_kutipan · kategori_belanja · dana · invois · invois_item · baucer</p></div>
+      <div class="card"><h3>Ops &amp; Config</h3><p>sewaan · program · rsvp · aset · arwah · pengumuman · pembekal · vendor · penaja · bayaran · tuntutan_bayaran · tetapan_sistem</p></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section>
+    <h2>By the numbers</h2>
+    <div class="grid g4">
+      <div class="stat"><b>28</b><small>PostgreSQL tables</small></div>
+      <div class="stat"><b>48</b><small>App routes / pages</small></div>
+      <div class="stat"><b>31</b><small>SQL migrations</small></div>
+      <div class="stat"><b>25</b><small>Server-action modules</small></div>
+    </div>
+  </section>
+
+  <!-- DEPLOY -->
+  <section>
+    <h2>Build &amp; deploy pipeline</h2>
+    <ul class="clean">
+      <li><b>Source</b> → GitHub (single repo, <code>main</code> branch)</li>
+      <li><b>CI/CD</b> → Cloudflare auto-builds on push: <code>opennextjs-cloudflare build</code> → deploy to Workers</li>
+      <li><b>Database</b> → migrations run manually in Supabase SQL Editor (phased, idempotent)</li>
+      <li><b>Config</b> → env as Cloudflare Secrets (persist across deploys); public vars via <code>NEXT_PUBLIC_*</code></li>
+      <li><b>Observability</b> → Cloudflare Workers observability enabled</li>
+    </ul>
+  </section>
+
+  <footer>
+    e-Surau architecture briefing · generated for developer review · stack &amp; figures sourced from the live codebase.
+  </footer>
+
+</div>
+</body>
+</html>
