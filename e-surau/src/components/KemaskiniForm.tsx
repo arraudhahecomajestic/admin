@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { simpanKemaskini, cariAhliIkutKp } from "@/app/ahli/kemaskini/actions";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import { GELARAN } from "@/lib/tetapan";
+import { KAWASAN_PILIHAN } from "@/lib/kawasan";
 import { dataURLtoBlob } from "@/lib/format";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
@@ -27,6 +28,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
   const [noKp, setNoKp] = useState(awal.no_kp ?? "");
   const [alamatKp, setAlamatKp] = useState(awal.alamat_kp ?? "");
   const [alamat, setAlamat] = useState(awal.alamat ?? "");
+  const [kawasan, setKawasan] = useState(awal.kawasan ?? "");
   const [telRumah, setTelRumah] = useState(awal.no_telefon_rumah ?? "");
   const [hp, setHp] = useState(awal.telefon ?? "");
   const [emel, setEmel] = useState(awal.emel ?? "");
@@ -122,7 +124,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     const UP = (s: string) => (s || "").toUpperCase();
     const res = await simpanKemaskini({
       gelaran, nama: UP(nama), no_kp: noKp,
-      alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamat), no_telefon_rumah: telRumah,
+      alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamat), kawasan, no_telefon_rumah: telRumah,
       telefon: hp, emel: emel.trim().toLowerCase(), status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
@@ -182,6 +184,12 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
         {!alamatSama && (
           <F label="Alamat Tempat Tinggal Sekarang"><textarea className="inp uppercase" rows={2} value={alamat} onChange={(e) => setAlamat(e.target.value.toUpperCase())} /></F>
         )}
+        <F label="Kawasan / Fasa">
+          <select className="inp" value={kawasan} onChange={(e) => setKawasan(e.target.value)}>
+            <option value="">— Pilih fasa anda —</option>
+            {KAWASAN_PILIHAN.map((k) => (<option key={k.kod} value={k.kod}>{k.nama}{k.jalan ? ` (Jalan ${k.jalan})` : ""}</option>))}
+          </select>
+        </F>
         <div className="grid gap-4 sm:grid-cols-3">
           <F label="No. Telefon Rumah"><input className="inp" value={telRumah} onChange={(e) => setTelRumah(e.target.value)} /></F>
           <F label="No. H/P *"><input className="inp" value={hp} onChange={(e) => setHp(e.target.value)} /></F>

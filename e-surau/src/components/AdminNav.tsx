@@ -3,6 +3,7 @@ import Link from "next/link";
 const pautanPenuh = [
   { href: "/admin", label: "Permohonan" },
   { href: "/admin/ahli", label: "Jejak Ahli" },
+  { href: "/admin/kariah-kawasan", label: "Kawasan" },
   { href: "/admin/kewangan", label: "Kewangan" },
   { href: "/admin/program", label: "Program" },
   { href: "/admin/tahlil", label: "Tahlil" },
@@ -24,7 +25,8 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
   let pautan = pautanPenuh;
   if (peranan === "bendahari") pautan = pautanBendahari;
   else if (peranan === "imam") pautan = pautanImam;
-  else if (master) pautan = [...pautanPenuh, { href: "/admin/penaja", label: "Penaja" }, { href: "/admin/peranan", label: "Peranan" }, { href: "/admin/tetapan", label: "Tetapan" }];
+  else pautan = [...pautanPenuh, { href: "/admin/kandungan", label: "Kandungan" }];
+  if (master) pautan = [...pautanPenuh, { href: "/admin/kandungan", label: "Kandungan" }, { href: "/admin/penaja", label: "Penaja" }, { href: "/admin/peranan", label: "Peranan" }, { href: "/admin/tetapan", label: "Tetapan" }];
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
       <nav className="flex flex-wrap gap-1">

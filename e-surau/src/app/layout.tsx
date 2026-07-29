@@ -70,6 +70,9 @@ export default async function RootLayout({
               <Link href="/program" className="hover:underline">
                 {t("Program", "Programmes")}
               </Link>
+              <Link href="/tentang" className="hover:underline">
+                {t("Tentang Surau", "About")}
+              </Link>
               <Link href="/sewaan" className="hover:underline">
                 {t("Sewaan", "Rental")}
               </Link>

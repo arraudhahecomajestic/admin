@@ -7,6 +7,9 @@ import { getProfil, isStaf } from "@/lib/sesi";
 import { rm, tarikhMs } from "@/lib/format";
 import { bahasaSemasa } from "@/lib/bahasa";
 import { buatT } from "@/lib/i18n";
+import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
+import { KAWASAN, kenalKawasan } from "@/lib/kawasan";
+import StatFasaChart from "@/components/StatFasaChart";
 
 export const dynamic = "force-dynamic";
 
@@ -57,14 +60,36 @@ async function ambilProgram(): Promise<any[]> {
   return (data as any[]) ?? [];
 }
 
+async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[]; total: number }> {
+  if (!adminConfigured) return { data: [], total: 0 };
+  try {
+    const db = createAdminClient();
+    const { data } = await db.from("ahli_kariah").select("alamat, alamat_kp, kawasan");
+    const rows = (data as any[]) ?? [];
+    const kira: Record<string, number> = {};
+    for (const k of KAWASAN) kira[k.kod] = 0;
+    let total = 0;
+    for (const a of rows) {
+      const kw = kenalKawasan(a.alamat || a.alamat_kp, a.kawasan);
+      if (kw.kod === "lain") continue; // graf awam tunjuk fasa dikenali sahaja
+      kira[kw.kod] = (kira[kw.kod] ?? 0) + 1;
+      total++;
+    }
+    return { data: KAWASAN.map((k) => ({ nama: k.nama, bil: kira[k.kod] ?? 0 })), total };
+  } catch {
+    return { data: [], total: 0 };
+  }
+}
+
 export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
   const tr = buatT(bahasaSemasa());
-  const [pengumuman, tabung, program, khDibuka, pampasan, kewanganAwam, profil] = await Promise.all([
+  const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
     ambilProgram(),
+    ambilStatFasa(),
     khairatDibuka(),
     pampasanKhairat(),
     kewanganAwamDibuka(),
@@ -141,6 +166,18 @@ export default async function Home() {
           </Link>
         </div>
       </section>
+
+      {statFasa.total > 0 && (
+        <StatFasaChart
+          data={statFasa.data}
+          total={statFasa.total}
+          tajuk={tr("Pendaftaran Ahli Kariah Ikut Fasa", "Member Registration by Phase")}
+          nota={tr(
+            "Bilangan ahli kariah berdaftar mengikut fasa kediaman. Belum daftar? Ayuh sertai kariah anda.",
+            "Registered community members by residential phase. Not registered yet? Join your neighbourhood.",
+          )}
+        />
+      )}
 
       <PrayerTimes zon={zon} />
 

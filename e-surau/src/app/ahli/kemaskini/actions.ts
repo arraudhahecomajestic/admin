@@ -41,6 +41,7 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
     no_kp: data.no_kp,
     alamat_kp: data.alamat_kp || null,
     alamat: data.alamat || null,
+    kawasan: data.kawasan || null,
     no_telefon_rumah: noTelefon(data.no_telefon_rumah) || null,
     telefon: noTelefon(data.telefon) || null,
     emel: data.emel || null,

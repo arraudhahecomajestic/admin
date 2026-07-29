@@ -34,9 +34,12 @@ export default async function AdminStafPage() {
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/staf" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} master={profil.master} />
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Pengurusan Staf Surau</h1>
-        <p className="mt-1 text-sm text-slate-600">Pantau kehadiran, beri tugasan, uruskan laporan &amp; templat tugas harian Penolong Pengurus Surau.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Pengurusan Staf Surau</h1>
+          <p className="mt-1 text-sm text-slate-600">Pantau kehadiran, beri tugasan, uruskan laporan &amp; templat tugas harian Penolong Pengurus Surau.</p>
+        </div>
+        <a href="/admin/staf/gaji" className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">💰 Gaji Staf</a>
       </div>
       <AdminStafPanel kehadiran={kehadiran} tugasan={tugasan} laporan={laporan} checklist={checklist} log={log} />
     </div>
