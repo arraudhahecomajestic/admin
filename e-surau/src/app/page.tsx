@@ -10,7 +10,7 @@ import { buatT } from "@/lib/i18n";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { KAWASAN, kenalKawasan } from "@/lib/kawasan";
 import StatFasaChart from "@/components/StatFasaChart";
-import KadDanaTutup from "@/components/KadDanaTutup";
+import KadTabung from "@/components/KadTabung";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +90,8 @@ async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[];
 export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
-  const tr = buatT(bahasaSemasa());
+  const lang = bahasaSemasa();
+  const tr = buatT(lang);
   const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
@@ -179,6 +180,8 @@ export default async function Home() {
           total={statFasa.total}
           belumKelas={statFasa.belumKelas}
           tajuk={tr("Pendaftaran Ahli Kariah Ikut Fasa", "Member Registration by Phase")}
+          labelLihat={tr("Lihat pecahan ikut fasa", "View breakdown by phase")}
+          labelTutup={tr("Tutup", "Close")}
           nota={tr(
             "Bilangan ahli kariah berdaftar mengikut fasa kediaman. Belum daftar? Ayuh sertai kariah anda.",
             "Registered community members by residential phase. Not registered yet? Join your neighbourhood.",
@@ -192,75 +195,42 @@ export default async function Home() {
 
       <PrayerTimes zon={zon} />
 
-      {/* Tabung Kutipan Surau — disorok dari umum sehingga diterbitkan (suis admin) */}
-      {tabung.length > 0 && paparKewangan && (
-        <section>
-          {stafKewangan && !kewanganAwam && (
-            <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
-              👁️ PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
-            </div>
-          )}
-          <h2 className="mb-3 text-xl font-bold text-slate-900">{tr("Kutipan Tabung Surau", "Surau Fund Collections")}</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {tabung.map((t) => {
-              if (t.ditutup) {
-                return (
-                  <KadDanaTutup
-                    key={t.kategori_id}
-                    nama={t.nama}
-                    terkumpul={t.jumlah_terkumpul}
-                    tarikh={t.terkini_tarikh}
-                    labelTutup={tr("Kutipan Ditutup", "Collection Closed")}
-                    labelLihat={tr("Lihat jumlah terkumpul", "View total collected")}
-                    labelSehingga={tr("Kutipan terkini sehingga", "Latest collection up to")}
-                  />
-                );
-              }
-              const belumLancar = t.jenis_khairat && !khDibuka;
-              return (
-              <div key={t.kategori_id} className="rounded-xl bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900">{t.nama}</h3>
-                  {t.jenis_khairat && (
-                    <span className="rounded bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">{tr("Khairat", "Death Benefit")}</span>
-                  )}
-                </div>
-                {belumLancar ? (
-                  <div className="mt-3 rounded-lg bg-slate-50 p-4 text-center text-sm font-medium text-slate-500">
-                    {tr("Tabung khairat belum dilancarkan.", "The death benefit fund has not been launched yet.")}
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-3">
-                      <div className="text-2xl font-bold text-surau">{rm(t.terkini_jumlah)}</div>
-                      <div className="text-xs text-slate-500">
-                        {tr("Kutipan terkini", "Latest collection")}{t.terkini_tarikh ? ` · ${tarikhMs(t.terkini_tarikh)}` : ` · ${tr("belum ada rekod", "no records yet")}`}
-                      </div>
-                    </div>
-                    <div className="mt-3 flex gap-6 border-t pt-3 text-sm">
-                      <div>
-                        <div className="font-semibold text-slate-800">{rm(t.jumlah_bulan_ini)}</div>
-                        <div className="text-xs text-slate-500">{tr("Bulan ini", "This month")}</div>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-800">{rm(t.jumlah_terkumpul)}</div>
-                        <div className="text-xs text-slate-500">{tr("Terkumpul", "Total collected")}</div>
-                      </div>
-                    </div>
-                  </>
-                )}
+      {/* Tabung Kutipan Surau — hanya tabung yang ADA duit dipapar; disorok sehingga diterbitkan */}
+      {(() => {
+        const tabungAda = tabung.filter((t) => Number(t.jumlah_terkumpul) > 0);
+        if (tabungAda.length === 0 || !paparKewangan) return null;
+        return (
+          <section>
+            {stafKewangan && !kewanganAwam && (
+              <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
+                👁️ PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
               </div>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-xs text-slate-400">
-            {tr(
-              "Dikemas kini automatik apabila bendahari merekod kutipan. Semoga Allah membalas jariah anda.",
-              "Updated automatically when the treasurer records a collection. May Allah reward your charity.",
             )}
-          </p>
-        </section>
-      )}
+            <h2 className="mb-3 text-xl font-bold text-slate-900">{tr("Kutipan Tabung Surau", "Surau Fund Collections")}</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {tabungAda.map((t) => (
+                <KadTabung
+                  key={t.kategori_id}
+                  lang={lang}
+                  nama={t.nama}
+                  jenisKhairat={t.jenis_khairat}
+                  ditutup={!!t.ditutup}
+                  terkiniJumlah={t.terkini_jumlah}
+                  terkiniTarikh={t.terkini_tarikh}
+                  jumlahBulanIni={t.jumlah_bulan_ini}
+                  jumlahTerkumpul={t.jumlah_terkumpul}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              {tr(
+                "Dikemas kini automatik apabila bendahari merekod kutipan. Semoga Allah membalas jariah anda.",
+                "Updated automatically when the treasurer records a collection. May Allah reward your charity.",
+              )}
+            </p>
+          </section>
+        );
+      })()}
 
       {/* Yaasin & Tahlil malam Jumaat */}
       <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
