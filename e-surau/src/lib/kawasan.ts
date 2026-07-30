@@ -13,6 +13,8 @@ export const KAWASAN: Kawasan[] = [
   { kod: "karisma", nama: "Karisma Apartment" },
   { kod: "harmoni", nama: "Harmoni Apartment" },
   { kod: "simfoni", nama: "Simfoni Apartment" },
+  { kod: "begonia", nama: "Residensi Begonia" },
+  { kod: "oleander", nama: "Residensi Oleander" },
 ];
 
 export const KAWASAN_LAIN: Kawasan = { kod: "lain", nama: "Lain-lain / Luar Fasa" };
@@ -32,6 +34,8 @@ export function kenalKawasan(alamat?: string | null, kawasanKod?: string | null)
   if (a.includes("KARISMA")) return KAWASAN.find((k) => k.kod === "karisma")!;
   if (a.includes("HARMONI")) return KAWASAN.find((k) => k.kod === "harmoni")!;
   if (a.includes("SIMFONI")) return KAWASAN.find((k) => k.kod === "simfoni")!;
+  if (a.includes("BEGONIA")) return KAWASAN.find((k) => k.kod === "begonia")!;
+  if (a.includes("OLEANDER")) return KAWASAN.find((k) => k.kod === "oleander")!;
 
   // Jalan: nombor selepas "ECO MAJESTIC" (cth "JALAN ECO MAJESTIC 8/3")
   const m = a.match(/ECO\s*MAJESTIC\s*(\d+)/);

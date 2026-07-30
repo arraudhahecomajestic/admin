@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { NAMA_SURAU, GELARAN, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 import { layakKhairat, umurDari, tarikhLahirDariKp } from "@/lib/khairat";
 import { noTelefon, dataURLtoBlob } from "@/lib/format";
+import { KAWASAN_PILIHAN } from "@/lib/kawasan";
 import SignaturePad from "@/components/SignaturePad";
 import KameraKp from "@/components/KameraKp";
 import { semakKpDaftar, sediaEmelAhli } from "./actions";
@@ -43,6 +44,7 @@ export default function DaftarPage() {
   const [alamatKp, setAlamatKp] = useState("");
   const [alamatSekarang, setAlamatSekarang] = useState("");
   const [alamatSama, setAlamatSama] = useState(false);
+  const [kawasan, setKawasan] = useState("");
   const [telRumah, setTelRumah] = useState("");
   const [hp, setHp] = useState("");
   const [emel, setEmel] = useState("");
@@ -253,7 +255,7 @@ export default function DaftarPage() {
     const payload = {
       kariah: namaSurau,
       gelaran, nama: UP(nama), no_kp: noKp,
-      alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamatSekarang),
+      alamat_kp: UP(alamatKp), alamat: UP(alamatSama ? alamatKp : alamatSekarang), kawasan,
       no_telefon_rumah: noTelefon(telRumah), telefon: noTelefon(hp), emel: emel.trim().toLowerCase(),
       status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
@@ -439,6 +441,15 @@ export default function DaftarPage() {
             <textarea className="inp uppercase" rows={2} value={alamatSekarang} onChange={(e) => setAlamatSekarang(e.target.value.toUpperCase())} />
           </Field>
         )}
+
+        <Field label="Kawasan / Fasa Kediaman">
+          <select className="inp" value={kawasan} onChange={(e) => setKawasan(e.target.value)}>
+            <option value="">— Pilih fasa anda —</option>
+            {KAWASAN_PILIHAN.map((k) => (
+              <option key={k.kod} value={k.kod}>{k.nama}{k.jalan ? ` (Jalan ${k.jalan})` : ""}</option>
+            ))}
+          </select>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="5. No. Telefon Rumah">

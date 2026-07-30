@@ -3,7 +3,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangCetak from "@/components/ButangCetak";
-import { khamisAkan } from "@/lib/arwah";
+import { khamisPapar } from "@/lib/arwah";
 import { tarikhMs } from "@/lib/format";
 import ArwahEditRow from "@/components/ArwahEditRow";
 
@@ -16,7 +16,7 @@ export default async function AdminTahlilPage({ searchParams }: { searchParams: 
   if (!profil) return <PerluMasuk />;
   if (!bolehTahlil(profil)) return <TiadaAkses />;
 
-  const minggu = searchParams.minggu || khamisAkan();
+  const minggu = searchParams.minggu || khamisPapar();
   const db = createAdminClient();
   const { data } = await db.from("arwah").select("*").eq("minggu", minggu).order("jantina").order("nama");
   const arwah = (data as any[]) ?? [];

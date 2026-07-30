@@ -10,7 +10,8 @@ export function jantinaDariNama(nama: string): "lelaki" | "perempuan" | "tidak_p
 
 // Waktu Malaysia (UTC+8) & waktu tutup pendaftaran tahlil.
 const MYT_OFFSET_MS = 8 * 60 * 60 * 1000;
-export const TUTUP_JAM = 19; // 7:00 malam
+export const TUTUP_JAM = 19;  // 7:00 malam — waktu TUTUP pendaftaran nama
+export const PAPAR_JAM = 20;  // 8:00 malam — senarai kekal DIPAPAR sehingga lepas majlis
 
 // Date yang medan UTC-nya mewakili "jam dinding" Malaysia — supaya betul
 // walaupun pelayan (Cloudflare) berjalan dalam UTC.
@@ -18,18 +19,27 @@ function mytSekarang(): Date {
   return new Date(Date.now() + MYT_OFFSET_MS);
 }
 
-// Tarikh Khamis (malam Jumaat) sasaran untuk kemasukan nama arwah, format YYYY-MM-DD.
-// Peraturan: nama yang dihantar SEBELUM 7:00 malam Khamis dibawa ke majlis
-// Khamis itu. Selepas 7:00 malam Khamis, ia dikumpul untuk Khamis berikutnya.
-export function khamisAkan(): string {
+// Kira tarikh Khamis (malam Jumaat) sasaran ikut jam tutup tertentu.
+function khamisDenganTutup(jamTutup: number): string {
   const m = mytSekarang();
   const dow = m.getUTCDay(); // 0=Ahad .. 4=Khamis .. 6=Sabtu
   const jam = m.getUTCHours();
   let add = (4 - dow + 7) % 7; // bilangan hari ke Khamis
-  // Hari ini Khamis tetapi sudah cecah/lepas 7:00 malam → tolak ke Khamis depan.
-  if (add === 0 && jam >= TUTUP_JAM) add = 7;
+  // Hari ini Khamis tetapi sudah cecah/lepas jam tutup → tolak ke Khamis depan.
+  if (add === 0 && jam >= jamTutup) add = 7;
   const t = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() + add));
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
+}
+
+// Khamis sasaran untuk PENDAFTARAN nama — tutup 7:00 malam Khamis.
+export function khamisAkan(): string {
+  return khamisDenganTutup(TUTUP_JAM);
+}
+
+// Khamis untuk PAPARAN senarai — kekal sehingga 8:00 malam Khamis supaya
+// imam bertugas boleh baca nama malam itu tanpa perlu buka panel admin.
+export function khamisPapar(): string {
+  return khamisDenganTutup(PAPAR_JAM);
 }
 
 export function gelaranArwah(jantina: string): string {

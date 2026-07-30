@@ -1,19 +1,25 @@
 import Link from "next/link";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
-import { khamisAkan } from "@/lib/arwah";
+import { khamisPapar } from "@/lib/arwah";
 import { tarikhMs } from "@/lib/format";
 import TahlilForm from "@/components/TahlilForm";
+import PilihMinggu from "@/components/PilihMinggu";
 import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
 
-export default async function TahlilPage() {
-  const minggu = khamisAkan();
+export default async function TahlilPage({ searchParams }: { searchParams: { minggu?: string } }) {
+  const semasa = khamisPapar();
+  const minggu = searchParams.minggu || semasa;
   const bayaranDibuka = await bayaranOnlineDibuka();
   let arwah: any[] = [];
+  let mingguList: string[] = [];
   if (supabaseConfigured) {
     const { data } = await supabase.from("v_arwah_akan").select("*").eq("minggu", minggu);
     arwah = (data as any[]) ?? [];
+    const { data: mgu } = await supabase.from("v_arwah_akan").select("minggu").order("minggu", { ascending: false });
+    mingguList = [...new Set(((mgu as any[]) ?? []).map((m) => m.minggu))];
+    if (!mingguList.includes(semasa)) mingguList.unshift(semasa);
   }
   const lelaki = arwah.filter((a) => a.jantina === "lelaki");
   const perempuan = arwah.filter((a) => a.jantina === "perempuan");
@@ -34,6 +40,12 @@ export default async function TahlilPage() {
       </div>
 
       <TahlilForm bayaranDibuka={bayaranDibuka} />
+
+      {mingguList.length > 1 && (
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <PilihMinggu minggu={minggu} senarai={mingguList} semasa={semasa} />
+        </div>
+      )}
 
       <section className="grid gap-4 sm:grid-cols-2">
         <SenaraiArwah tajuk="Al-Marhum (Lelaki)" senarai={lelaki} />

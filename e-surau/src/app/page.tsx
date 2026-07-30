@@ -10,6 +10,7 @@ import { buatT } from "@/lib/i18n";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { KAWASAN, kenalKawasan } from "@/lib/kawasan";
 import StatFasaChart from "@/components/StatFasaChart";
+import KadDanaTutup from "@/components/KadDanaTutup";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ type Tabung = {
   jumlah_bulan_ini: number | string;
   terkini_jumlah: number | string | null;
   terkini_tarikh: string | null;
+  ditutup?: boolean;
 };
 
 async function ambilPengumuman(): Promise<Pengumuman[]> {
@@ -47,7 +49,7 @@ async function ambilTabung(): Promise<Tabung[]> {
   if (!supabaseConfigured) return [];
   const { data, error } = await supabase
     .from("v_kutipan_ringkasan")
-    .select("kategori_id, nama, jenis_khairat, jumlah_terkumpul, jumlah_bulan_ini, terkini_jumlah, terkini_tarikh")
+    .select("kategori_id, nama, jenis_khairat, jumlah_terkumpul, jumlah_bulan_ini, terkini_jumlah, terkini_tarikh, ditutup")
     .order("urutan", { ascending: true });
   if (error) return [];
   return (data as Tabung[]) ?? [];
@@ -201,6 +203,19 @@ export default async function Home() {
           <h2 className="mb-3 text-xl font-bold text-slate-900">{tr("Kutipan Tabung Surau", "Surau Fund Collections")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {tabung.map((t) => {
+              if (t.ditutup) {
+                return (
+                  <KadDanaTutup
+                    key={t.kategori_id}
+                    nama={t.nama}
+                    terkumpul={t.jumlah_terkumpul}
+                    tarikh={t.terkini_tarikh}
+                    labelTutup={tr("Kutipan Ditutup", "Collection Closed")}
+                    labelLihat={tr("Lihat jumlah terkumpul", "View total collected")}
+                    labelSehingga={tr("Kutipan terkini sehingga", "Latest collection up to")}
+                  />
+                );
+              }
               const belumLancar = t.jenis_khairat && !khDibuka;
               return (
               <div key={t.kategori_id} className="rounded-xl bg-white p-5 shadow-sm">
