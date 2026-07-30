@@ -5,7 +5,7 @@ import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU } from "@/lib/tetapan"
 import { khairatDibuka, penajaDipapar, infaqDipapar } from "@/lib/tetapanSistem";
 import { getProfil, isMaster } from "@/lib/sesi";
 import PenajaStrip from "@/components/PenajaStrip";
-import ToggleBahasa from "@/components/ToggleBahasa";
+import NavUtama from "@/components/NavUtama";
 import { bahasaSemasa } from "@/lib/bahasa";
 import { buatT } from "@/lib/i18n";
 
@@ -45,45 +45,19 @@ export default async function RootLayout({
             </div>
           </div>
         </div>
-        <header className="print-hide bg-hitam text-white shadow">
+        <header className="print-hide relative bg-hitam text-white shadow">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="text-sm font-bold text-surau-light">
               {t("Portal Kariah", "Community Portal")}
             </Link>
-            <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-              <Link href="/" className="hover:underline">
-                {t("Utama", "Home")}
-              </Link>
-              <Link href="/daftar" className="hover:underline">
-                {t("Daftar Ahli", "Register")}
-              </Link>
-              {paparKhairat && (
-                <Link href="/khairat" className="font-semibold text-surau-light hover:underline">
-                  {t("Khairat", "Death Benefit")}{stafPreview ? " ·pratonton" : ""}
-                </Link>
-              )}
-              {paparInfaq && (
-                <Link href="/infaq" className="font-semibold text-surau-light hover:underline">
-                  {t("Infaq", "Infaq")}{!infaqOn && master ? " ·pratonton" : ""}
-                </Link>
-              )}
-              <Link href="/program" className="hover:underline">
-                {t("Program", "Programmes")}
-              </Link>
-              <Link href="/tentang" className="hover:underline">
-                {t("Tentang Surau", "About")}
-              </Link>
-              <Link href="/sewaan" className="hover:underline">
-                {t("Sewaan", "Rental")}
-              </Link>
-              <Link href="/pembekal/daftar" className="hover:underline">
-                {t("Vendor", "Vendors")}
-              </Link>
-              <Link href="/masuk" className="rounded bg-surau px-3 py-1 font-semibold text-white hover:bg-surau-dark">
-                {t("Log Masuk", "Login")}
-              </Link>
-              <ToggleBahasa lang={lang} />
-            </nav>
+            <NavUtama
+              lang={lang}
+              paparKhairat={paparKhairat}
+              stafPreview={stafPreview}
+              paparInfaq={paparInfaq}
+              infaqOn={infaqOn}
+              master={master}
+            />
           </div>
         </header>
         {paparPenaja && (

@@ -31,7 +31,7 @@ export default async function TentangPage() {
 
       {/* Visi & Misi */}
       {(visi || misiPoin.length > 0) && (
-        <section className="grid gap-4 sm:grid-cols-2">
+        <section id="visi" className="scroll-mt-24 grid gap-4 sm:grid-cols-2">
           {visi && (
             <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
               <h2 className="mb-2 font-bold text-surau">{tr("Visi", "Vision")}</h2>
@@ -51,7 +51,7 @@ export default async function TentangPage() {
 
       {/* Carta Organisasi */}
       {carta.length > 0 && (
-        <section>
+        <section id="carta" className="scroll-mt-24">
           <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Carta Organisasi", "Organisation Chart")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {carta.map((c, i) => (
@@ -70,7 +70,7 @@ export default async function TentangPage() {
 
       {/* Buletin */}
       {buletin.length > 0 && (
-        <section>
+        <section id="buletin" className="scroll-mt-24">
           <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Buletin Surau", "Surau Bulletin")}</h2>
           <div className="space-y-3">
             {buletin.map((b, i) => (

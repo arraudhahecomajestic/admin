@@ -44,3 +44,9 @@ alter table buletin           enable row level security;
 -- Baldi awam untuk gambar carta & fail buletin
 insert into storage.buckets (id, name, public) values ('kandungan', 'kandungan', true)
 on conflict (id) do nothing;
+
+-- Benarkan staf/admin (login) muat naik ke bucket kandungan
+do $$ begin
+  create policy "muat naik kandungan" on storage.objects
+    for insert to authenticated with check (bucket_id = 'kandungan');
+exception when duplicate_object then null; end $$;

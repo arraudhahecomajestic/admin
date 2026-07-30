@@ -1,11 +1,13 @@
 // Graf bar bilangan ahli kariah berdaftar ikut fasa (server-rendered, tiada JS).
 export default function StatFasaChart({
-  data, total, tajuk, nota,
+  data, total, tajuk, nota, belumKelas = 0, notaBelumKelas = "",
 }: {
   data: { nama: string; bil: number }[];
   total: number;
   tajuk: string;
   nota: string;
+  belumKelas?: number;
+  notaBelumKelas?: string;
 }) {
   const max = Math.max(1, ...data.map((d) => d.bil));
   return (
@@ -38,7 +40,12 @@ export default function StatFasaChart({
           );
         })}
       </div>
-      <p className="mt-4 text-xs text-slate-400">{nota}</p>
+      {belumKelas > 0 && notaBelumKelas && (
+        <p className="mt-3 text-xs text-slate-500">
+          <span className="font-semibold text-slate-600">{belumKelas}</span> {notaBelumKelas}
+        </p>
+      )}
+      <p className="mt-2 text-xs text-slate-400">{nota}</p>
     </section>
   );
 }

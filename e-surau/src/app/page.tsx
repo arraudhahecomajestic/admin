@@ -60,24 +60,28 @@ async function ambilProgram(): Promise<any[]> {
   return (data as any[]) ?? [];
 }
 
-async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[]; total: number }> {
-  if (!adminConfigured) return { data: [], total: 0 };
+async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[]; total: number; belumKelas: number }> {
+  if (!adminConfigured) return { data: [], total: 0, belumKelas: 0 };
   try {
     const db = createAdminClient();
     const { data } = await db.from("ahli_kariah").select("alamat, alamat_kp, kawasan");
     const rows = (data as any[]) ?? [];
     const kira: Record<string, number> = {};
     for (const k of KAWASAN) kira[k.kod] = 0;
-    let total = 0;
+    let terkelas = 0;
     for (const a of rows) {
       const kw = kenalKawasan(a.alamat || a.alamat_kp, a.kawasan);
-      if (kw.kod === "lain") continue; // graf awam tunjuk fasa dikenali sahaja
+      if (kw.kod === "lain") continue; // bar awam tunjuk fasa dikenali sahaja
       kira[kw.kod] = (kira[kw.kod] ?? 0) + 1;
-      total++;
+      terkelas++;
     }
-    return { data: KAWASAN.map((k) => ({ nama: k.nama, bil: kira[k.kod] ?? 0 })), total };
+    return {
+      data: KAWASAN.map((k) => ({ nama: k.nama, bil: kira[k.kod] ?? 0 })),
+      total: rows.length,              // jumlah SEBENAR semua ahli berdaftar
+      belumKelas: rows.length - terkelas,
+    };
   } catch {
-    return { data: [], total: 0 };
+    return { data: [], total: 0, belumKelas: 0 };
   }
 }
 
@@ -171,10 +175,15 @@ export default async function Home() {
         <StatFasaChart
           data={statFasa.data}
           total={statFasa.total}
+          belumKelas={statFasa.belumKelas}
           tajuk={tr("Pendaftaran Ahli Kariah Ikut Fasa", "Member Registration by Phase")}
           nota={tr(
             "Bilangan ahli kariah berdaftar mengikut fasa kediaman. Belum daftar? Ayuh sertai kariah anda.",
             "Registered community members by residential phase. Not registered yet? Join your neighbourhood.",
+          )}
+          notaBelumKelas={tr(
+            "belum dikelaskan ikut fasa (alamat belum lengkap)",
+            "not yet classified by phase (address incomplete)",
           )}
         />
       )}
