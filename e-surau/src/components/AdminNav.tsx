@@ -8,7 +8,6 @@ type Kump = { label: string; items: Item[] };
 
 // Kumpulan untuk admin/AJK/master
 const KEAHLIAN: Item[] = [
-  { href: "/admin/ahli", label: "Jejak Ahli" },
   { href: "/admin/kariah-kawasan", label: "Kawasan / Fasa" },
   { href: "/admin/cetak", label: "Cetak Borang" },
 ];

@@ -26,7 +26,7 @@ export default async function PerananPage({ searchParams }: { searchParams: { ca
   // Buang aksara khas PostgREST (,()%*) supaya input carian tak boleh manipulasi penapis.
   const cari = (searchParams.cari ?? "").replace(/[,()%*]/g, " ").trim();
   const db = createAdminClient();
-  let q = db.from("profil").select("id, nama, emel, peranan, master, ahli_kariah(nama)").order("peranan").limit(200);
+  let q = db.from("profil").select("id, nama, emel, peranan, master, ahli_id, ahli_kariah(nama)").order("peranan").limit(200);
   if (cari) q = q.or(`emel.ilike.%${cari}%,nama.ilike.%${cari}%`);
   const { data } = await q;
   const senarai = (data as any[]) ?? [];
@@ -61,6 +61,13 @@ export default async function PerananPage({ searchParams }: { searchParams: { ca
                 <td className="px-4 py-3">
                   <div className="font-medium text-slate-900">{(u.nama || u.ahli_kariah?.nama || "—").toUpperCase()}</div>
                   <div className="text-xs text-slate-400">{u.emel}</div>
+                  {u.ahli_id ? (
+                    <a href={`/admin/permohonan/${u.ahli_id}`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-semibold text-surau hover:underline">
+                      👁 Lihat Profil →
+                    </a>
+                  ) : (
+                    <span className="mt-1 inline-block text-xs text-slate-400">Tiada rekod ahli</span>
+                  )}
                 </td>
                 <td className="px-4 py-3" colSpan={3}>
                   <form action={tetapkanPeranan} className="flex flex-wrap items-center gap-3">
