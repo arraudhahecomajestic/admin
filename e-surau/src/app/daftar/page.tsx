@@ -355,11 +355,8 @@ export default function DaftarPage() {
             No. KP anda ada dalam rekod, tetapi maklumat anda <b>belum lengkap &amp; belum disahkan</b>. Cipta akaun sekarang untuk melengkapkannya.
           </p>
         </div>
-        <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4 text-sm">
-          <div className="font-bold text-red-700">🔴 Maklumat anda BELUM LENGKAP</div>
-          <p className="mt-1 text-red-600">
-            Cipta akaun sekarang, kemudian <b>kemas kini & sahkan maklumat</b> anda (alamat, telefon, gambar IC, tanggungan). Status anda akan bertukar 🟡 menunggu pengesahan → 🟢 disahkan setelah lengkap.
-          </p>
+        <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4 text-center">
+          <div className="text-lg font-bold text-red-700">PERMOHONAN ANDA BELUM LENGKAP</div>
         </div>
         {selesai && !selesai.ok && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{selesai.msg}</div>

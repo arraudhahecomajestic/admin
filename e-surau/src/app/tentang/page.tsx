@@ -30,29 +30,36 @@ export default async function TentangPage() {
       </div>
 
       {/* Visi & Misi */}
-      {(visi || misiPoin.length > 0) && (
-        <section id="visi" className="scroll-mt-24 grid gap-4 sm:grid-cols-2">
-          {visi && (
-            <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
-              <h2 className="mb-2 font-bold text-surau">{tr("Visi", "Vision")}</h2>
-              <p className="whitespace-pre-wrap text-slate-700">{visi}</p>
-            </div>
-          )}
-          {misiPoin.length > 0 && (
-            <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
-              <h2 className="mb-2 font-bold text-surau">{tr("Misi", "Mission")}</h2>
-              <ul className="list-disc space-y-1 pl-5 text-slate-700">
-                {misiPoin.map((m, i) => <li key={i}>{m}</li>)}
-              </ul>
-            </div>
-          )}
-        </section>
-      )}
+      <section id="visi" className="scroll-mt-24">
+        <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Visi & Misi", "Vision & Mission")}</h2>
+        {(visi || misiPoin.length > 0) ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {visi && (
+              <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+                <h3 className="mb-2 font-bold text-surau">{tr("Visi", "Vision")}</h3>
+                <p className="whitespace-pre-wrap text-slate-700">{visi}</p>
+              </div>
+            )}
+            {misiPoin.length > 0 && (
+              <div className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">
+                <h3 className="mb-2 font-bold text-surau">{tr("Misi", "Mission")}</h3>
+                <ul className="list-disc space-y-1 pl-5 text-slate-700">
+                  {misiPoin.map((m, i) => <li key={i}>{m}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-xl bg-white p-6 text-center text-sm text-slate-400 shadow-sm">
+            {tr("Visi & Misi akan dikemas kini tidak lama lagi.", "Vision & Mission will be updated soon.")}
+          </div>
+        )}
+      </section>
 
       {/* Carta Organisasi */}
-      {carta.length > 0 && (
-        <section id="carta" className="scroll-mt-24">
-          <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Carta Organisasi", "Organisation Chart")}</h2>
+      <section id="carta" className="scroll-mt-24">
+        <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Carta Organisasi", "Organisation Chart")}</h2>
+        {carta.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {carta.map((c, i) => (
               <div key={i} className="rounded-xl bg-white p-4 text-center shadow-sm">
@@ -65,13 +72,17 @@ export default async function TentangPage() {
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="rounded-xl bg-white p-6 text-center text-sm text-slate-400 shadow-sm">
+            {tr("Carta organisasi akan dikemas kini tidak lama lagi.", "Organisation chart will be updated soon.")}
+          </div>
+        )}
+      </section>
 
       {/* Buletin */}
-      {buletin.length > 0 && (
-        <section id="buletin" className="scroll-mt-24">
-          <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Buletin Surau", "Surau Bulletin")}</h2>
+      <section id="buletin" className="scroll-mt-24">
+        <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Buletin Surau", "Surau Bulletin")}</h2>
+        {buletin.length > 0 ? (
           <div className="space-y-3">
             {buletin.map((b, i) => (
               <article key={i} className="rounded-xl bg-white p-4 shadow-sm">
@@ -94,12 +105,12 @@ export default async function TentangPage() {
               </article>
             ))}
           </div>
-        </section>
-      )}
-
-      {!visi && !misiPoin.length && carta.length === 0 && buletin.length === 0 && (
-        <p className="rounded-lg bg-white p-4 text-sm text-slate-500 shadow-sm">{tr("Maklumat akan dikemas kini tidak lama lagi.", "Information will be updated soon.")}</p>
-      )}
+        ) : (
+          <div className="rounded-xl bg-white p-6 text-center text-sm text-slate-400 shadow-sm">
+            {tr("Buletin akan dikemas kini tidak lama lagi.", "Bulletin will be updated soon.")}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

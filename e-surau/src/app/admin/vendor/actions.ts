@@ -10,7 +10,7 @@ export async function tetapkanStatusVendor(formData: FormData) {
   const status = String(formData.get("status") ?? "");
   if (!id || !["menunggu", "lulus", "tolak"].includes(status)) return;
   const db = createAdminClient();
-  await db.from("vendor").update({ status }).eq("id", id);
+  await db.from("pembekal").update({ status }).eq("id", id);
   revalidatePath("/admin/vendor");
 }
 
@@ -19,6 +19,6 @@ export async function padamVendor(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();
-  await db.from("vendor").delete().eq("id", id);
+  await db.from("pembekal").delete().eq("id", id);
   revalidatePath("/admin/vendor");
 }

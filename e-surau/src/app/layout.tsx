@@ -72,6 +72,7 @@ export default async function RootLayout({
             {paparPenaja && <Link href="/rakan" className="font-medium text-surau hover:underline">{t("Rakan Surau", "Our Partners")}</Link>}
             <Link href="/dasar-privasi" className="hover:text-surau hover:underline">{t("Dasar Privasi", "Privacy Policy")}</Link>
             <Link href="/terma" className="hover:text-surau hover:underline">{t("Terma & Penafian", "Terms & Disclaimer")}</Link>
+            <Link href="/maklum-balas" className="font-medium text-surau hover:underline">{t("Maklum Balas", "Feedback")}</Link>
             <Link href="/keselamatan" className="hover:text-surau hover:underline">{t("Keselamatan", "Security")}</Link>
             <Link href="/polisi-bayaran-balik" className="hover:text-surau hover:underline">{t("Bayaran Balik", "Refunds")}</Link>
           </div>

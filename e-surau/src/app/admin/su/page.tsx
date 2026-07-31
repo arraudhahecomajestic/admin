@@ -9,6 +9,7 @@ const KAD = [
   { href: "/admin/su/mesyuarat", ikon: "📝", tajuk: "Minit Mesyuarat", nota: "Agenda, minit, jejak tindakan AJK" },
   { href: "/admin/su/surat", ikon: "✉️", tajuk: "Surat Rasmi & Daftar", nota: "Karang surat keluar, rekod surat masuk" },
   { href: "/admin/pengumuman", ikon: "📢", tajuk: "Pengumuman", nota: "Tulis pengumuman untuk halaman utama" },
+  { href: "/admin/maklum-balas", ikon: "💬", tajuk: "Maklum Balas", nota: "Komplen & cadangan dari kariah" },
   { href: "/admin/kandungan", ikon: "👥", tajuk: "Carta & Visi/Misi", nota: "Kemas kini AJK, visi, misi, buletin" },
   { href: "/admin/ahli", ikon: "🗂️", tajuk: "Rekod Ahli Kariah", nota: "Jejak & urus data keahlian" },
   { href: "/admin/kariah-kawasan", ikon: "📍", tajuk: "Ahli Ikut Kawasan", nota: "Statistik pendaftaran ikut fasa" },

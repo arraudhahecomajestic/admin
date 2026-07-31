@@ -28,6 +28,7 @@ const SETIAUSAHA: Item[] = [
   { href: "/admin/su/mesyuarat", label: "Minit Mesyuarat" },
   { href: "/admin/su/surat", label: "Surat Rasmi" },
   { href: "/admin/pengumuman", label: "Pengumuman" },
+  { href: "/admin/maklum-balas", label: "Maklum Balas" },
   { href: "/admin/kandungan", label: "Kandungan Surau" },
 ];
 const SISTEM: Item[] = [

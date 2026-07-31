@@ -10,7 +10,7 @@ import { buatT } from "@/lib/i18n";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { KAWASAN, kenalKawasan } from "@/lib/kawasan";
 import StatFasaChart from "@/components/StatFasaChart";
-import KadTabung from "@/components/KadTabung";
+import PieTabung, { PieSlice } from "@/components/PieTabung";
 
 export const dynamic = "force-dynamic";
 
@@ -87,12 +87,34 @@ async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[];
   }
 }
 
+async function ambilPieTabung(): Promise<PieSlice[]> {
+  if (!adminConfigured) return [];
+  try {
+    const db = createAdminClient();
+    const { data } = await db
+      .from("kutipan")
+      .select("jumlah, kategori:kategori_kutipan(nama, papar_awam)")
+      .gte("tarikh", "2026-01-01")
+      .lte("tarikh", "2026-06-30");
+    const rows = (data as any[]) ?? [];
+    const kira: Record<string, number> = {};
+    for (const k of rows) {
+      const kat = k.kategori;
+      if (!kat || kat.papar_awam === false) continue;
+      kira[kat.nama] = (kira[kat.nama] ?? 0) + Number(k.jumlah || 0);
+    }
+    return Object.entries(kira).map(([nama, jumlah]) => ({ nama, jumlah }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
   const zon = ZON_SOLAT;
   const namaSurau = NAMA_SURAU;
   const lang = bahasaSemasa();
   const tr = buatT(lang);
-  const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil] = await Promise.all([
+  const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, pieTabung] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
     ambilProgram(),
@@ -101,9 +123,26 @@ export default async function Home() {
     pampasanKhairat(),
     kewanganAwamDibuka(),
     getProfil(),
+    ambilPieTabung(),
   ]);
   const stafKewangan = isStaf(profil); // SU/Pengerusi/AJK + Bendahari
   const paparKewangan = kewanganAwam || stafKewangan; // awam nampak hanya bila diterbitkan
+
+  // Gabung detail tabung (v_kutipan_ringkasan) ke dalam data pai ikut nama
+  const detailTabung = new Map(tabung.map((tt) => [tt.nama, tt]));
+  const pieData: PieSlice[] = pieTabung.map((p) => {
+    const d = detailTabung.get(p.nama);
+    return {
+      nama: p.nama,
+      jumlah: p.jumlah,
+      jenisKhairat: d?.jenis_khairat,
+      ditutup: d?.ditutup,
+      bulanIni: d?.jumlah_bulan_ini,
+      terkumpul: d?.jumlah_terkumpul,
+      terkiniJumlah: d?.terkini_jumlah,
+      terkiniTarikh: d?.terkini_tarikh,
+    };
+  });
 
   return (
     <div className="space-y-8">
@@ -195,42 +234,27 @@ export default async function Home() {
 
       <PrayerTimes zon={zon} />
 
-      {/* Tabung Kutipan Surau — hanya tabung yang ADA duit dipapar; disorok sehingga diterbitkan */}
-      {(() => {
-        const tabungAda = tabung.filter((t) => Number(t.jumlah_terkumpul) > 0);
-        if (tabungAda.length === 0 || !paparKewangan) return null;
-        return (
-          <section>
-            {stafKewangan && !kewanganAwam && (
-              <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
-                👁️ PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
-              </div>
-            )}
-            <h2 className="mb-3 text-xl font-bold text-slate-900">{tr("Kutipan Tabung Surau", "Surau Fund Collections")}</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {tabungAda.map((t) => (
-                <KadTabung
-                  key={t.kategori_id}
-                  lang={lang}
-                  nama={t.nama}
-                  jenisKhairat={t.jenis_khairat}
-                  ditutup={!!t.ditutup}
-                  terkiniJumlah={t.terkini_jumlah}
-                  terkiniTarikh={t.terkini_tarikh}
-                  jumlahBulanIni={t.jumlah_bulan_ini}
-                  jumlahTerkumpul={t.jumlah_terkumpul}
-                />
-              ))}
+      {/* Carta pai kutipan Jan–Jun 2026 — pecahan ikut tabung; ikut suis kewangan awam */}
+      {paparKewangan && pieData.some((p) => p.jumlah > 0) && (
+        <div>
+          {stafKewangan && !kewanganAwam && (
+            <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
+              👁️ PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
             </div>
-            <p className="mt-2 text-xs text-slate-400">
-              {tr(
-                "Dikemas kini automatik apabila bendahari merekod kutipan. Semoga Allah membalas jariah anda.",
-                "Updated automatically when the treasurer records a collection. May Allah reward your charity.",
-              )}
-            </p>
-          </section>
-        );
-      })()}
+          )}
+          <PieTabung
+            data={pieData}
+            lang={lang}
+            tajuk={tr("Kutipan Tabung Januari–Jun 2026", "Fund Collections January–June 2026")}
+            labelJumlah={tr("Jumlah Kutipan", "Total Collected")}
+            labelKlik={tr("Klik mana-mana bahagian untuk buka detail tabung.", "Click any segment to expand the fund details.")}
+            nota={tr(
+              "Jumlah kutipan masuk (derma, wakaf, infaq & lain-lain) bagi separuh pertama 2026. Dikemas kini automatik apabila bendahari merekod kutipan.",
+              "Total incoming collections (donations, waqf, infaq & others) for the first half of 2026. Updated automatically when the treasurer records a collection.",
+            )}
+          />
+        </div>
+      )}
 
       {/* Yaasin & Tahlil malam Jumaat */}
       <section className="rounded-xl border-2 border-surau/30 bg-surau/5 p-5">

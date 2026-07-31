@@ -4,7 +4,6 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import { tarikhMs } from "@/lib/format";
-import { KATEGORI_VENDOR } from "@/lib/vendor";
 import { tetapkanStatusVendor, padamVendor } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +14,7 @@ const warna: Record<string, string> = {
   tolak: "bg-red-100 text-red-700",
 };
 
-export default async function AdminVendorPage({ searchParams }: { searchParams: { kategori?: string; status?: string } }) {
+export default async function AdminVendorPage({ searchParams }: { searchParams: { status?: string } }) {
   if (!adminConfigured)
     return <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Supabase belum dikonfigurasi.</div>;
   const profil = await getProfil();
@@ -23,11 +22,15 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
   if (!isPentadbir(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
-  let q = db.from("vendor").select("*").order("dicipta", { ascending: false }).limit(500);
+  let q = db.from("pembekal").select("*").order("dicipta", { ascending: false }).limit(500);
   if (searchParams.status && ["menunggu", "lulus", "tolak"].includes(searchParams.status)) q = q.eq("status", searchParams.status);
-  if (searchParams.kategori) q = q.contains("kategori", [searchParams.kategori]);
   const { data } = await q;
   const senarai = (data as any[]) ?? [];
+
+  // Kiraan untuk tab
+  const { data: semua } = await db.from("pembekal").select("status");
+  const bil = { semua: (semua as any[])?.length ?? 0, menunggu: 0, lulus: 0 };
+  for (const r of (semua as any[]) ?? []) { if (r.status === "menunggu") bil.menunggu++; if (r.status === "lulus") bil.lulus++; }
 
   return (
     <div className="space-y-6">
@@ -35,48 +38,41 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
       <h1 className="text-2xl font-bold text-slate-900">Vendor / Pembekal</h1>
 
       <div className="flex flex-wrap gap-1 text-sm">
-        <Tapis label="Semua" href="/admin/vendor" aktif={!searchParams.status && !searchParams.kategori} />
-        <Tapis label="Menunggu" href="/admin/vendor?status=menunggu" aktif={searchParams.status === "menunggu"} />
-        <Tapis label="Diluluskan" href="/admin/vendor?status=lulus" aktif={searchParams.status === "lulus"} />
-        {KATEGORI_VENDOR.map((k) => (
-          <Tapis key={k} label={k} href={`/admin/vendor?kategori=${encodeURIComponent(k)}`} aktif={searchParams.kategori === k} />
-        ))}
+        <Tapis label={`Semua (${bil.semua})`} href="/admin/vendor" aktif={!searchParams.status} />
+        <Tapis label={`Menunggu (${bil.menunggu})`} href="/admin/vendor?status=menunggu" aktif={searchParams.status === "menunggu"} />
+        <Tapis label={`Diluluskan (${bil.lulus})`} href="/admin/vendor?status=lulus" aktif={searchParams.status === "lulus"} />
       </div>
 
       <div className="space-y-3">
-        {senarai.length === 0 && <p className="rounded-xl bg-white p-6 text-center text-slate-400 shadow-sm">Tiada vendor.</p>}
-        {senarai.map((v) => {
-          const kat = Array.isArray(v.kategori) ? v.kategori : [];
-          return (
-            <div key={v.id} className="rounded-xl bg-white p-5 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-slate-400">{v.no_rujukan}</span>
-                    <span className={`rounded px-2 py-0.5 text-xs font-semibold ${warna[v.status]}`}>{v.status}</span>
-                  </div>
-                  <div className="mt-1 font-semibold text-slate-900">{v.nama} <span className="text-xs font-normal text-slate-400">· {v.jenis_pemohon}</span></div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {kat.map((k: string) => <span key={k} className="rounded bg-surau/10 px-2 py-0.5 text-xs text-surau">{k}</span>)}
-                  </div>
-                  <div className="mt-1 text-xs text-slate-500">
-                    {v.pegawai ? `${v.pegawai} · ` : ""}📞 {v.telefon}{v.whatsapp ? ` · WA ${v.whatsapp}` : ""}{v.emel ? ` · ${v.emel}` : ""}
-                  </div>
-                  {v.no_pendaftaran && <div className="text-xs text-slate-500">SSM/KP: {v.no_pendaftaran}</div>}
-                  {v.keterangan && <div className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600">{v.keterangan}</div>}
-                  <div className="mt-1 text-xs text-slate-400">{tarikhMs(v.dicipta)}</div>
+        {senarai.length === 0 && <p className="rounded-xl bg-white p-6 text-center text-slate-400 shadow-sm">Tiada vendor dalam kategori ini.</p>}
+        {senarai.map((v) => (
+          <div key={v.id} className="rounded-xl bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`rounded px-2 py-0.5 text-xs font-semibold ${warna[v.status] ?? "bg-slate-100 text-slate-600"}`}>{v.status}</span>
+                  <span className="rounded bg-surau/10 px-2 py-0.5 text-xs text-surau">{v.jenis || "vendor"}</span>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex gap-1">
-                    <Btn id={v.id} status="lulus" label="Lulus" warna="bg-green-600" />
-                    <Btn id={v.id} status="tolak" label="Tolak" warna="bg-red-600" />
-                  </div>
-                  <form action={padamVendor}><input type="hidden" name="id" value={v.id} /><button className="text-xs font-semibold text-red-600 hover:underline">Padam</button></form>
+                <div className="mt-1 font-semibold text-slate-900">{v.nama}{v.syarikat ? <span className="text-sm font-normal text-slate-500"> · {v.syarikat}</span> : null}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  📞 {v.telefon || "-"}{v.emel ? ` · ${v.emel}` : ""}{v.no_kp ? ` · KP ${v.no_kp}` : ""}
                 </div>
+                {(v.bank || v.no_akaun) && (
+                  <div className="mt-0.5 text-xs text-slate-500">🏦 {v.bank || "-"} · {v.no_akaun || "-"}{v.nama_akaun ? ` · ${v.nama_akaun}` : ""}</div>
+                )}
+                {v.catatan && <div className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600">{v.catatan}</div>}
+                <div className="mt-1 text-xs text-slate-400">{tarikhMs(v.dicipta)}</div>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <div className="flex gap-1">
+                  <Btn id={v.id} status="lulus" label="Lulus" warna="bg-green-600" />
+                  <Btn id={v.id} status="tolak" label="Tolak" warna="bg-red-600" />
+                </div>
+                <form action={padamVendor}><input type="hidden" name="id" value={v.id} /><button className="text-xs font-semibold text-red-600 hover:underline">Padam</button></form>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
