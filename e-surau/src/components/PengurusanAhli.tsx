@@ -74,6 +74,30 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
     navigator.clipboard?.writeText(teks).then(() => { setDisalin(true); setTimeout(() => setDisalin(false), 2000); });
   }
 
+  function muatTurunCsv() {
+    const kelulusan = (s: string) => (s === "lulus" ? "Diluluskan" : s === "tolak" ? "Ditolak" : "Menunggu");
+    const sel = (v: any) => {
+      const s = (v ?? "").toString().replace(/"/g, '""');
+      return `"${s}"`;
+    };
+    const header = ["No. Ahli", "Nama", "No. KP", "Telefon", "Kelulusan", "Data"];
+    const baris = ditapis.map((a) => [
+      a.no_ahli, a.nama, a.no_kp, a.telefon,
+      kelulusan(a.status), a.maklumat_disahkan ? "Disahkan" : "Belum",
+    ]);
+    const csv = [header, ...baris].map((r) => r.map(sel).join(",")).join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const tarikh = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `ahli-kariah-${tarikh}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   const bolehLihat = bolehPapar && papar;
 
   return (
@@ -106,6 +130,11 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
         <button onClick={salin} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">
           {disalin ? "✓ Disalin" : "Salin senarai"}
         </button>
+        {bolehPapar && (
+          <button onClick={muatTurunCsv} className="rounded-lg bg-green-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-800">
+            ⬇ Muat Turun CSV
+          </button>
+        )}
       </div>
 
       {/* TAB */}

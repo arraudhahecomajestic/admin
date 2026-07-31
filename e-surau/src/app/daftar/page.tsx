@@ -349,10 +349,16 @@ export default function DaftarPage() {
     return (
       <div className="mx-auto max-w-lg space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Rekod Anda Telah Ada</h1>
+          <h1 className="text-2xl font-bold text-red-700">Permohonan Anda Belum Lengkap</h1>
           <p className="mt-1 text-sm text-slate-600">
-            {ahliNama ? <>Selamat datang, <b>{ahliNama}</b>. </> : null}
-            No. KP anda sudah berdaftar sebagai ahli kariah. Sila cipta akaun portal untuk log masuk.
+            {ahliNama ? <>Salam, <b>{ahliNama}</b>. </> : null}
+            No. KP anda ada dalam rekod, tetapi maklumat anda <b>belum lengkap &amp; belum disahkan</b>. Cipta akaun sekarang untuk melengkapkannya.
+          </p>
+        </div>
+        <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4 text-sm">
+          <div className="font-bold text-red-700">🔴 Maklumat anda BELUM LENGKAP</div>
+          <p className="mt-1 text-red-600">
+            Cipta akaun sekarang, kemudian <b>kemas kini & sahkan maklumat</b> anda (alamat, telefon, gambar IC, tanggungan). Status anda akan bertukar 🟡 menunggu pengesahan → 🟢 disahkan setelah lengkap.
           </p>
         </div>
         {selesai && !selesai.ok && (
@@ -385,9 +391,14 @@ export default function DaftarPage() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Borang Pendaftaran Ahli Kariah</h1>
+        <h1 className="text-2xl font-bold text-red-700">Anda Belum Berdaftar</h1>
         <p className="mt-1 text-sm text-slate-600">Kariah: <b>{namaSurau}</b> · Selaras borang rasmi JAIS. Medan bertanda * wajib.</p>
         <button type="button" onClick={() => setPeringkat("semak")} className="mt-2 text-xs text-slate-500 hover:underline">← Semak No. KP semula</button>
+      </div>
+
+      <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4 text-sm">
+        <div className="font-bold text-red-700">🔴 Anda belum berdaftar sebagai ahli kariah</div>
+        <p className="mt-1 text-red-600">No. KP anda tiada dalam rekod. Sila lengkapkan borang di bawah untuk mendaftar &amp; sertai kariah Surau Ar Raudhah.</p>
       </div>
 
       {selesai && !selesai.ok && (

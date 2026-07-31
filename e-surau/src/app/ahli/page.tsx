@@ -102,24 +102,51 @@ export default async function AhliPage() {
         </div>
       </div>
 
-      {/* Banner kemas kini maklumat */}
-      {!a?.maklumat_disahkan ? (
-        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
-          <div className="font-semibold text-amber-800">⚠️ Sila kemas kini & sahkan maklumat anda</div>
-          <p className="mt-1 text-sm text-amber-700">
-            Maklumat anda mungkin belum lengkap atau perlu disemak. Ambil masa sebentar untuk
-            betulkan & lengkapkan (alamat, telefon, gambar IC, tanggungan).
-          </p>
-          <Link href="/ahli/kemaskini" className="mt-3 inline-block rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">
-            Kemas Kini Maklumat →
-          </Link>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-          <span>✓ Maklumat disahkan{a.tarikh_kemaskini ? ` pada ${tarikhMs(a.tarikh_kemaskini)}` : ""}.</span>
-          <Link href="/ahli/kemaskini" className="font-medium underline">Kemas kini semula</Link>
-        </div>
-      )}
+      {/* Banner status maklumat — lampu isyarat: MERAH → KUNING → HIJAU */}
+      {(() => {
+        const disahkan = !!a?.maklumat_disahkan;
+        const st = a?.status;
+        // HIJAU — telah diluluskan
+        if (st === "lulus") {
+          return (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-green-300 bg-green-50 p-4">
+              <div>
+                <div className="font-bold text-green-800">🟢 Maklumat Anda Telah Disahkan</div>
+                <p className="mt-0.5 text-sm text-green-700">Keahlian anda diluluskan{a.tarikh_kemaskini ? ` · dikemas kini ${tarikhMs(a.tarikh_kemaskini)}` : ""}. Terima kasih!</p>
+              </div>
+              <Link href="/ahli/kemaskini" className="text-sm font-medium text-green-800 underline">Kemas kini semula</Link>
+            </div>
+          );
+        }
+        // MERAH — belum kemas kini / ditolak
+        if (!disahkan || st === "tolak") {
+          return (
+            <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4">
+              <div className="font-bold text-red-700">🔴 Maklumat Anda BELUM LENGKAP</div>
+              <p className="mt-1 text-sm text-red-600">
+                {st === "tolak"
+                  ? "Permohonan anda perlu dibetulkan. Sila kemas kini semula maklumat anda."
+                  : "Rekod anda belum dikemas kini & disahkan. Sila lengkapkan sekarang (alamat, telefon, gambar IC, tanggungan) untuk mengesahkan keahlian anda."}
+              </p>
+              <Link href="/ahli/kemaskini" className="mt-3 inline-block rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700">
+                Kemas Kini Sekarang →
+              </Link>
+            </div>
+          );
+        }
+        // KUNING — dah hantar, menunggu pengesahan
+        return (
+          <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+            <div className="font-bold text-amber-800">🟡 Menunggu Pengesahan</div>
+            <p className="mt-1 text-sm text-amber-700">
+              Terima kasih! Maklumat anda telah dihantar{a.tarikh_kemaskini ? ` pada ${tarikhMs(a.tarikh_kemaskini)}` : ""} dan sedang menunggu pengesahan AJK. Anda masih boleh kemas kini jika perlu.
+            </p>
+            <Link href="/ahli/kemaskini" className="mt-3 inline-block rounded-lg border border-amber-400 px-5 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100">
+              Kemas Kini Semula
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* Status permohonan */}
       <div className={`grid gap-4 ${bolehKhairat ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
