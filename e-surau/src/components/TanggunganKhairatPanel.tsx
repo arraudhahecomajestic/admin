@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const PER_MUKA = 25;
 
 type Tggn = { nama: string; hubungan: string | null; no_kp: string | null };
 type Ahli = { ahli_id: string; nama: string; no_ahli: string | null; telefon: string | null; tanggungan: Tggn[] };
@@ -16,6 +18,7 @@ function waNombor(tel: string | null): string {
 
 export default function TanggunganKhairatPanel({ data }: { data: Ahli[] }) {
   const [q, setQ] = useState("");
+  const [muka, setMuka] = useState(1);
 
   const jumTggn = useMemo(() => data.reduce((s, a) => s + a.tanggungan.length, 0), [data]);
 
@@ -29,6 +32,11 @@ export default function TanggunganKhairatPanel({ data }: { data: Ahli[] }) {
       a.tanggungan.some((t) => (t.nama || "").toLowerCase().includes(cari)),
     );
   }, [data, q]);
+
+  useEffect(() => { setMuka(1); }, [q]);
+  const jumMuka = Math.max(1, Math.ceil(ditapis.length / PER_MUKA));
+  const mukaSemasa = Math.min(muka, jumMuka);
+  const halaman = ditapis.slice((mukaSemasa - 1) * PER_MUKA, mukaSemasa * PER_MUKA);
 
   function muatTurunCsv() {
     const sel = (v: any) => `"${(v ?? "").toString().replace(/"/g, '""')}"`;
@@ -85,7 +93,7 @@ export default function TanggunganKhairatPanel({ data }: { data: Ahli[] }) {
             {ditapis.length === 0 && (
               <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Tiada kariah mendaftar tanggungan khairat lagi.</td></tr>
             )}
-            {ditapis.map((a) => {
+            {halaman.map((a) => {
               const wa = waNombor(a.telefon);
               return (
                 <tr key={a.ahli_id} className="border-b align-top last:border-0">
@@ -113,6 +121,13 @@ export default function TanggunganKhairatPanel({ data }: { data: Ahli[] }) {
           </tbody>
         </table>
       </div>
+      {jumMuka > 1 && (
+        <div className="flex items-center justify-center gap-3 border-t px-5 py-3">
+          <button onClick={() => setMuka((m) => Math.max(1, m - 1))} disabled={mukaSemasa <= 1} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">← Sebelum</button>
+          <span className="text-sm text-slate-500">Muka {mukaSemasa} / {jumMuka}</span>
+          <button onClick={() => setMuka((m) => Math.min(jumMuka, m + 1))} disabled={mukaSemasa >= jumMuka} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">Seterusnya →</button>
+        </div>
+      )}
     </section>
   );
 }

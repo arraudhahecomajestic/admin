@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const PER_MUKA = 25;
 
 type Ahli = {
   id: string;
@@ -57,6 +59,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
   const [tab, setTab] = useState<Tab>("semua");
   const [papar, setPapar] = useState(false);
   const [disalin, setDisalin] = useState(false);
+  const [muka, setMuka] = useState(1);
 
   const kira = useMemo(() => ({
     jumlah: senarai.length,
@@ -84,6 +87,12 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
       );
     });
   }, [senarai, q, tab]);
+
+  // Reset ke muka 1 bila carian/tab bertukar
+  useEffect(() => { setMuka(1); }, [q, tab]);
+  const jumMuka = Math.max(1, Math.ceil(ditapis.length / PER_MUKA));
+  const mukaSemasa = Math.min(muka, jumMuka);
+  const halaman = ditapis.slice((mukaSemasa - 1) * PER_MUKA, mukaSemasa * PER_MUKA);
 
   function salin() {
     const teks = ditapis.map((a) => `${a.nama}\t${a.telefon ?? "-"}\t${a.maklumat_disahkan ? "Disahkan" : "Belum"}`).join("\n");
@@ -163,7 +172,9 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
         <TabBtn label="Dah Sahkan" bil={kira.sah} aktif={tab === "sah"} onClick={() => setTab("sah")} warna="bg-green-600" />
       </div>
 
-      <div className="text-xs text-slate-500">Menunjukkan {ditapis.length} rekod.</div>
+      <div className="text-xs text-slate-500">
+        {ditapis.length === 0 ? "Tiada rekod." : `Menunjukkan ${(mukaSemasa - 1) * PER_MUKA + 1}–${Math.min(mukaSemasa * PER_MUKA, ditapis.length)} daripada ${ditapis.length} rekod.`}
+      </div>
 
       {/* JADUAL */}
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
@@ -182,7 +193,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
             {ditapis.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Tiada rekod padan.</td></tr>
             )}
-            {ditapis.slice(0, 800).map((a) => {
+            {halaman.map((a) => {
               const wa = waNombor(a.telefon);
               const pr = infoPeringkat(a.status, a.peringkat);
               return (
@@ -213,7 +224,13 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
           </tbody>
         </table>
       </div>
-      {ditapis.length > 800 && <div className="text-xs text-slate-400">Memaparkan 800 pertama. Gunakan carian untuk tapis lagi.</div>}
+      {jumMuka > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-1">
+          <button onClick={() => setMuka((m) => Math.max(1, m - 1))} disabled={mukaSemasa <= 1} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">← Sebelum</button>
+          <span className="text-sm text-slate-500">Muka {mukaSemasa} / {jumMuka}</span>
+          <button onClick={() => setMuka((m) => Math.min(jumMuka, m + 1))} disabled={mukaSemasa >= jumMuka} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">Seterusnya →</button>
+        </div>
+      )}
     </div>
   );
 }
