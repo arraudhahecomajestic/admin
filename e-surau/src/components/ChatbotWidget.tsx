@@ -9,8 +9,8 @@ export default function ChatbotWidget({ lang = "ms", nama = "" }: { lang?: strin
   const t = (ms: string, e: string) => (en ? e : ms);
 
   const sapaan = t(
-    `Assalamualaikum${nama ? " " + nama.split(" ")[0] : ""}! Saya Ayaan Ihlan, Pembantu Surau Ar Raudhah. Tanya saya apa sahaja — cara daftar ahli, khairat kematian, waktu solat, program, sewaan ruang & lain-lain.`,
-    `Assalamualaikum${nama ? " " + nama.split(" ")[0] : ""}! I'm Ayaan Ihlan, the Surau Ar Raudhah assistant. Ask me anything — how to register, death benefit scheme, prayer times, programmes, hall rental & more.`,
+    `Assalamualaikum${nama ? " " + nama.split(" ")[0] : ""}! Saya Ayaan Ilhan, Pembantu Surau Ar Raudhah. Tanya saya apa sahaja — cara daftar ahli, khairat kematian, waktu solat, program, sewaan ruang & lain-lain.`,
+    `Assalamualaikum${nama ? " " + nama.split(" ")[0] : ""}! I'm Ayaan Ilhan, the Surau Ar Raudhah assistant. Ask me anything — how to register, death benefit scheme, prayer times, programmes, hall rental & more.`,
   );
 
   const [buka, setBuka] = useState(false);
@@ -58,7 +58,7 @@ export default function ChatbotWidget({ lang = "ms", nama = "" }: { lang?: strin
       {!buka && (
         <button
           onClick={() => setBuka(true)}
-          aria-label={t("Buka Ayaan Ihlan", "Open Ayaan Ihlan")}
+          aria-label={t("Buka Ayaan Ilhan", "Open Ayaan Ilhan")}
           className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-surau px-4 py-3 text-white shadow-lg transition-transform hover:scale-105 hover:bg-surau-dark"
         >
           <span className="text-xl leading-none">💬</span>
@@ -72,7 +72,7 @@ export default function ChatbotWidget({ lang = "ms", nama = "" }: { lang?: strin
           {/* Kepala */}
           <div className="flex items-center justify-between gap-2 bg-surau px-4 py-3 text-white">
             <div>
-              <div className="text-sm font-bold leading-tight">Ayaan Ihlan</div>
+              <div className="text-sm font-bold leading-tight">Ayaan Ilhan</div>
               <div className="text-[11px] text-white/80 leading-tight">{t("Pembantu Surau Ar Raudhah", "Surau Ar Raudhah Assistant")}</div>
             </div>
             <button onClick={() => setBuka(false)} aria-label={t("Tutup", "Close")} className="rounded p-1 text-white/90 hover:bg-white/20">
