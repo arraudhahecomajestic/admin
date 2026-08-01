@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
 import TuntutanForm, { type KeahlianRingkas } from "@/components/TuntutanForm";
+import TanggunganKhairatPanel from "@/components/TanggunganKhairatPanel";
 import ButangHantar from "@/components/ButangHantar";
 import { bayarYuran, tukarStatusTuntutan } from "./actions";
 
@@ -24,17 +25,28 @@ export default async function KhairatPage({
   if (!isPentadbir(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
-  const [keahlianRes, yuranRes, tggRes, tuntutanRes] = await Promise.all([
+  const [keahlianRes, yuranRes, tggRes, tuntutanRes, tggKhRes] = await Promise.all([
     db.from("keahlian_khairat").select("id, no_khairat, status, tarikh_sertai, ahli:ahli_kariah(id, nama, no_ahli)").order("no_khairat"),
     db.from("yuran_khairat").select("keahlian_id, tahun, lunas"),
     db.from("tanggungan").select("id, ahli_id, nama, dilindungi_khairat"),
     db.from("tuntutan_khairat").select("id, no_tuntutan, nama_si_mati, jenis_si_mati, tarikh_kematian, jumlah_pampasan, status, nama_waris, keahlian:keahlian_khairat(no_khairat, ahli:ahli_kariah(nama))").order("dicipta", { ascending: false }),
+    db.from("tanggungan").select("nama, hubungan, no_kp, dilindungi_khairat, ahli:ahli_kariah(id, nama, no_ahli, telefon)").eq("dilindungi_khairat", true),
   ]);
 
   const keahlian = (keahlianRes.data ?? []) as any[];
   const yuran = (yuranRes.data ?? []) as any[];
   const tanggungan = (tggRes.data ?? []) as any[];
   const tuntutan = (tuntutanRes.data ?? []) as any[];
+
+  // Kumpul tanggungan khairat ikut ahli
+  const petaKh = new Map<string, { ahli_id: string; nama: string; no_ahli: string | null; telefon: string | null; tanggungan: { nama: string; hubungan: string | null; no_kp: string | null }[] }>();
+  for (const t of (tggKhRes.data ?? []) as any[]) {
+    const a = t.ahli;
+    if (!a?.id) continue;
+    if (!petaKh.has(a.id)) petaKh.set(a.id, { ahli_id: a.id, nama: a.nama, no_ahli: a.no_ahli, telefon: a.telefon, tanggungan: [] });
+    petaKh.get(a.id)!.tanggungan.push({ nama: t.nama, hubungan: t.hubungan, no_kp: t.no_kp });
+  }
+  const senaraiKhairat = Array.from(petaKh.values()).sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
 
   const bayarTahunIni = (kid: string) =>
     yuran.some((y) => y.keahlian_id === kid && y.tahun === TAHUN && y.lunas);
@@ -75,6 +87,9 @@ export default async function KhairatPage({
         <Stat label="Tuntutan Menunggu" nilai={String(stat.tuntutanMenunggu)} warna="text-red-600" />
         <Stat label="Pampasan Dibayar" nilai={rm(stat.pampasan)} warna="text-surau" />
       </div>
+
+      {/* Kariah yang daftar tanggungan khairat */}
+      <TanggunganKhairatPanel data={senaraiKhairat} />
 
       {/* Senarai ahli khairat + kutip yuran */}
       <section className="rounded-xl bg-white shadow-sm">
