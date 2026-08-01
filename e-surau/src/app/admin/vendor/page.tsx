@@ -33,6 +33,23 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
   const bil = { semua: (semua as any[])?.length ?? 0, menunggu: 0, lulus: 0 };
   for (const r of (semua as any[]) ?? []) { if (r.status === "menunggu") bil.menunggu++; if (r.status === "lulus") bil.lulus++; }
 
+  // Pautan dokumen profil vendor (IC, profil syarikat, katalog) — signed URL
+  async function signed(path: string | null) {
+    if (!path) return null;
+    const rel = path.replace(/^salinan-kp\//, "");
+    const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
+    return data?.signedUrl ?? null;
+  }
+  const dok: Record<string, { depan?: string | null; belakang?: string | null; profil?: string | null; katalog?: string | null }> = {};
+  await Promise.all(senarai.map(async (v) => {
+    dok[v.id] = {
+      depan: await signed(v.url_kp_depan),
+      belakang: await signed(v.url_kp_belakang),
+      profil: await signed(v.url_profil_syarikat),
+      katalog: await signed(v.url_katalog),
+    };
+  }));
+
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/vendor" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} master={profil.master} />
@@ -56,13 +73,29 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
                 </div>
                 <div className="mt-1 font-semibold text-slate-900">{v.nama}{v.syarikat ? <span className="text-sm font-normal text-slate-500"> · {v.syarikat}</span> : null}</div>
                 <div className="mt-1 text-xs text-slate-500">
-                  📞 {v.telefon || "-"}{v.emel ? ` · ${v.emel}` : ""}{v.no_kp ? ` · KP ${v.no_kp}` : ""}
+                  📞 {v.telefon || "-"}{v.emel ? ` · ${v.emel}` : ""}{v.no_kp ? ` · KP ${v.no_kp}` : ""}{v.no_ssm ? ` · SSM ${v.no_ssm}` : ""}
                 </div>
                 {(v.bank || v.no_akaun) && (
                   <div className="mt-0.5 text-xs text-slate-500">🏦 {v.bank || "-"} · {v.no_akaun || "-"}{v.nama_akaun ? ` · ${v.nama_akaun}` : ""}</div>
                 )}
                 {v.catatan && <div className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600">{v.catatan}</div>}
-                <div className="mt-1 text-xs text-slate-400">{tarikhMs(v.dicipta)}</div>
+                {/* Dokumen profil vendor */}
+                {(() => {
+                  const d = dok[v.id] || {};
+                  const ada = d.depan || d.belakang || d.profil || d.katalog;
+                  if (!ada) return <div className="mt-1.5 text-xs italic text-slate-400">Tiada dokumen dimuat naik.</div>;
+                  const Pautan = ({ href, label }: { href?: string | null; label: string }) =>
+                    href ? <a href={href} target="_blank" rel="noreferrer" className="rounded-lg border border-surau/40 px-2.5 py-1 text-xs font-semibold text-surau hover:bg-surau/10">📄 {label}</a> : null;
+                  return (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <Pautan href={d.depan} label="IC Depan" />
+                      <Pautan href={d.belakang} label="IC Belakang" />
+                      <Pautan href={d.profil} label="Profil Syarikat" />
+                      <Pautan href={d.katalog} label="Katalog" />
+                    </div>
+                  );
+                })()}
+                <div className="mt-1.5 text-xs text-slate-400">{tarikhMs(v.dicipta)}</div>
               </div>
               {bolehLulus && (
                 <div className="flex flex-col items-end gap-2">
