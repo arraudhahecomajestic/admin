@@ -6,7 +6,7 @@ import { rsvpProgram } from "../actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function JemputanProgramPage({ params }: { params: { id: string } }) {
+export default async function JemputanProgramPage({ params, searchParams }: { params: { id: string }; searchParams: { rsvp?: string } }) {
   if (!adminConfigured)
     return <p className="text-center text-slate-500">Sistem belum dikonfigurasi.</p>;
 
@@ -42,9 +42,23 @@ export default async function JemputanProgramPage({ params }: { params: { id: st
           </div>
           {p.keterangan && <p className="whitespace-pre-line border-t pt-3 text-sm text-slate-700">{p.keterangan}</p>}
 
+          {searchParams.rsvp === "ok" && (
+            <div className="mt-2 rounded-xl border-2 border-green-500 bg-green-50 p-5 text-center">
+              <div className="text-3xl">✓</div>
+              <div className="mt-1 text-lg font-bold text-green-700">Kehadiran anda telah disahkan!</div>
+              <div className="mt-1 text-sm text-green-700">Terima kasih. Jumpa anda di majlis, insyaAllah. Anda tidak perlu daftar lagi.</div>
+            </div>
+          )}
+          {searchParams.rsvp === "penuh" && (
+            <div className="mt-2 rounded-xl border-2 border-amber-400 bg-amber-50 p-4 text-center text-sm font-semibold text-amber-800">
+              Maaf, pendaftaran telah penuh. Terima kasih atas minat anda.
+            </div>
+          )}
+
           {p.rsvp_dibuka && !penuh ? (
             <form action={rsvpProgram} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-800">Sahkan Kehadiran (RSVP)</div>
+              <div className="text-sm font-semibold text-slate-800">{searchParams.rsvp === "ok" ? "Kemas kini kehadiran anda" : "Sahkan Kehadiran (RSVP)"}</div>
+              <p className="text-xs text-slate-500">Guna nombor telefon yang sama untuk kemas kini — tak akan jadi pendaftaran berganda.</p>
               <input type="hidden" name="program_id" value={p.id} />
               <input name="nama" required placeholder="Nama anda" className="inp" />
               <input name="telefon" placeholder="No. telefon (WhatsApp)" className="inp" />
