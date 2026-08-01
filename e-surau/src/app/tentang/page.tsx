@@ -90,7 +90,7 @@ export default async function TentangPage() {
                   <div>
                     <h3 className="font-semibold text-slate-900">{b.tajuk}</h3>
                     <div className="text-xs text-slate-500">{tarikhMs(b.tarikh)}</div>
-                    {b.keterangan && <p className="mt-1 text-sm text-slate-600">{b.keterangan}</p>}
+                    {b.keterangan && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{b.keterangan}</p>}
                   </div>
                   {b.url_fail && (
                     <a href={b.url_fail} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg bg-surau px-3 py-1.5 text-xs font-semibold text-white hover:bg-surau-dark">
