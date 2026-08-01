@@ -6,6 +6,7 @@ import { khairatDibuka, penajaDipapar, infaqDipapar } from "@/lib/tetapanSistem"
 import { getProfil, isMaster } from "@/lib/sesi";
 import PenajaStrip from "@/components/PenajaStrip";
 import NavUtama from "@/components/NavUtama";
+import ChatbotWidget from "@/components/ChatbotWidget";
 import { bahasaSemasa } from "@/lib/bahasa";
 import { buatT } from "@/lib/i18n";
 
@@ -78,6 +79,8 @@ export default async function RootLayout({
           </div>
           {t("Jawatankuasa Surau Ar Raudhah, Eco Majestic", "Surau Ar Raudhah Committee, Eco Majestic")}
         </footer>
+        {/* Pembantu Maya AI — ahli berdaftar (log masuk) sahaja */}
+        {profil && <ChatbotWidget lang={lang} nama={profil.nama ?? ""} />}
       </body>
     </html>
   );
