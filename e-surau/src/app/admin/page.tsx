@@ -20,7 +20,7 @@ export default async function AdminPage() {
   const db = createAdminClient();
   const { data, error } = await db
     .from("ahli_kariah")
-    .select("id, no_ahli, nama, no_kp, telefon, status, maklumat_disahkan, sumber, tarikh_daftar")
+    .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, sumber, tarikh_daftar")
     .order("tarikh_daftar", { ascending: false });
 
   const senarai = (data as any[]) ?? [];

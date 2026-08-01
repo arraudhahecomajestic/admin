@@ -10,11 +10,25 @@ type Ahli = {
   no_kp: string | null;
   telefon: string | null;
   status: "menunggu" | "lulus" | "tolak";
+  peringkat: string | null;
   maklumat_disahkan: boolean;
   sumber: string;
 };
 
-type Tab = "semua" | "baru" | "belum" | "sah";
+type Tab = "semua" | "menunggu" | "lulus" | "baru" | "belum" | "sah";
+
+// Label peringkat kelulusan — general, ikut tahap sebenar dalam sistem.
+function infoPeringkat(status: string, peringkat: string | null): { label: string; cls: string } {
+  if (status === "lulus") return { label: "✓ Diluluskan", cls: "bg-green-600 text-white" };
+  if (status === "tolak") return { label: "✕ Ditolak", cls: "bg-red-100 text-red-700" };
+  switch (peringkat) {
+    case "disokong_nazir": return { label: "Disokong Pengerusi", cls: "bg-blue-100 text-blue-700" };
+    case "disokong_su": return { label: "Disokong Setiausaha", cls: "bg-teal-100 text-teal-700" };
+    case "ditolak_nazir": return { label: "Ditolak Pengerusi", cls: "bg-red-100 text-red-700" };
+    case "ditolak_su": return { label: "Ditolak Setiausaha", cls: "bg-red-100 text-red-700" };
+    default: return { label: "Baru", cls: "bg-slate-100 text-slate-500" };
+  }
+}
 
 function topengKp(kp: string | null): string {
   const d = (kp || "").replace(/\s/g, "");
@@ -56,6 +70,8 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
   const ditapis = useMemo(() => {
     const cari = q.trim().toLowerCase();
     return senarai.filter((a) => {
+      if (tab === "menunggu" && a.status !== "menunggu") return false;
+      if (tab === "lulus" && a.status !== "lulus") return false;
       if (tab === "baru" && a.sumber !== "baru") return false;
       if (tab === "belum" && a.maklumat_disahkan) return false;
       if (tab === "sah" && !a.maklumat_disahkan) return false;
@@ -140,6 +156,8 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
       {/* TAB */}
       <div className="flex flex-wrap gap-2">
         <TabBtn label="Semua" bil={kira.jumlah} aktif={tab === "semua"} onClick={() => setTab("semua")} warna="bg-slate-700" />
+        <TabBtn label="Menunggu" bil={kira.menunggu} aktif={tab === "menunggu"} onClick={() => setTab("menunggu")} warna="bg-slate-500" />
+        <TabBtn label="Diluluskan" bil={kira.lulus} aktif={tab === "lulus"} onClick={() => setTab("lulus")} warna="bg-green-700" />
         <TabBtn label="Pemohon Baru" bil={kira.baru} aktif={tab === "baru"} onClick={() => setTab("baru")} warna="bg-emerald-600" />
         <TabBtn label="Belum Kemas Kini" bil={kira.belum} aktif={tab === "belum"} onClick={() => setTab("belum")} warna="bg-orange-500" />
         <TabBtn label="Dah Sahkan" bil={kira.sah} aktif={tab === "sah"} onClick={() => setTab("sah")} warna="bg-green-600" />
@@ -156,30 +174,30 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
               <th className="px-4 py-3">Nama</th>
               <th className="px-4 py-3">Telefon</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Data</th>
               <th className="px-4 py-3 text-right">Tindakan</th>
             </tr>
           </thead>
           <tbody>
             {ditapis.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Tiada rekod padan.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Tiada rekod padan.</td></tr>
             )}
             {ditapis.slice(0, 800).map((a) => {
               const wa = waNombor(a.telefon);
+              const pr = infoPeringkat(a.status, a.peringkat);
               return (
-                <tr key={a.id} className="border-b last:border-0">
+                <tr key={a.id} className={`border-b last:border-0 ${a.status === "lulus" ? "bg-green-50/60" : ""}`}>
                   <td className="px-4 py-2.5 font-mono text-xs">{a.no_ahli}</td>
                   <td className="px-4 py-2.5">
                     <div className="font-medium text-slate-900">{a.nama}</div>
                     <div className="font-mono text-xs text-slate-400">{bolehLihat ? (a.no_kp || "—") : topengKp(a.no_kp)}</div>
                   </td>
                   <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{bolehLihat ? (a.telefon || "—") : topengTel(a.telefon)}</td>
+                  <td className="px-4 py-2.5"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${pr.cls}`}>{pr.label}</span></td>
                   <td className="px-4 py-2.5">
-                    <div className="flex flex-wrap gap-1">
-                      <LencanaKelulusan status={a.status} />
-                      {a.maklumat_disahkan
-                        ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Data ✓</span>
-                        : <span className="rounded bg-orange-100 px-1.5 py-0.5 text-xs font-semibold text-orange-700">Data belum</span>}
-                    </div>
+                    {a.maklumat_disahkan
+                      ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Data ✓</span>
+                      : <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-500">Data belum</span>}
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-2">
@@ -198,12 +216,6 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
       {ditapis.length > 800 && <div className="text-xs text-slate-400">Memaparkan 800 pertama. Gunakan carian untuk tapis lagi.</div>}
     </div>
   );
-}
-
-function LencanaKelulusan({ status }: { status: string }) {
-  if (status === "lulus") return <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Diluluskan</span>;
-  if (status === "tolak") return <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700">Ditolak</span>;
-  return <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">Menunggu</span>;
 }
 
 function Kad({ label, nilai, warna }: { label: string; nilai: number; warna: string }) {
