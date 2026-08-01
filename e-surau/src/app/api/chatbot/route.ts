@@ -163,7 +163,7 @@ export async function POST(request: Request) {
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
       return NextResponse.json(
-        { ok: false, ralat: "Maaf, Pembantu Maya sibuk sekejap. Cuba lagi sebentar.", nyahpepijat: `${res.status} ${txt.slice(0, 200)}` },
+        { ok: false, ralat: `⚠️ Ralat API (${res.status}): ${txt.slice(0, 220)}`, nyahpepijat: `${res.status} ${txt.slice(0, 300)}` },
         { status: 200 },
       );
     }
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, reply: reply || "Maaf, saya tak dapat jawapan buat masa ini." });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, ralat: "Maaf, sambungan ke Pembantu Maya gagal. Cuba lagi.", nyahpepijat: e?.message ?? "ralat" },
+      { ok: false, ralat: `⚠️ Sambungan gagal: ${e?.message ?? "ralat tidak diketahui"}`, nyahpepijat: e?.message ?? "ralat" },
       { status: 200 },
     );
   }
