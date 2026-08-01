@@ -46,6 +46,11 @@ export function isAdminAtauBendahari(p: Profil | null): boolean {
   return !!p && ["admin", "bendahari"].includes(p.peranan);
 }
 
+// Kelulusan berkaitan vendor/pembekal (pendaftaran & tuntutan) — Admin & Bendahari sahaja (bukan AJK).
+export function bolehLulusVendor(p: Profil | null): boolean {
+  return !!p && (["admin", "bendahari"].includes(p.peranan) || p.master === true);
+}
+
 // SU / Pengerusi / AJK — pentadbir penuh (permohonan, jejak, cetak, dll).
 export function isPentadbir(p: Profil | null): boolean {
   return !!p && ["admin", "ajk"].includes(p.peranan);

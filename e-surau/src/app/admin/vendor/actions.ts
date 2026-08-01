@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, bolehLulusVendor } from "@/lib/sesi";
 
 export async function tetapkanStatusVendor(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  if (!bolehLulusVendor(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "");
   if (!id || !["menunggu", "lulus", "tolak"].includes(status)) return;
@@ -15,7 +15,7 @@ export async function tetapkanStatusVendor(formData: FormData) {
 }
 
 export async function padamVendor(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  if (!bolehLulusVendor(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();

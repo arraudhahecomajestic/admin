@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, bolehKewangan, isPentadbir } from "@/lib/sesi";
+import { getProfil, bolehKewangan, isPentadbir, bolehLulusVendor } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -47,7 +47,7 @@ export default async function AdminTuntutanPage() {
 
   const pembekalMenunggu = pembekal.filter((p) => p.status === "menunggu");
   const boleh$ = bolehKewangan(profil);
-  const bolehAjk = isPentadbir(profil);
+  const bolehVendor = bolehLulusVendor(profil); // lulus pendaftaran vendor — Admin & Bendahari
 
   return (
     <div className="space-y-6">
@@ -55,7 +55,7 @@ export default async function AdminTuntutanPage() {
       <h1 className="text-2xl font-bold text-slate-900">Tuntutan Bayaran</h1>
 
       {/* Pembekal menunggu kelulusan */}
-      {pembekalMenunggu.length > 0 && bolehAjk && (
+      {pembekalMenunggu.length > 0 && bolehVendor && (
         <section className="rounded-xl bg-white shadow-sm">
           <h2 className="border-b px-5 py-3 font-semibold text-slate-900">Pembekal Baharu — Menunggu Kelulusan ({pembekalMenunggu.length})</h2>
           <div className="divide-y">
@@ -110,8 +110,8 @@ export default async function AdminTuntutanPage() {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-                {t.status === "baru" && bolehAjk && (
-                  <form action={sahAjk}><input type="hidden" name="id" value={t.id} /><ButangHantar className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">✓ Sah (AJK)</ButangHantar></form>
+                {t.status === "baru" && boleh$ && (
+                  <form action={sahAjk}><input type="hidden" name="id" value={t.id} /><ButangHantar className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">✓ Sahkan</ButangHantar></form>
                 )}
                 {t.status === "disah_ajk" && boleh$ && (
                   <form action={lulusBendahari}><input type="hidden" name="id" value={t.id} /><ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">Luluskan + Jana Baucer</ButangHantar></form>

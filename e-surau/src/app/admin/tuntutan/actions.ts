@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir, bolehKewangan } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehKewangan, bolehLulusVendor } from "@/lib/sesi";
 
 function segar() {
   revalidatePath("/admin/tuntutan");
@@ -10,9 +10,9 @@ function segar() {
   revalidatePath("/admin/kewangan");
 }
 
-// AJK / admin: luluskan atau tolak pendaftaran pembekal
+// Admin & Bendahari sahaja: luluskan atau tolak pendaftaran pembekal
 export async function tetapkanStatusPembekal(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  if (!bolehLulusVendor(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "");
   if (!id || !["lulus", "tolak", "menunggu"].includes(status)) return;
@@ -21,10 +21,10 @@ export async function tetapkanStatusPembekal(formData: FormData) {
   segar();
 }
 
-// AJK: sahkan tuntutan (baru → disah_ajk)
+// Admin / AJK / Bendahari: sahkan tuntutan (baru → disah_ajk)
 export async function sahAjk(formData: FormData) {
   const p = await getProfil();
-  if (!isPentadbir(p)) return;
+  if (!bolehKewangan(p)) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();

@@ -13,7 +13,19 @@ export default async function PembekalPortalPage() {
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
 
-  if (!profil.pembekal_id) {
+  const db = createAdminClient();
+
+  // Auto-sambung ikut e-mel jika akaun belum dipautkan ke rekod pembekal.
+  let pembekalId = profil.pembekal_id;
+  if (!pembekalId && profil.emel) {
+    const { data: padan } = await db.from("pembekal").select("id").eq("emel", profil.emel.toLowerCase()).maybeSingle();
+    if ((padan as any)?.id) {
+      pembekalId = (padan as any).id;
+      await db.from("profil").update({ pembekal_id: pembekalId }).eq("id", profil.id);
+    }
+  }
+
+  if (!pembekalId) {
     return (
       <div className="mx-auto max-w-md rounded-xl bg-white p-6 text-center shadow-sm">
         <h1 className="text-lg font-bold text-slate-900">Akaun bukan pembekal</h1>
@@ -23,13 +35,12 @@ export default async function PembekalPortalPage() {
     );
   }
 
-  const db = createAdminClient();
-  const { data: pb } = await db.from("pembekal").select("*").eq("id", profil.pembekal_id).single();
+  const { data: pb } = await db.from("pembekal").select("*").eq("id", pembekalId).single();
   const p: any = pb;
   const { data: tuntutanData } = await db
     .from("tuntutan_bayaran")
     .select("*")
-    .eq("pembekal_id", profil.pembekal_id)
+    .eq("pembekal_id", pembekalId)
     .order("dicipta", { ascending: false });
   const tuntutan = (tuntutanData as any[]) ?? [];
 
@@ -40,7 +51,7 @@ export default async function PembekalPortalPage() {
     return data?.signedUrl ?? null;
   }
   const slipMap: Record<string, string | null> = {};
-  await Promise.all(tuntutan.filter((t) => t.url_slip).map(async (t) => { slipMap[t.id] = await signed(t.url_slip); }));
+  await Promise.all(tuntutan.filter((t) => t.url_dokumen).map(async (t) => { slipMap[t.id] = await signed(t.url_dokumen); }));
 
   const stPb = STATUS_PEMBEKAL[p?.status] ?? STATUS_PEMBEKAL.menunggu;
 

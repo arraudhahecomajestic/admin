@@ -1,4 +1,4 @@
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehKewangan, bolehLulusVendor } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -19,7 +19,8 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
     return <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Supabase belum dikonfigurasi.</div>;
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isPentadbir(profil)) return <TiadaAkses />;
+  if (!isPentadbir(profil) && !bolehKewangan(profil)) return <TiadaAkses />;
+  const bolehLulus = bolehLulusVendor(profil); // Admin & Bendahari sahaja boleh lulus/tolak/padam
 
   const db = createAdminClient();
   let q = db.from("pembekal").select("*").order("dicipta", { ascending: false }).limit(500);
@@ -63,13 +64,15 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
                 {v.catatan && <div className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600">{v.catatan}</div>}
                 <div className="mt-1 text-xs text-slate-400">{tarikhMs(v.dicipta)}</div>
               </div>
-              <div className="flex flex-col items-end gap-2">
-                <div className="flex gap-1">
-                  <Btn id={v.id} status="lulus" label="Lulus" warna="bg-green-600" />
-                  <Btn id={v.id} status="tolak" label="Tolak" warna="bg-red-600" />
+              {bolehLulus && (
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex gap-1">
+                    <Btn id={v.id} status="lulus" label="Lulus" warna="bg-green-600" />
+                    <Btn id={v.id} status="tolak" label="Tolak" warna="bg-red-600" />
+                  </div>
+                  <form action={padamVendor}><input type="hidden" name="id" value={v.id} /><button className="text-xs font-semibold text-red-600 hover:underline">Padam</button></form>
                 </div>
-                <form action={padamVendor}><input type="hidden" name="id" value={v.id} /><button className="text-xs font-semibold text-red-600 hover:underline">Padam</button></form>
-              </div>
+              )}
             </div>
           </div>
         ))}

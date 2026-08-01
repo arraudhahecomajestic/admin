@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { buatT, bahasaCookieKlien, type Bahasa } from "@/lib/i18n";
+import { pautkanPembekal } from "@/app/pembekal/portal/actions";
 
 async function destIkutPeranan(supabase: any): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -14,7 +15,9 @@ async function destIkutPeranan(supabase: any): Promise<string> {
   if (prof?.peranan === "bendahari") return "/admin/kewangan";
   if (prof?.peranan === "imam") return "/admin/tahlil";
   if (prof && ["admin", "ajk"].includes(prof.peranan)) return "/admin";
-  if (prof?.pembekal_id) return "/pembekal/portal";
+  // Pembekal — cuba auto-sambung ikut e-mel jika belum dipautkan.
+  const pid = prof?.pembekal_id ?? (await pautkanPembekal());
+  if (pid) return "/pembekal/portal";
   return "/ahli";
 }
 

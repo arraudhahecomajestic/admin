@@ -4,6 +4,20 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil } from "@/lib/sesi";
 
+// Auto-sambung akaun login → rekod pembekal ikut e-mel yang sama.
+// Pulihkan pembekal sedia ada yang daftar tapi belum dipautkan.
+export async function pautkanPembekal(): Promise<string | null> {
+  const p = await getProfil();
+  if (!p) return null;
+  if (p.pembekal_id) return p.pembekal_id;
+  if (!p.emel) return null;
+  const db = createAdminClient();
+  const { data } = await db.from("pembekal").select("id").eq("emel", p.emel.toLowerCase()).maybeSingle();
+  const id = (data as any)?.id ?? null;
+  if (id) await db.from("profil").update({ pembekal_id: id }).eq("id", p.id);
+  return id;
+}
+
 export async function hantarTuntutan(data: {
   butiran?: string;
   jumlah?: number | string;
