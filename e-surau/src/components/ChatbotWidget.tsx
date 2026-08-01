@@ -71,12 +71,9 @@ export default function ChatbotWidget({ lang = "ms", nama = "" }: { lang?: strin
         <div className="fixed bottom-5 right-5 z-50 flex h-[70vh] max-h-[560px] w-[92vw] max-w-[380px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
           {/* Kepala */}
           <div className="flex items-center justify-between gap-2 bg-surau px-4 py-3 text-white">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">💬</span>
-              <div>
-                <div className="text-sm font-bold leading-tight">Ayaan Ihlan</div>
-                <div className="text-[11px] text-white/80 leading-tight">{t("Pembantu Surau Ar Raudhah", "Surau Ar Raudhah Assistant")}</div>
-              </div>
+            <div>
+              <div className="text-sm font-bold leading-tight">Ayaan Ihlan</div>
+              <div className="text-[11px] text-white/80 leading-tight">{t("Pembantu Surau Ar Raudhah", "Surau Ar Raudhah Assistant")}</div>
             </div>
             <button onClick={() => setBuka(false)} aria-label={t("Tutup", "Close")} className="rounded p-1 text-white/90 hover:bg-white/20">
               ✕

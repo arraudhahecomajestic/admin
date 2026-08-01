@@ -14,10 +14,40 @@ import {
 export const dynamic = "force-dynamic";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest";
+const MODEL_ENDPOINT = "https://api.anthropic.com/v1/models?limit=100";
+// Model lalai (ID bertarikh — lebih stabil dari alias "-latest").
+// Boleh ganti dengan env ANTHROPIC_MODEL. Jika tak sah, sistem cari sendiri.
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
 const MAX_SEJARAH = 12; // had mesej dihantar (jimat kos)
 
 type Msg = { role: "user" | "assistant"; content: string };
+
+function tajukAnthropic(apiKey: string) {
+  return { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" };
+}
+
+async function panggilClaude(apiKey: string, model: string, sistem: string, mesej: Msg[]) {
+  return fetch(ENDPOINT, {
+    method: "POST",
+    headers: tajukAnthropic(apiKey),
+    body: JSON.stringify({ model, max_tokens: 1024, system: sistem, messages: mesej }),
+  });
+}
+
+// Cari model sah pada akaun (utamakan Sonnet terkini). Auto-pulih bila alias bersara.
+async function cariModelSah(apiKey: string, lalai: string): Promise<string> {
+  try {
+    const res = await fetch(MODEL_ENDPOINT, { headers: tajukAnthropic(apiKey) });
+    if (!res.ok) return lalai;
+    const data = await res.json();
+    const ids: string[] = ((data?.data as any[]) ?? []).map((m) => m?.id).filter(Boolean);
+    if (!ids.length) return lalai;
+    // Senarai dari API disusun terkini dahulu → ambil Sonnet pertama, jika tiada ambil yang pertama.
+    return ids.find((id) => id.includes("sonnet")) || ids[0];
+  } catch {
+    return lalai;
+  }
+}
 
 // ---- Kumpul data langsung dari sistem untuk konteks chatbot ----
 async function ambilKonteksLangsung(): Promise<string> {
@@ -145,25 +175,18 @@ export async function POST(request: Request) {
   const sistem = binaSistemPrompt(konteks, profil.nama ?? "");
 
   try {
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1024,
-        system: sistem,
-        messages: bersih,
-      }),
-    });
+    let res = await panggilClaude(apiKey, MODEL, sistem, bersih);
+
+    // Auto-pulih: jika model tak wujud (404), cari model sah & cuba semula sekali.
+    if (res.status === 404) {
+      const modelSah = await cariModelSah(apiKey, MODEL);
+      if (modelSah !== MODEL) res = await panggilClaude(apiKey, modelSah, sistem, bersih);
+    }
 
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
       return NextResponse.json(
-        { ok: false, ralat: `⚠️ Ralat API (${res.status}): ${txt.slice(0, 220)}`, nyahpepijat: `${res.status} ${txt.slice(0, 300)}` },
+        { ok: false, ralat: `Maaf, Ayaan tak dapat jawab sekejap (${res.status}). Cuba lagi sebentar.`, nyahpepijat: `${res.status} ${txt.slice(0, 300)}` },
         { status: 200 },
       );
     }
@@ -176,7 +199,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, reply: reply || "Maaf, saya tak dapat jawapan buat masa ini." });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, ralat: `⚠️ Sambungan gagal: ${e?.message ?? "ralat tidak diketahui"}`, nyahpepijat: e?.message ?? "ralat" },
+      { ok: false, ralat: "Maaf, sambungan ke Ayaan gagal. Cuba lagi sebentar.", nyahpepijat: e?.message ?? "ralat" },
       { status: 200 },
     );
   }
