@@ -21,7 +21,7 @@ export default async function InfaqPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       {preview && (
         <div className="rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-teal-900">
-          👁️ PRATONTON SUPER ADMIN — halaman Infaq belum dilancarkan. Orang lain tidak nampak. Flip suis di /admin/tetapan bila sedia.
+          PRATONTON SUPER ADMIN — halaman Infaq belum dilancarkan. Orang lain tidak nampak. Flip suis di /admin/tetapan bila sedia.
         </div>
       )}
 

@@ -71,8 +71,8 @@ export default async function AdminSewaanPage() {
                   </div>
                   <div className="mt-1 font-semibold text-slate-900">{s.nama_program || s.jenis_acara || "Sewaan"}</div>
                   <div className="text-sm text-slate-600">{s.nama_pemohon} · {s.status_pemohon}</div>
-                  <div className="text-xs text-slate-500">📅 {tarikhMs(s.tarikh_acara)}{s.masa_mula ? ` · ${s.masa_mula}${s.masa_tamat ? `–${s.masa_tamat}` : ""}` : ""}</div>
-                  <div className="text-xs text-slate-500">📞 {s.telefon || "—"}{s.whatsapp ? ` · WA ${s.whatsapp}` : ""}{s.emel ? ` · ${s.emel}` : ""}</div>
+                  <div className="text-xs text-slate-500">{tarikhMs(s.tarikh_acara)}{s.masa_mula ? ` · ${s.masa_mula}${s.masa_tamat ? `–${s.masa_tamat}` : ""}` : ""}</div>
+                  <div className="text-xs text-slate-500">{s.telefon || "—"}{s.whatsapp ? ` · WA ${s.whatsapp}` : ""}{s.emel ? ` · ${s.emel}` : ""}</div>
                 </div>
                 <div className="text-right text-sm">
                   <div className="text-lg font-bold text-surau">{rm(s.jumlah_keseluruhan)}</div>

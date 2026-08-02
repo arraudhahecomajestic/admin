@@ -241,7 +241,7 @@ export default async function Home() {
         <div>
           {stafKewangan && !kewanganAwam && (
             <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
-              👁️ PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
+              PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
             </div>
           )}
           <PieTabung
@@ -284,8 +284,8 @@ export default async function Home() {
               <Link key={p.id} href="/program" className="rounded-xl bg-white p-4 shadow-sm hover:shadow">
                 {p.kategori && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{p.kategori}</span>}
                 <div className="mt-2 font-semibold text-slate-900">{p.tajuk}</div>
-                <div className="mt-1 text-xs text-slate-500">📅 {tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
-                {p.lokasi && <div className="text-xs text-slate-500">📍 {p.lokasi}</div>}
+                <div className="mt-1 text-xs text-slate-500">{tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
+                {p.lokasi && <div className="text-xs text-slate-500">{p.lokasi}</div>}
               </Link>
             ))}
           </div>

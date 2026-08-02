@@ -6,14 +6,14 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 const KAD = [
-  { href: "/admin/su/mesyuarat", ikon: "📝", tajuk: "Minit Mesyuarat", nota: "Agenda, minit, jejak tindakan AJK" },
-  { href: "/admin/su/surat", ikon: "✉️", tajuk: "Surat Rasmi & Daftar", nota: "Karang surat keluar, rekod surat masuk" },
-  { href: "/admin/pengumuman", ikon: "📢", tajuk: "Pengumuman", nota: "Tulis pengumuman untuk halaman utama" },
-  { href: "/admin/maklum-balas", ikon: "💬", tajuk: "Maklum Balas", nota: "Komplen & cadangan dari kariah" },
-  { href: "/admin/kandungan", ikon: "👥", tajuk: "Carta & Visi/Misi", nota: "Kemas kini AJK, visi, misi, buletin" },
-  { href: "/admin/ahli", ikon: "🗂️", tajuk: "Rekod Ahli Kariah", nota: "Jejak & urus data keahlian" },
-  { href: "/admin/kariah-kawasan", ikon: "📍", tajuk: "Ahli Ikut Kawasan", nota: "Statistik pendaftaran ikut fasa" },
-  { href: "/admin/program", ikon: "📅", tajuk: "Program & Aktiviti", nota: "Urus takwim & program surau" },
+  { href: "/admin/su/mesyuarat", ikon: "", tajuk: "Minit Mesyuarat", nota: "Agenda, minit, jejak tindakan AJK" },
+  { href: "/admin/su/surat", ikon: "", tajuk: "Surat Rasmi & Daftar", nota: "Karang surat keluar, rekod surat masuk" },
+  { href: "/admin/pengumuman", ikon: "", tajuk: "Pengumuman", nota: "Tulis pengumuman untuk halaman utama" },
+  { href: "/admin/maklum-balas", ikon: "", tajuk: "Maklum Balas", nota: "Komplen & cadangan dari kariah" },
+  { href: "/admin/kandungan", ikon: "", tajuk: "Carta & Visi/Misi", nota: "Kemas kini AJK, visi, misi, buletin" },
+  { href: "/admin/ahli", ikon: "", tajuk: "Rekod Ahli Kariah", nota: "Jejak & urus data keahlian" },
+  { href: "/admin/kariah-kawasan", ikon: "", tajuk: "Ahli Ikut Kawasan", nota: "Statistik pendaftaran ikut fasa" },
+  { href: "/admin/program", ikon: "", tajuk: "Program & Aktiviti", nota: "Urus takwim & program surau" },
 ];
 
 export default async function PanelSetiausahaPage() {
@@ -31,8 +31,7 @@ export default async function PanelSetiausahaPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {KAD.map((k) => (
           <Link key={k.href} href={k.href} className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-surau hover:shadow">
-            <div className="text-3xl">{k.ikon}</div>
-            <div className="mt-2 font-semibold text-slate-900 group-hover:text-surau">{k.tajuk}</div>
+            <div className="font-semibold text-slate-900 group-hover:text-surau">{k.tajuk}</div>
             <div className="mt-1 text-sm text-slate-500">{k.nota}</div>
           </Link>
         ))}

@@ -26,10 +26,10 @@ export default function KongsiProgram({
     const baris = [
       "*JEMPUTAN — Surau Ar-Raudhah, Eco Majestic*",
       "",
-      `📌 *${tajuk}*`,
-      `🗓️ ${tarikhLabel}${masa ? ` · ${masa}` : ""}`,
+      `*${tajuk}*`,
+      `${tarikhLabel}${masa ? ` · ${masa}` : ""}`,
     ];
-    if (lokasi) baris.push(`📍 ${lokasi}`);
+    if (lokasi) baris.push(`${lokasi}`);
     baris.push("", "Sila sahkan kehadiran (RSVP) di pautan ini:", pautan());
     return baris.join("\n");
   }
@@ -55,14 +55,14 @@ export default function KongsiProgram({
         onClick={salinPautan}
         className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
       >
-        {salin === "pautan" ? "✓ Pautan disalin" : "🔗 Salin pautan RSVP"}
+        {salin === "pautan" ? "✓ Pautan disalin" : "Salin pautan RSVP"}
       </button>
       <button
         type="button"
         onClick={whatsapp}
         className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
       >
-        💬 Hebahan WhatsApp
+        Hebahan WhatsApp
       </button>
     </div>
   );

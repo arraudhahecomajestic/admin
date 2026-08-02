@@ -39,7 +39,7 @@ export default async function AdminStafPage() {
           <h1 className="text-2xl font-bold text-slate-900">Pengurusan Staf Surau</h1>
           <p className="mt-1 text-sm text-slate-600">Pantau kehadiran, beri tugasan, uruskan laporan &amp; templat tugas harian Penolong Pengurus Surau.</p>
         </div>
-        <a href="/admin/staf/gaji" className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">💰 Gaji Staf</a>
+        <a href="/admin/staf/gaji" className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Gaji Staf</a>
       </div>
       <AdminStafPanel kehadiran={kehadiran} tugasan={tugasan} laporan={laporan} checklist={checklist} log={log} />
     </div>

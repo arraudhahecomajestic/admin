@@ -66,7 +66,7 @@ export default async function TentangPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {c.gambar_url
                   ? <img src={c.gambar_url} alt={c.nama ?? c.jawatan} className="mx-auto h-20 w-20 rounded-full object-cover" />
-                  : <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surau/10 text-2xl text-surau">👤</div>}
+                  : <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surau/10 text-2xl text-surau"></div>}
                 <div className="mt-2 text-sm font-bold text-slate-900">{c.nama || "—"}</div>
                 <div className="text-xs font-medium text-surau">{c.jawatan}</div>
               </div>

@@ -53,7 +53,7 @@ export default async function DirektoriVendorPage({ searchParams }: { searchPara
               </div>
               {v.keterangan && <p className="mt-2 text-sm text-slate-600">{v.keterangan}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                {v.telefon && <a href={`tel:${v.telefon}`} className="font-medium text-slate-700 hover:underline">📞 {v.telefon}</a>}
+                {v.telefon && <a href={`tel:${v.telefon}`} className="font-medium text-slate-700 hover:underline">{v.telefon}</a>}
                 {w && <a href={`https://wa.me/${w}`} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700">WhatsApp</a>}
               </div>
             </div>

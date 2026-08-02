@@ -30,7 +30,7 @@ export default function StafPortal({
     <div className="space-y-6">
       {/* KEHADIRAN */}
       <section className="rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 font-semibold text-slate-900">🕒 Kehadiran Hari Ini</h2>
+        <h2 className="mb-3 font-semibold text-slate-900">Kehadiran Hari Ini</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {SHIFT.map((s) => {
             const rec = kehadiran.find((k) => k.shift === s.kod);
@@ -45,7 +45,7 @@ export default function StafPortal({
       {/* CHECKLIST */}
       <section className="rounded-xl bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">✅ Tugas Harian</h2>
+          <h2 className="font-semibold text-slate-900">Tugas Harian</h2>
           <span className="text-sm font-semibold text-surau">{siapBil}/{checklist.length} · {pct}%</span>
         </div>
         <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
@@ -59,9 +59,9 @@ export default function StafPortal({
 
       {/* TUGASAN */}
       <section className="rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 font-semibold text-slate-900">📋 Tugasan Khas {tugasan.length > 0 && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{tugasan.length} baru</span>}</h2>
+        <h2 className="mb-3 font-semibold text-slate-900">Tugasan Khas {tugasan.length > 0 && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{tugasan.length} baru</span>}</h2>
         {tugasan.length === 0 ? (
-          <p className="text-sm text-slate-400">Tiada tugasan baru. 🎉</p>
+          <p className="text-sm text-slate-400">Tiada tugasan baru. </p>
         ) : (
           <div className="space-y-2">
             {tugasan.map((t) => <TugasRow key={t.id} tugas={t} onDone={() => router.refresh()} />)}
@@ -156,13 +156,13 @@ function LaporForm({ onDone }: { onDone: () => void }) {
 
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">🛠️ Lapor Kerosakan / Aduan</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Lapor Kerosakan / Aduan</h2>
       <div className="space-y-2">
         <input value={tajuk} onChange={(e) => setTajuk(e.target.value)} placeholder="Tajuk (cth: Aircond ruang utama rosak)" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         <textarea value={ket} onChange={(e) => setKet(e.target.value)} rows={2} placeholder="Keterangan" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
           <input type="file" accept="image/*" capture="environment" className="hidden" onChange={pilihGambar} />
-          {gambar ? "✓ Gambar dilampir — ketik untuk tukar" : busy ? "Memuat naik…" : "📷 Lampir gambar (pilihan)"}
+          {gambar ? "✓ Gambar dilampir — ketik untuk tukar" : busy ? "Memuat naik…" : "Lampir gambar (pilihan)"}
         </label>
         <button onClick={hantar} disabled={busy} className="w-full rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">Hantar Laporan</button>
         {msg && <p className={`text-sm ${msg.startsWith("✓") ? "text-green-600" : "text-red-600"}`}>{msg}</p>}
@@ -186,7 +186,7 @@ function LogForm({ onDone }: { onDone: () => void }) {
   }
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">📝 Log Aktiviti Harian</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Log Aktiviti Harian</h2>
       <div className="space-y-2">
         <select value={shift} onChange={(e) => setShift(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
           {SHIFT.map((s) => <option key={s.kod} value={s.kod}>{s.label}</option>)}

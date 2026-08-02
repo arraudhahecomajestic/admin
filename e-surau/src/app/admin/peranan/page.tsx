@@ -63,7 +63,7 @@ export default async function PerananPage({ searchParams }: { searchParams: { ca
                   <div className="text-xs text-slate-400">{u.emel}</div>
                   {u.ahli_id ? (
                     <a href={`/admin/permohonan/${u.ahli_id}`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-semibold text-surau hover:underline">
-                      👁 Lihat Profil →
+                      Lihat Profil →
                     </a>
                   ) : (
                     <span className="mt-1 inline-block text-xs text-slate-400">Tiada rekod ahli</span>

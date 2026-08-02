@@ -31,7 +31,7 @@ export default function MaklumBalasForm() {
       <div className="rounded-xl bg-white p-8 text-center shadow-sm">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl">✓</div>
         <h2 className="text-xl font-bold text-slate-900">Terima kasih!</h2>
-        <p className="mt-2 text-slate-600">Maklum balas anda telah dihantar kepada AJK Surau Ar Raudhah. Setiap pandangan amat kami hargai. 🤲</p>
+        <p className="mt-2 text-slate-600">Maklum balas anda telah dihantar kepada AJK Surau Ar Raudhah. Setiap pandangan amat kami hargai. </p>
         <button onClick={() => { setSelesai(null); setMesej(""); setNama(""); setHubungan(""); }} className="mt-5 rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Hantar lagi</button>
       </div>
     );

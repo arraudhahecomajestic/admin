@@ -31,8 +31,8 @@ export default function InfaqForm() {
   return (
     <div className="space-y-5">
       <div className="flex gap-2">
-        <button onClick={() => setTab("subuh")} className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "subuh" ? "bg-surau text-white" : "bg-slate-100 text-slate-600"}`}>🌅 Infaq Subuh</button>
-        <button onClick={() => setTab("jamuan")} className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "jamuan" ? "bg-surau text-white" : "bg-slate-100 text-slate-600"}`}>🍲 Infaq Jamuan</button>
+        <button onClick={() => setTab("subuh")} className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "subuh" ? "bg-surau text-white" : "bg-slate-100 text-slate-600"}`}>Infaq Subuh</button>
+        <button onClick={() => setTab("jamuan")} className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "jamuan" ? "bg-surau text-white" : "bg-slate-100 text-slate-600"}`}>Infaq Jamuan</button>
       </div>
 
       {tab === "subuh" ? (
@@ -82,7 +82,7 @@ export default function InfaqForm() {
       <button onClick={bayar} disabled={sedang} className="w-full rounded-lg bg-surau px-6 py-3.5 text-base font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {sedang ? "Menyambung ke gerbang bayaran…" : `Infaq ${tab === "subuh" ? `RM${subuhAmt}` : `RM${jamuanAmt}`} Sekarang (FPX / Kad / e-Wallet)`}
       </button>
-      <p className="text-center text-xs text-slate-400">Semoga Allah membalas infaq anda dengan kebaikan yang berlipat ganda. 🤲</p>
+      <p className="text-center text-xs text-slate-400">Semoga Allah membalas infaq anda dengan kebaikan yang berlipat ganda. </p>
     </div>
   );
 }

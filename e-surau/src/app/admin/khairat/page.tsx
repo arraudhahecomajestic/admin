@@ -78,7 +78,7 @@ export default async function KhairatPage({
         <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">✓ Tuntutan berjaya direkod.</div>
       )}
       {searchParams.ralat === "tak_layak" && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">⚠️ Tuntutan tidak dapat direkod — keahlian tertunggak yuran tahun {TAHUN}.</div>
+        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">Tuntutan tidak dapat direkod — keahlian tertunggak yuran tahun {TAHUN}.</div>
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

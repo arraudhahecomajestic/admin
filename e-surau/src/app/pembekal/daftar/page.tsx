@@ -132,12 +132,12 @@ export default function DaftarPembekalPage() {
         {!entiti ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <button onClick={() => setEntiti("individu")} className="rounded-xl border-2 border-slate-200 bg-white p-6 text-center hover:border-surau">
-              <div className="text-3xl">👤</div>
+              <div className="text-3xl"></div>
               <div className="mt-2 font-semibold text-slate-900">Individu</div>
               <div className="mt-1 text-xs text-slate-500">Perseorangan (imam, bilal, penjaja, dll)</div>
             </button>
             <button onClick={() => setEntiti("syarikat")} className="rounded-xl border-2 border-slate-200 bg-white p-6 text-center hover:border-surau">
-              <div className="text-3xl">🏢</div>
+              <div className="text-3xl"></div>
               <div className="mt-2 font-semibold text-slate-900">Syarikat</div>
               <div className="mt-1 text-xs text-slate-500">Perniagaan berdaftar (SSM)</div>
             </button>
@@ -278,7 +278,7 @@ function Muat({ label, url, onPick }: { label: string; url: string; onPick: (f: 
       <input type="file" accept="image/*,application/pdf" className="hidden" onChange={async (e) => { const fl = e.target.files?.[0]; if (fl) { setMuat(true); await onPick(fl); setMuat(false); } }} />
       {url ? <span className="font-medium text-green-600">✓ {label} dimuat naik</span>
         : muat ? <span className="text-amber-600">Memuat naik…</span>
-        : <><span className="text-lg">📎</span><span className="mt-1 font-medium text-slate-700">{label}</span></>}
+        : <><span className="text-lg"></span><span className="mt-1 font-medium text-slate-700">{label}</span></>}
     </label>
   );
 }

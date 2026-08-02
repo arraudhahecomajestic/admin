@@ -110,7 +110,7 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="🔍 Cari nama, no. ahli, IC atau telefon…"
+          placeholder="Cari nama, no. ahli, IC atau telefon…"
           className="min-w-[220px] flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-surau"
         />
         {btn("semua", `Semua (${total})`, "bg-slate-700 text-white")}
@@ -121,7 +121,7 @@ export default function JejakAhli({ senarai }: { senarai: Ahli[] }) {
           className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${papar ? "bg-amber-500 text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-100"}`}
           title="Papar / sorok No. KP & telefon"
         >
-          {papar ? "🙈 Sorok IC & Telefon" : "👁 Papar IC & Telefon"}
+          {papar ? "Sorok IC & Telefon" : "Papar IC & Telefon"}
         </button>
         <button
           onClick={salinSenarai}

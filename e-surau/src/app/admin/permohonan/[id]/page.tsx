@@ -59,7 +59,7 @@ export default async function PermohonanPage({ params }: { params: { id: string 
             {a.status}
           </span>
           <Link href={`/admin/permohonan/${a.id}/cetak`} className="rounded-lg border border-surau/40 px-3 py-1.5 text-xs font-semibold text-surau hover:bg-surau/10">
-            🖨 Cetak Borang + IC
+            Cetak Borang + IC
           </Link>
         </div>
       </div>

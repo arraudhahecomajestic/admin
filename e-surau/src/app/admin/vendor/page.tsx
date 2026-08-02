@@ -73,10 +73,10 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
                 </div>
                 <div className="mt-1 font-semibold text-slate-900">{v.nama}{v.syarikat ? <span className="text-sm font-normal text-slate-500"> · {v.syarikat}</span> : null}</div>
                 <div className="mt-1 text-xs text-slate-500">
-                  📞 {v.telefon || "-"}{v.emel ? ` · ${v.emel}` : ""}{v.no_kp ? ` · KP ${v.no_kp}` : ""}{v.no_ssm ? ` · SSM ${v.no_ssm}` : ""}
+                  {v.telefon || "-"}{v.emel ? ` · ${v.emel}` : ""}{v.no_kp ? ` · KP ${v.no_kp}` : ""}{v.no_ssm ? ` · SSM ${v.no_ssm}` : ""}
                 </div>
                 {(v.bank || v.no_akaun) && (
-                  <div className="mt-0.5 text-xs text-slate-500">🏦 {v.bank || "-"} · {v.no_akaun || "-"}{v.nama_akaun ? ` · ${v.nama_akaun}` : ""}</div>
+                  <div className="mt-0.5 text-xs text-slate-500">{v.bank || "-"} · {v.no_akaun || "-"}{v.nama_akaun ? ` · ${v.nama_akaun}` : ""}</div>
                 )}
                 {v.catatan && <div className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600">{v.catatan}</div>}
                 {/* Dokumen profil vendor */}
@@ -85,7 +85,7 @@ export default async function AdminVendorPage({ searchParams }: { searchParams: 
                   const ada = d.depan || d.belakang || d.profil || d.katalog;
                   if (!ada) return <div className="mt-1.5 text-xs italic text-slate-400">Tiada dokumen dimuat naik.</div>;
                   const Pautan = ({ href, label }: { href?: string | null; label: string }) =>
-                    href ? <a href={href} target="_blank" rel="noreferrer" className="rounded-lg border border-surau/40 px-2.5 py-1 text-xs font-semibold text-surau hover:bg-surau/10">📄 {label}</a> : null;
+                    href ? <a href={href} target="_blank" rel="noreferrer" className="rounded-lg border border-surau/40 px-2.5 py-1 text-xs font-semibold text-surau hover:bg-surau/10">{label}</a> : null;
                   return (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Pautan href={d.depan} label="IC Depan" />

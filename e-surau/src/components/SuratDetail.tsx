@@ -40,7 +40,7 @@ export default function SuratDetail({ surat: s0, pencatat }: { surat: any; penca
             {STATUS_SURAT.map((s) => <option key={s.kod} value={s.kod}>{s.label}</option>)}
           </select>
           {keluar && !edit && <button onClick={() => setEdit(true)} className="rounded-lg bg-surau px-4 py-1.5 text-sm font-semibold text-white hover:bg-surau-dark">Edit</button>}
-          {keluar && !edit && <button onClick={() => window.print()} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">🖨️ Cetak Surat</button>}
+          {keluar && !edit && <button onClick={() => window.print()} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cetak Surat</button>}
           <button onClick={padam} className="rounded-lg border border-red-300 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50">Padam</button>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function SuratDetail({ surat: s0, pencatat }: { surat: any; penca
           </div>
           {s0.catatan && <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{s0.catatan}</p>}
           {s0.url_fail && (
-            <button onClick={bukaLampiran} className="mt-4 rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">📎 Buka Lampiran</button>
+            <button onClick={bukaLampiran} className="mt-4 rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Buka Lampiran</button>
           )}
         </div>
       )}

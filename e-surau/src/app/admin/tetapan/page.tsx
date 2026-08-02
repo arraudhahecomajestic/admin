@@ -138,7 +138,7 @@ export default async function TetapanPage() {
 
       {/* SUIS BESAR — Bayaran Online (CHIP) untuk SEMUA modul */}
       <section className="rounded-xl border-2 border-surau/40 bg-white p-5 shadow-sm">
-        <h2 className="font-semibold text-slate-900">🔌 Suis Besar — Bayaran Online (CHIP)</h2>
+        <h2 className="font-semibold text-slate-900">Suis Besar — Bayaran Online (CHIP)</h2>
         <p className="mt-1 text-sm text-slate-600">
           Satu suis kawal <b>semua</b> butang bayaran online sekali gus — <b>Tahlil / Doa Selamat</b>,
           <b> Sewaan</b>, dan <b>Khairat</b>. Bila <b>DITUTUP</b>, semua butang bayaran online disorok &amp;

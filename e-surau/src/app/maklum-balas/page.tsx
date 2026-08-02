@@ -10,8 +10,7 @@ export default function MaklumBalasPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Maklum Balas &amp; Cadangan</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Ada komplen, cadangan penambahbaikan, atau pandangan untuk {NAMA_SURAU}? Kongsi dengan kami — suara anda membantu kami menambah baik surau. 🤝
-        </p>
+          Ada komplen, cadangan penambahbaikan, atau pandangan untuk {NAMA_SURAU}? Kongsi dengan kami — suara anda membantu kami menambah baik surau.         </p>
       </div>
       <MaklumBalasForm />
       <p className="text-center">

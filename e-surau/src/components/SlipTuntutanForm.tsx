@@ -43,7 +43,7 @@ export default function SlipTuntutanForm({ id }: { id: string }) {
     <div className="mt-2 space-y-2 rounded-lg border border-slate-200 p-3">
       <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-2 text-xs hover:border-surau">
         <input type="file" accept="image/*,application/pdf" className="hidden" onChange={naik} />
-        {urlSlip ? <span className="font-medium text-green-600">✓ Slip dimuat naik</span> : muat ? <span className="text-amber-600">Memuat naik…</span> : <span className="text-slate-600">📎 Muat naik slip bayaran</span>}
+        {urlSlip ? <span className="font-medium text-green-600">✓ Slip dimuat naik</span> : muat ? <span className="text-amber-600">Memuat naik…</span> : <span className="text-slate-600">Muat naik slip bayaran</span>}
       </label>
       <input value={rujukan} onChange={(e) => setRujukan(e.target.value)} placeholder="No. rujukan bayaran (pilihan)" className="w-full rounded border border-slate-300 px-2 py-1 text-xs" />
       {ralat && <p className="text-xs text-red-600">{ralat}</p>}

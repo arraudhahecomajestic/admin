@@ -72,10 +72,10 @@ export default function TanggunganKhairatPanel({ data }: { data: Ahli[] }) {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="🔍 Cari nama ahli / tanggungan / no. ahli…"
+          placeholder="Cari nama ahli / tanggungan / no. ahli…"
           className="min-w-[220px] flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-surau"
         />
-        <button onClick={muatTurunCsv} className="rounded-lg bg-green-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-800">⬇ Muat Turun CSV</button>
+        <button onClick={muatTurunCsv} className="rounded-lg bg-green-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-800">Muat Turun CSV</button>
       </div>
 
       <div className="overflow-x-auto">

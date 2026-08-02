@@ -311,7 +311,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
             <input type="file" accept="image/*" capture="user" className="hidden" onChange={snapSelfie} />
             {urlSelfie ? <span className="text-sm font-medium text-green-600">✓ Swafoto ada — ketik untuk ambil semula</span>
               : muatSelfie ? <span className="text-sm text-amber-600">Memuat naik…</span>
-              : <><span className="text-2xl">🤳</span><span className="mt-1 text-sm font-medium text-slate-700">Ambil Swafoto</span><span className="text-xs text-slate-400">Kamera hadapan akan terbuka</span></>}
+              : <><span className="text-2xl"></span><span className="mt-1 text-sm font-medium text-slate-700">Ambil Swafoto</span><span className="text-xs text-slate-400">Kamera hadapan akan terbuka</span></>}
           </label>
         </div>
       </section>

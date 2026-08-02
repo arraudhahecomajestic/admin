@@ -47,7 +47,7 @@ export default async function ProgramPage() {
                     {p.kategori && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{p.kategori}</span>}
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
-                    📅 {tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}{p.lokasi ? ` · 📍 ${p.lokasi}` : ""}
+                    {tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}{p.lokasi ? ` · ${p.lokasi}` : ""}
                   </div>
                 </div>
                 <div className="text-right text-xs text-slate-500">

@@ -34,7 +34,7 @@ export default function AdminStafPanel({
     <div className="space-y-6">
       {/* KEHADIRAN HARI INI */}
       <section className="rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 font-semibold text-slate-900">🕒 Kehadiran Hari Ini</h2>
+        <h2 className="mb-3 font-semibold text-slate-900">Kehadiran Hari Ini</h2>
         {kehadiran.length === 0 ? (
           <p className="text-sm text-slate-400">Belum ada rekod clock-in hari ini.</p>
         ) : (
@@ -67,7 +67,7 @@ export default function AdminStafPanel({
 
       {/* LOG AKTIVITI */}
       <section className="rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 font-semibold text-slate-900">📝 Log Aktiviti Terkini</h2>
+        <h2 className="mb-3 font-semibold text-slate-900">Log Aktiviti Terkini</h2>
         {log.length === 0 ? (
           <p className="text-sm text-slate-400">Tiada log lagi.</p>
         ) : (
@@ -104,7 +104,7 @@ function TugasanPanel({ tugasan, onDone }: { tugasan: Tugas[]; onDone: () => voi
   const siap = tugasan.filter((t) => t.status === "siap");
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">📋 Tugasan Khas</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Tugasan Khas</h2>
       <div className="mb-4 space-y-2 rounded-lg bg-slate-50 p-3">
         <input value={tajuk} onChange={(e) => setTajuk(e.target.value)} placeholder="Tajuk tugasan baru" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         <textarea value={ket} onChange={(e) => setKet(e.target.value)} rows={2} placeholder="Keterangan (pilihan)" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
@@ -150,9 +150,9 @@ function LaporanPanel({ laporan, onDone }: { laporan: Laporan[]; onDone: () => v
   const selesai = laporan.filter((l) => l.status === "selesai");
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">🛠️ Laporan &amp; Aduan {aktif.length > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">{aktif.length} aktif</span>}</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Laporan &amp; Aduan {aktif.length > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">{aktif.length} aktif</span>}</h2>
       {aktif.length === 0 ? (
-        <p className="text-sm text-slate-400">Tiada laporan aktif. 🎉</p>
+        <p className="text-sm text-slate-400">Tiada laporan aktif. </p>
       ) : (
         <div className="space-y-3">{aktif.map((l) => <LaporRow key={l.id} l={l} onDone={onDone} />)}</div>
       )}
@@ -214,7 +214,7 @@ function ChecklistPanel({ checklist, onDone }: { checklist: Item[]; onDone: () =
   }
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">✅ Templat Tugas Harian</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Templat Tugas Harian</h2>
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 p-3">
         <input value={tajuk} onChange={(e) => setTajuk(e.target.value)} placeholder="Item tugas baru" className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         <select value={shift} onChange={(e) => setShift(e.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm">

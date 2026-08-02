@@ -53,7 +53,7 @@ export default function TuntutanForm({ senarai }: { senarai: KeahlianRingkas[] }
 
       {takLayak && (
         <p className="rounded-lg bg-red-50 p-2 text-xs text-red-700">
-          ⚠️ Keahlian ini <b>tertunggak yuran</b>. Tuntutan tidak layak sehingga
+          Keahlian ini <b>tertunggak yuran</b>. Tuntutan tidak layak sehingga
           yuran tahun semasa dijelaskan.
         </p>
       )}

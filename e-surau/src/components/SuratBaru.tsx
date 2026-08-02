@@ -12,8 +12,8 @@ export default function SuratBaru({ rujukanCadang }: { rujukanCadang: string }) 
   if (!tab) {
     return (
       <div className="flex flex-wrap gap-3">
-        <button onClick={() => setTab("keluar")} className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">✉️ Karang Surat Keluar</button>
-        <button onClick={() => setTab("masuk")} className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">📥 Rekod Surat Masuk</button>
+        <button onClick={() => setTab("keluar")} className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Karang Surat Keluar</button>
+        <button onClick={() => setTab("masuk")} className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Rekod Surat Masuk</button>
       </div>
     );
   }
@@ -92,7 +92,7 @@ function FormMasuk({ onTutup, onSiap }: { onTutup: () => void; onSiap: () => voi
         <label className="text-sm text-slate-600 sm:col-span-2">Catatan<input value={f.catatan} onChange={(e) => set("catatan", e.target.value)} className="inp" /></label>
         <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau sm:col-span-2">
           <input type="file" accept="application/pdf,image/*" className="hidden" onChange={pilihFail} />
-          {urlFail ? "✓ Imbasan dilampir" : busy ? "Memuat naik…" : "📎 Lampir imbasan surat (PDF/gambar)"}
+          {urlFail ? "✓ Imbasan dilampir" : busy ? "Memuat naik…" : "Lampir imbasan surat (PDF/gambar)"}
         </label>
       </div>
       <div className="mt-3 flex items-center gap-3">

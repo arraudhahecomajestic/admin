@@ -9,7 +9,7 @@ function topeng(v: string, jenis: "kp" | "tel"): string {
   return d.length <= 4 ? "••••" : "•".repeat(d.length - 4) + d.slice(-4);
 }
 
-// Teks sensitif (IC / telefon) — ditopeng sehingga admin tekan 👁.
+// Teks sensitif (IC / telefon) — ditopeng sehingga admin tekan .
 export default function SulitTeks({ nilai, jenis = "kp" }: { nilai?: string | null; jenis?: "kp" | "tel" }) {
   const [show, setShow] = useState(false);
   if (!nilai) return <span className="text-slate-400">—</span>;
@@ -22,7 +22,7 @@ export default function SulitTeks({ nilai, jenis = "kp" }: { nilai?: string | nu
         className="text-xs text-slate-400 hover:text-surau"
         title="Papar / sorok"
       >
-        {show ? "🙈" : "👁"}
+        {show ? "" : ""}
       </button>
     </span>
   );

@@ -57,7 +57,7 @@ export default function TuntutanPembekalForm() {
           <input type="file" accept="image/*,application/pdf" className="hidden" onChange={naikDok} />
           {urlDok ? <span className="font-medium text-green-600">✓ Dokumen dimuat naik — ketik untuk tukar</span>
             : muat ? <span className="text-amber-600">Memuat naik…</span>
-            : <span className="text-slate-600">📎 Muat naik invois / resit (PDF atau gambar)</span>}
+            : <span className="text-slate-600">Muat naik invois / resit (PDF atau gambar)</span>}
         </label>
       </div>
       <button type="submit" disabled={hantar || muat} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">

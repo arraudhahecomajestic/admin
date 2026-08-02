@@ -33,7 +33,7 @@ export default function KeraniTambah() {
         onClick={() => setBuka((b) => !b)}
         className="flex w-full items-center justify-between text-left"
       >
-        <span className="font-semibold text-slate-900">➕ Tambah Ahli dari Borang Hardcopy</span>
+        <span className="font-semibold text-slate-900">Tambah Ahli dari Borang Hardcopy</span>
         <span className="text-sm text-surau">{buka ? "Tutup ▲" : "Buka ▼"}</span>
       </button>
 

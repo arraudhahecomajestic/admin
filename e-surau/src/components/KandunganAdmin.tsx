@@ -48,7 +48,7 @@ function VisiMisi({ visi, misi, onDone }: { visi: string; misi: string; onDone: 
   }
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">🎯 Visi & Misi</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Visi & Misi</h2>
       <div className="space-y-3">
         <label className="block"><span className="mb-1 block text-sm font-medium text-slate-700">Visi</span>
           <textarea value={v} onChange={(e) => setV(e.target.value)} rows={2} className="inp" placeholder="Visi surau…" /></label>
@@ -87,13 +87,13 @@ function CartaSeksyen({ carta, onDone }: { carta: Carta[]; onDone: () => void })
   }
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">👥 Carta Organisasi</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Carta Organisasi</h2>
       <div className="mb-4 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-2">
         <input value={jawatan} onChange={(e) => setJawatan(e.target.value)} placeholder="Jawatan (cth: Pengerusi)" className="inp" />
         <input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama" className="inp uppercase" />
         <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
           <input type="file" accept="image/*" className="hidden" onChange={pilihGambar} />
-          {gambarUrl ? "✓ Gambar dilampir" : busy ? "Memuat naik…" : "📷 Gambar (pilihan)"}
+          {gambarUrl ? "✓ Gambar dilampir" : busy ? "Memuat naik…" : "Gambar (pilihan)"}
         </label>
         <input type="number" value={susunan} onChange={(e) => setSusunan(Number(e.target.value) || 0)} placeholder="Susunan" className="inp" />
         <div className="sm:col-span-2">
@@ -143,14 +143,14 @@ function BuletinSeksyen({ buletin, onDone }: { buletin: Buletin[]; onDone: () =>
   }
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">📰 Buletin Surau</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Buletin Surau</h2>
       <div className="mb-4 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-2">
         <input value={tajuk} onChange={(e) => setTajuk(e.target.value)} placeholder="Tajuk buletin" className="inp sm:col-span-2" />
         <textarea value={ket} onChange={(e) => setKet(e.target.value)} rows={2} placeholder="Keterangan ringkas (pilihan)" className="inp sm:col-span-2" />
         <label className="text-sm text-slate-600">Tarikh<input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="inp" /></label>
         <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
           <input type="file" accept="application/pdf,image/*" className="hidden" onChange={pilihFail} />
-          {urlFail ? `✓ Fail dilampir (${jenisFail})` : busy ? "Memuat naik…" : "📎 Lampir PDF / Gambar"}
+          {urlFail ? `✓ Fail dilampir (${jenisFail})` : busy ? "Memuat naik…" : "Lampir PDF / Gambar"}
         </label>
         <div className="sm:col-span-2">
           <button onClick={tambah} disabled={busy} className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">Terbit Buletin</button>

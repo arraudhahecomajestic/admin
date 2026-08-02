@@ -124,8 +124,8 @@ export default async function KhairatInfo() {
         {stafPreview && (
           <p className="mt-4 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-teal-900">
             {tr(
-              "👁️ PRATONTON SUPER ADMIN — halaman ini belum dilancarkan. Orang lain tidak nampak. Flip suis di /admin/tetapan bila sedia untuk lancar.",
-              "👁️ SUPER ADMIN PREVIEW — this page is not yet launched. Nobody else can see it. Flip the switch at /admin/tetapan when ready to launch.",
+              "PRATONTON SUPER ADMIN — halaman ini belum dilancarkan. Orang lain tidak nampak. Flip suis di /admin/tetapan bila sedia untuk lancar.",
+              "SUPER ADMIN PREVIEW — this page is not yet launched. Nobody else can see it. Flip the switch at /admin/tetapan when ready to launch.",
             )}
           </p>
         )}

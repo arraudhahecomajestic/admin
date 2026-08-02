@@ -61,8 +61,7 @@ export default function ChatbotWidget({ lang = "ms", nama = "" }: { lang?: strin
           aria-label={t("Buka Ayaan Ilhan", "Open Ayaan Ilhan")}
           className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-surau px-4 py-3 text-white shadow-lg transition-transform hover:scale-105 hover:bg-surau-dark"
         >
-          <span className="text-xl leading-none">💬</span>
-          <span className="hidden text-sm font-semibold sm:inline">{t("Tanya Ayaan", "Ask Ayaan")}</span>
+          <span className="text-sm font-semibold">{t("Tanya Ayaan", "Ask Ayaan")}</span>
         </button>
       )}
 

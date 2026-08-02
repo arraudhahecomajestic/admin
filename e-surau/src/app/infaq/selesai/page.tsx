@@ -13,7 +13,7 @@ export default function InfaqSelesai({ searchParams }: { searchParams: { ref?: s
       <p className="mt-2 text-slate-600">
         {gagal
           ? "Maaf, pembayaran infaq anda tidak berjaya atau dibatalkan. Anda boleh cuba semula."
-          : "Infaq anda telah diterima. Semoga Allah membalas dengan kebaikan yang berlipat ganda. 🤲"}
+          : "Infaq anda telah diterima. Semoga Allah membalas dengan kebaikan yang berlipat ganda. "}
         {searchParams.ref ? <><br /><span className="text-xs text-slate-400">Rujukan: {searchParams.ref}</span></> : null}
       </p>
       <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">

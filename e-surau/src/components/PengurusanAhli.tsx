@@ -28,8 +28,8 @@ function masaAktiviti(a: Ahli): number {
 
 // Label peringkat kelulusan — general, ikut tahap sebenar dalam sistem.
 function infoPeringkat(status: string, peringkat: string | null): { label: string; cls: string } {
-  if (status === "lulus") return { label: "✓ Diluluskan", cls: "bg-green-600 text-white" };
-  if (status === "tolak") return { label: "✕ Ditolak", cls: "bg-red-100 text-red-700" };
+  if (status === "lulus") return { label: "Diluluskan", cls: "bg-green-600 text-white" };
+  if (status === "tolak") return { label: "Ditolak", cls: "bg-red-100 text-red-700" };
   switch (peringkat) {
     case "disokong_nazir": return { label: "Disokong Pengerusi", cls: "bg-blue-100 text-blue-700" };
     case "disokong_su": return { label: "Disokong Setiausaha", cls: "bg-teal-100 text-teal-700" };
@@ -150,7 +150,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="🔍 Cari nama, no. ahli, IC atau telefon…"
+          placeholder="Cari nama, no. ahli, IC atau telefon…"
           className="min-w-[220px] flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-surau"
         />
         {bolehPapar && (
@@ -159,15 +159,15 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${papar ? "bg-amber-500 text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-100"}`}
             title="Papar / sorok No. KP & telefon (Admin sahaja)"
           >
-            {papar ? "🙈 Sorok IC & Telefon" : "👁 Papar IC & Telefon"}
+            {papar ? "Sorok IC & Telefon" : "Papar IC & Telefon"}
           </button>
         )}
         <button onClick={salin} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">
-          {disalin ? "✓ Disalin" : "Salin senarai"}
+          {disalin ? "Disalin" : "Salin senarai"}
         </button>
         {bolehPapar && (
           <button onClick={muatTurunCsv} className="rounded-lg bg-green-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-800">
-            ⬇ Muat Turun CSV
+            Muat Turun CSV
           </button>
         )}
       </div>
@@ -175,7 +175,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
       {/* TAB */}
       <div className="flex flex-wrap gap-2">
         <TabBtn label="Semua" bil={kira.jumlah} aktif={tab === "semua"} onClick={() => setTab("semua")} warna="bg-slate-700" />
-        <TabBtn label="🆕 Terkini" bil={kira.terkini} aktif={tab === "terkini"} onClick={() => setTab("terkini")} warna="bg-blue-600" />
+        <TabBtn label="Terkini" bil={kira.terkini} aktif={tab === "terkini"} onClick={() => setTab("terkini")} warna="bg-blue-600" />
         <TabBtn label="Menunggu" bil={kira.menunggu} aktif={tab === "menunggu"} onClick={() => setTab("menunggu")} warna="bg-slate-500" />
         <TabBtn label="Diluluskan" bil={kira.lulus} aktif={tab === "lulus"} onClick={() => setTab("lulus")} warna="bg-green-700" />
         <TabBtn label="Pemohon Baru" bil={kira.baru} aktif={tab === "baru"} onClick={() => setTab("baru")} warna="bg-emerald-600" />
@@ -213,7 +213,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-900">{a.nama}</span>
-                      {masaAktiviti(a) >= ambangBaru && <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">🆕 Baru</span>}
+                      {masaAktiviti(a) >= ambangBaru && <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">Baru</span>}
                     </div>
                     <div className="font-mono text-xs text-slate-400">{bolehLihat ? (a.no_kp || "—") : topengKp(a.no_kp)}</div>
                   </td>
@@ -221,8 +221,8 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
                   <td className="px-4 py-2.5"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${pr.cls}`}>{pr.label}</span></td>
                   <td className="px-4 py-2.5">
                     {a.maklumat_disahkan
-                      ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Data ✓</span>
-                      : <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-500">Data belum</span>}
+                      ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Lengkap</span>
+                      : <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-500">Belum</span>}
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-2">
@@ -240,9 +240,9 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
       </div>
       {jumMuka > 1 && (
         <div className="flex items-center justify-center gap-3 pt-1">
-          <button onClick={() => setMuka((m) => Math.max(1, m - 1))} disabled={mukaSemasa <= 1} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">← Sebelum</button>
+          <button onClick={() => setMuka((m) => Math.max(1, m - 1))} disabled={mukaSemasa <= 1} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">Sebelum</button>
           <span className="text-sm text-slate-500">Muka {mukaSemasa} / {jumMuka}</span>
-          <button onClick={() => setMuka((m) => Math.min(jumMuka, m + 1))} disabled={mukaSemasa >= jumMuka} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">Seterusnya →</button>
+          <button onClick={() => setMuka((m) => Math.min(jumMuka, m + 1))} disabled={mukaSemasa >= jumMuka} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40">Seterusnya</button>
         </div>
       )}
     </div>

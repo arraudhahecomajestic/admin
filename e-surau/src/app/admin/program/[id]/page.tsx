@@ -118,8 +118,8 @@ export default async function EditProgramPage({ params }: { params: { id: string
                         <div className="text-xs text-slate-500">{r.telefon_penjaga}{r.emel ? ` · ${r.emel}` : ""}</div>
                       </td>
                       <td className="px-4 py-2.5 text-xs text-slate-600">
-                        {r.maklumat_kesihatan ? <div>🩺 {r.maklumat_kesihatan}</div> : <div className="text-slate-400">Tiada nyatakan</div>}
-                        {(r.kontak_kecemasan || r.no_kecemasan) && <div className="mt-0.5">🚨 {r.kontak_kecemasan || ""} {r.no_kecemasan || ""}</div>}
+                        {r.maklumat_kesihatan ? <div>{r.maklumat_kesihatan}</div> : <div className="text-slate-400">Tiada nyatakan</div>}
+                        {(r.kontak_kecemasan || r.no_kecemasan) && <div className="mt-0.5">{r.kontak_kecemasan || ""} {r.no_kecemasan || ""}</div>}
                       </td>
                       <td className="px-4 py-2.5">{r.kebenaran_foto ? <span className="text-green-600">✓</span> : <span className="text-slate-400">✕</span>}</td>
                       <td className="px-4 py-2.5">

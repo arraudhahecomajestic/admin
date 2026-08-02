@@ -31,7 +31,7 @@ export default function KeraniCarian() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="🔍 Cari nama, No. Ahli atau No. KP…"
+          placeholder="Cari nama, No. Ahli atau No. KP…"
           className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-surau"
         />
         <button
@@ -85,7 +85,7 @@ export default function KeraniCarian() {
       )}
 
       <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
-        🔒 Paparan carian sahaja untuk tujuan menyemak/tally dengan borang hardcopy. Senarai penuh tidak
+        Paparan carian sahaja untuk tujuan menyemak/tally dengan borang hardcopy. Senarai penuh tidak
         dipaparkan dan tiada fungsi muat turun/eksport.
       </p>
     </div>

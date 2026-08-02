@@ -122,7 +122,7 @@ export default function KameraKp({
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={snap} className="flex-1 rounded-lg bg-surau px-3 py-2 text-sm font-semibold text-white hover:bg-surau-dark">
-              📸 Snap
+              Snap
             </button>
             <button type="button" onClick={tutup} className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600">
               Batal
@@ -136,15 +136,15 @@ export default function KameraKp({
           ) : ada ? (
             <div className="py-2 text-sm font-medium text-green-600">✓ {label} sudah diambil</div>
           ) : (
-            <div className="py-1 text-2xl">🪪</div>
+            <div className="py-1 text-2xl"></div>
           )}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pilihFail} />
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={mula} className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">
-              📷 Kamera
+              Kamera
             </button>
             <button type="button" onClick={() => fileRef.current?.click()} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-              📎 Muat Naik Fail
+              Muat Naik Fail
             </button>
           </div>
           <p className="text-[11px] text-slate-400">

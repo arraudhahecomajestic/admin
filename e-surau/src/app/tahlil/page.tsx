@@ -34,7 +34,7 @@ export default async function TahlilPage({ searchParams }: { searchParams: { min
           untuk disebut dalam sesi <b>{tarikhMs(minggu)}</b>.
         </p>
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          ⏰ <b>Waktu tutup:</b> Nama yang dihantar <b>sebelum 7:00 malam hari Khamis</b> akan dibawa
+          <b>Waktu tutup:</b> Nama yang dihantar <b>sebelum 7:00 malam hari Khamis</b> akan dibawa
           ke majlis malam Jumaat tersebut. Nama selepas itu akan dikumpulkan untuk majlis Khamis berikutnya.
         </div>
       </div>

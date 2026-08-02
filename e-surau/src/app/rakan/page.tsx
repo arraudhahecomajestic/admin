@@ -45,7 +45,7 @@ export default async function RakanPage() {
     <div className="space-y-8">
       {preview && (
         <div className="rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-teal-900">
-          👁️ PRATONTON SUPER ADMIN — Rakan Surau belum dilancarkan. Orang lain tidak nampak. Flip suis Penaja di /admin/tetapan bila sedia.
+          PRATONTON SUPER ADMIN — Rakan Surau belum dilancarkan. Orang lain tidak nampak. Flip suis Penaja di /admin/tetapan bila sedia.
         </div>
       )}
 
@@ -64,7 +64,7 @@ export default async function RakanPage() {
       {/* Tawaran eksklusif ahli */}
       {tawaranAda.length > 0 && (
         <section>
-          <h2 className="mb-1 text-xl font-bold text-slate-900">🎁 Tawaran Eksklusif Ahli Kariah</h2>
+          <h2 className="mb-1 text-xl font-bold text-slate-900">Tawaran Eksklusif Ahli Kariah</h2>
           <p className="mb-4 text-sm text-slate-600">Tunjukkan anda ahli kariah atau guna kod promo di bawah.</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {tawaranAda.map((p) => (
@@ -104,7 +104,7 @@ export default async function RakanPage() {
                   </div>
                   {p.keterangan && <p className="mt-2 flex-1 text-sm text-slate-600">{p.keterangan}</p>}
                   {p.tawaran && (
-                    <div className="mt-2 rounded-lg bg-surau/5 px-2 py-1 text-xs font-semibold text-surau-dark">🎁 {p.tawaran}</div>
+                    <div className="mt-2 rounded-lg bg-surau/5 px-2 py-1 text-xs font-semibold text-surau-dark">{p.tawaran}</div>
                   )}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {wa && (

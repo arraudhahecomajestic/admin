@@ -45,7 +45,7 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${m0.status === "selesai" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{m0.status === "selesai" ? "Selesai" : "Draf"}</span>
           {!edit && <button onClick={() => setEdit(true)} className="rounded-lg bg-surau px-4 py-1.5 text-sm font-semibold text-white hover:bg-surau-dark">Edit</button>}
-          {!edit && <button onClick={() => window.print()} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">🖨️ Cetak Minit</button>}
+          {!edit && <button onClick={() => window.print()} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cetak Minit</button>}
           {!edit && <button onClick={tukarStatus} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">{m0.status === "selesai" ? "Tanda Draf" : "Tanda Selesai"}</button>}
           {!edit && <button onClick={padam} className="rounded-lg border border-red-300 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50">Padam</button>}
         </div>
@@ -173,7 +173,7 @@ function TindakanPanel({ mesyuaratId, tindakan, onDone }: { mesyuaratId: string;
   }
   return (
     <section className="print-hide rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 font-semibold text-slate-900">📌 Jejak Tindakan</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">Jejak Tindakan</h2>
       <div className="mb-4 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-4">
         <input value={perkara} onChange={(e) => setPerkara(e.target.value)} placeholder="Perkara / tindakan" className="inp sm:col-span-2" />
         <input value={tj} onChange={(e) => setTj(e.target.value)} placeholder="Tanggungjawab" className="inp" />

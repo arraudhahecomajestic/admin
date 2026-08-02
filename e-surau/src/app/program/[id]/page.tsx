@@ -41,10 +41,10 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
             {p.kategori && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{p.kategori}</span>}
           </div>
           <div className="space-y-1 text-sm text-slate-600">
-            <div>🗓️ {tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
-            {p.lokasi && <div>📍 {p.lokasi}</div>}
-            <div>🙋 {jumHadir} {p.berbayar ? "peserta berdaftar" : "akan hadir"}{p.had_peserta ? ` / ${p.had_peserta}` : ""}</div>
-            {p.berbayar && p.yuran > 0 && <div>💳 Yuran: RM{Number(p.yuran).toFixed(2)}</div>}
+            <div>{tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
+            {p.lokasi && <div>{p.lokasi}</div>}
+            <div>{jumHadir} {p.berbayar ? "peserta berdaftar" : "akan hadir"}{p.had_peserta ? ` / ${p.had_peserta}` : ""}</div>
+            {p.berbayar && p.yuran > 0 && <div>Yuran: RM{Number(p.yuran).toFixed(2)}</div>}
           </div>
           {p.keterangan && <p className="whitespace-pre-line border-t pt-3 text-sm text-slate-700">{p.keterangan}</p>}
 

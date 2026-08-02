@@ -276,7 +276,7 @@ export default function DaftarPage() {
 
     // Cipta akaun portal ahli (jika kata laluan diisi). Rekod ahli dicipta
     // dahulu supaya trigger auto-pautkan akaun ikut emel.
-    let mesej = "Permohonan anda berjaya dihantar! 📧 Kami telah menghantar pautan pengesahan ke e-mel anda. Sila SEMAK E-MEL (termasuk folder Spam/Promosi), klik pautan untuk mengesahkan akaun, kemudian LOG MASUK untuk menyemak status permohonan anda (Menunggu → Diluluskan).";
+    let mesej = "Permohonan anda berjaya dihantar! Kami telah menghantar pautan pengesahan ke e-mel anda. Sila SEMAK E-MEL (termasuk folder Spam/Promosi), klik pautan untuk mengesahkan akaun, kemudian LOG MASUK untuk menyemak status permohonan anda (Menunggu → Diluluskan).";
     if (nakAkaun) {
       const { error: eSignup } = await supabase.auth.signUp({
         email: emel,
@@ -367,7 +367,7 @@ export default function DaftarPage() {
             <input className="inp" type="email" value={emel} onChange={(e) => setEmel(e.target.value)} placeholder="emel@contoh.com" autoFocus />
           </div>
           <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-            🔑 Kata laluan anda ialah <b>No. Kad Pengenalan</b> anda ({noKp}). Log masuk nanti guna e-mel + No. KP ini.
+            Kata laluan anda ialah <b>No. Kad Pengenalan</b> anda ({noKp}). Log masuk nanti guna e-mel + No. KP ini.
           </div>
           <button disabled={hantar} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
             {hantar ? "Menyimpan…" : "Cipta Akaun"}
@@ -589,7 +589,7 @@ export default function DaftarPage() {
         <h2 className="font-semibold text-surau">Pengesahan Identiti</h2>
         <p className="text-xs text-slate-500">Sila turunkan tandatangan & ambil swafoto sebagai bukti pengesahan diri.</p>
         <div className="rounded-lg border border-surau/20 bg-surau/5 p-3 text-xs leading-relaxed text-slate-600">
-          <b className="text-slate-800">🤳 Kenapa perlu swafoto?</b> Swafoto memastikan orang yang mendaftar benar-benar pemilik Kad Pengenalan tersebut —
+          <b className="text-slate-800">Kenapa perlu swafoto?</b> Swafoto memastikan orang yang mendaftar benar-benar pemilik Kad Pengenalan tersebut —
           bagi mengelak penyalahgunaan atau penyamaran identiti, dan melindungi hak ahli (terutama pampasan khairat kematian).
           Gambar ini <b>sulit</b>, disimpan dengan selamat, dan hanya boleh dilihat oleh pentadbir surau yang dibenarkan.
           Lihat <Link href="/dasar-privasi" className="font-medium text-surau underline">Dasar Privasi</Link>.
@@ -604,7 +604,7 @@ export default function DaftarPage() {
             <input type="file" accept="image/*" capture="user" className="hidden" onChange={snapSelfie} />
             {urlSelfie ? <span className="text-sm font-medium text-green-600">✓ Swafoto ada — ketik untuk ambil semula</span>
               : muatSelfie ? <span className="text-sm text-amber-600">Memuat naik…</span>
-              : <><span className="text-2xl">🤳</span><span className="mt-1 text-sm font-medium text-slate-700">Ambil Swafoto</span><span className="text-xs text-slate-400">Kamera hadapan akan terbuka</span></>}
+              : <><span className="text-2xl"></span><span className="mt-1 text-sm font-medium text-slate-700">Ambil Swafoto</span><span className="text-xs text-slate-400">Kamera hadapan akan terbuka</span></>}
           </label>
         </div>
       </section>
@@ -630,7 +630,7 @@ export default function DaftarPage() {
 
       {selesai && !selesai.ok && (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-700">
-          ⚠️ {selesai.msg}
+          {selesai.msg}
         </div>
       )}
       <button type="submit" disabled={hantar || muatNaik !== ""} className="w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">

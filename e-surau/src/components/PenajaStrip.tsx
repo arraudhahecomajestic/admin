@@ -32,7 +32,7 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/rakan" className="whitespace-nowrap text-xs font-medium text-surau hover:underline">Rakan Surau →</a>
           <span className="hidden text-xs text-slate-400 sm:inline">
-            {pratonton ? "👁️ Pratonton" : contoh ? "Contoh" : "Tajaan"}
+            {pratonton ? "Pratonton" : contoh ? "Contoh" : "Tajaan"}
           </span>
         </div>
       </div>

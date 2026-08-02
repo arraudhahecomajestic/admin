@@ -162,7 +162,7 @@ Keluar,2026-07-15,Utiliti (air/elektrik),220.50,Bil elektrik,`;
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
       <button onClick={() => setBuka((v) => !v)} className="flex w-full items-center justify-between text-left">
-        <h2 className="font-semibold text-slate-900">⬆️ Import Kewangan Bulanan (CSV / Penyata Bank)</h2>
+        <h2 className="font-semibold text-slate-900">Import Kewangan Bulanan (CSV / Penyata Bank)</h2>
         <span className="text-sm text-surau">{buka ? "Tutup ▲" : "Buka ▼"}</span>
       </button>
 
@@ -173,10 +173,10 @@ Keluar,2026-07-15,Utiliti (air/elektrik),220.50,Bil elektrik,`;
           </p>
           <div className="flex flex-wrap gap-2">
             <label className="cursor-pointer rounded-lg bg-surau px-3 py-2 text-sm font-semibold text-white hover:bg-surau-dark">
-              📁 Pilih Fail CSV
+              Pilih Fail CSV
               <input type="file" accept=".csv,text/csv" className="hidden" onChange={pilihFail} />
             </label>
-            <button onClick={muatTemplat} className="rounded-lg border border-surau/40 px-3 py-2 text-sm font-semibold text-surau hover:bg-surau/5">⬇ Templat Mudah</button>
+            <button onClick={muatTemplat} className="rounded-lg border border-surau/40 px-3 py-2 text-sm font-semibold text-surau hover:bg-surau/5">Templat Mudah</button>
             {namaFail && <span className="self-center text-sm text-slate-500">{namaFail}{format === "maybank" ? " · Penyata Maybank dikesan" : ""}</span>}
           </div>
 
