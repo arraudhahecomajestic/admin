@@ -3,6 +3,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import AdminStafPanel from "@/components/AdminStafPanel";
+import JadualKerjaStaf from "@/components/JadualKerjaStaf";
 import { hariIni } from "@/lib/staf";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,15 @@ export default async function AdminStafPage() {
   const checklist = (itemRes.data ?? []) as any[];
   const log = (logRes.data ?? []) as any[];
 
+  // Jadual kerja akan datang (dari hari ini)
+  const { data: jadualData } = await db
+    .from("staf_jadual")
+    .select("id, tarikh, shift, catatan")
+    .gte("tarikh", tarikh)
+    .order("tarikh", { ascending: true })
+    .limit(60);
+  const jadual = (jadualData as any[]) ?? [];
+
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/staf" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} master={profil.master} />
@@ -41,6 +51,7 @@ export default async function AdminStafPage() {
         </div>
         <a href="/admin/staf/gaji" className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Gaji Staf</a>
       </div>
+      <JadualKerjaStaf awal={jadual} />
       <AdminStafPanel kehadiran={kehadiran} tugasan={tugasan} laporan={laporan} checklist={checklist} log={log} />
     </div>
   );

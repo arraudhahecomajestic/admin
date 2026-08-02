@@ -116,6 +116,7 @@ export default async function Home() {
   const lang = bahasaSemasa();
   const tr = buatT(lang);
   const tahunPie = new Date().getFullYear();
+  const bulanPie = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "ms-MY", { month: "long", timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
   const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, pieTabung] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
@@ -248,6 +249,7 @@ export default async function Home() {
             data={pieData}
             lang={lang}
             tajuk={tr(`Kutipan Tabung ${tahunPie}`, `Fund Collections ${tahunPie}`)}
+            tempoh={tr(`Tempoh: Januari – ${bulanPie} ${tahunPie}`, `Period: January – ${bulanPie} ${tahunPie}`)}
             labelJumlah={tr("Jumlah Kutipan", "Total Collected")}
             labelKlik={tr("Klik mana-mana bahagian untuk buka detail tabung.", "Click any segment to expand the fund details.")}
             nota={tr(

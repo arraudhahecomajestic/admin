@@ -49,6 +49,7 @@ export default function PieTabung({
   data,
   lang,
   tajuk,
+  tempoh,
   nota,
   labelJumlah,
   labelKlik,
@@ -56,6 +57,7 @@ export default function PieTabung({
   data: PieSlice[];
   lang: string;
   tajuk: string;
+  tempoh?: string;
   nota: string;
   labelJumlah: string;
   labelKlik: string;
@@ -82,8 +84,9 @@ export default function PieTabung({
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm">
-      <h2 className="mb-1 text-xl font-bold text-slate-900">{tajuk}</h2>
-      <p className="mb-4 text-xs text-slate-400">{labelKlik}</p>
+      <h2 className="text-xl font-bold text-slate-900">{tajuk}</h2>
+      {tempoh && <p className="mt-0.5 text-sm font-medium text-slate-500">{tempoh}</p>}
+      <p className="mb-4 mt-1 text-xs text-slate-400">{labelKlik}</p>
 
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
         {/* Carta bulat */}
