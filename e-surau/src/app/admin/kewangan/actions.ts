@@ -84,33 +84,40 @@ export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean
   const KAEDAH_SAH = ["tunai", "online", "cek"];
   let masuk = 0, keluar = 0, jumMasuk = 0, jumKeluar = 0, gagal = 0;
   const ralat: string[] = [];
+  const barisKutipan: any[] = [];
+  const barisBelanja: any[] = [];
 
   for (let i = 0; i < rows.length; i++) {
-    const r = rows[i]; const baris = i + 2; // +1 header, +1 index
+    const r = rows[i]; const baris = i + 2;
     const jenis = String(r.jenis ?? "").trim().toLowerCase();
     const jumlah = Number(String(r.jumlah ?? "").replace(/[^0-9.\-]/g, ""));
     const tarikh = normalTarikh(String(r.tarikh ?? ""));
     const kategori = String(r.kategori ?? "").trim();
     const keterangan = String(r.keterangan ?? "").trim();
-    if (!jumlah || jumlah <= 0) { gagal++; ralat.push(`Baris ${baris}: jumlah tidak sah.`); continue; }
-    if (!kategori) { gagal++; ralat.push(`Baris ${baris}: kategori kosong.`); continue; }
-    if (!tarikh) { gagal++; ralat.push(`Baris ${baris}: tarikh tidak sah (guna YYYY-MM-DD atau DD/MM/YYYY).`); continue; }
+    if (!jumlah || jumlah <= 0) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: jumlah tidak sah.`); continue; }
+    if (!kategori) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: kategori kosong.`); continue; }
+    if (!tarikh) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: tarikh tidak sah.`); continue; }
     const isMasuk = MASUK.includes(jenis), isKeluar = KELUAR.includes(jenis);
-    if (!isMasuk && !isKeluar) { gagal++; ralat.push(`Baris ${baris}: Jenis mesti 'Masuk' atau 'Keluar'.`); continue; }
+    if (!isMasuk && !isKeluar) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: Jenis mesti 'Masuk' atau 'Keluar'.`); continue; }
     try {
       if (isMasuk) {
         const kid = await katKutipan(kategori);
         let kaedah = String(r.kaedah ?? "tunai").trim().toLowerCase();
         if (!KAEDAH_SAH.includes(kaedah)) kaedah = "tunai";
-        await db.from("kutipan").insert({ kategori_id: kid, jumlah, kaedah, catatan: keterangan || null, tarikh, direkod_oleh: oleh });
+        barisKutipan.push({ kategori_id: kid, jumlah, kaedah, catatan: keterangan || null, tarikh, direkod_oleh: oleh });
         masuk++; jumMasuk += jumlah;
       } else {
         const kid = await katBelanja(kategori);
-        await db.from("perbelanjaan").insert({ kategori_id: kid, jumlah, keterangan: keterangan || kategori, tarikh, dari_khairat: false, direkod_oleh: oleh });
+        barisBelanja.push({ kategori_id: kid, jumlah, keterangan: keterangan || kategori, tarikh, dari_khairat: false, direkod_oleh: oleh });
         keluar++; jumKeluar += jumlah;
       }
-    } catch (e: any) { gagal++; ralat.push(`Baris ${baris}: ${e?.message ?? "ralat simpan"}`); }
+    } catch (e: any) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: ${e?.message ?? "ralat simpan"}`); }
   }
+
+  // Batch insert (chunk 200) — laju & elak had permintaan
+  const chunk = <T,>(arr: T[], n: number) => { const o: T[][] = []; for (let i = 0; i < arr.length; i += n) o.push(arr.slice(i, i + n)); return o; };
+  for (const c of chunk(barisKutipan, 200)) { const { error } = await db.from("kutipan").insert(c); if (error) { masuk -= c.length; gagal += c.length; if (ralat.length < 25) ralat.push(`Kutipan: ${error.message}`); } }
+  for (const c of chunk(barisBelanja, 200)) { const { error } = await db.from("perbelanjaan").insert(c); if (error) { keluar -= c.length; gagal += c.length; if (ralat.length < 25) ralat.push(`Belanja: ${error.message}`); } }
 
   revalidatePath("/admin/kewangan");
   revalidatePath("/");
