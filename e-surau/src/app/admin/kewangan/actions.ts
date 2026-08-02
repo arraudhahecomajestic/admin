@@ -37,6 +37,86 @@ export async function tambahBelanja(formData: FormData) {
   revalidatePath("/admin/kewangan");
 }
 
+// ---- Import CSV bulanan: kutipan (Masuk) & perbelanjaan (Keluar) sekali gus ----
+function normalTarikh(s: string): string | null {
+  const t = (s || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const m = t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/); // DD/MM/YYYY
+  if (m) {
+    const d = m[1].padStart(2, "0"), mo = m[2].padStart(2, "0");
+    return `${m[3]}-${mo}-${d}`;
+  }
+  return null;
+}
+
+export type BarisCsv = { jenis: string; tarikh: string; kategori: string; jumlah: string | number; keterangan?: string; kaedah?: string };
+
+export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean; masuk: number; keluar: number; jumMasuk: number; jumKeluar: number; gagal: number; ralat: string[]; msg?: string }> {
+  const p = await getProfil();
+  const kosong = { ok: false, masuk: 0, keluar: 0, jumMasuk: 0, jumKeluar: 0, gagal: 0, ralat: [] as string[] };
+  if (!bolehKewangan(p)) return { ...kosong, msg: "Tiada akses." };
+  if (!Array.isArray(rows) || rows.length === 0) return { ...kosong, msg: "Fail kosong atau tiada baris data." };
+
+  const db = createAdminClient();
+  const oleh = (p?.nama ?? p?.emel ?? "bendahari") + " (CSV)";
+  const cacheK = new Map<string, number>();
+  const cacheB = new Map<string, number>();
+
+  async function katKutipan(nama: string): Promise<number> {
+    const key = nama.toLowerCase();
+    if (cacheK.has(key)) return cacheK.get(key)!;
+    const { data } = await db.from("kategori_kutipan").select("id").ilike("nama", nama).maybeSingle();
+    let id = (data as any)?.id;
+    if (!id) { const { data: b } = await db.from("kategori_kutipan").insert({ nama, jenis_khairat: false, papar_awam: false }).select("id").single(); id = (b as any)?.id; }
+    cacheK.set(key, id); return id;
+  }
+  async function katBelanja(nama: string): Promise<number> {
+    const key = nama.toLowerCase();
+    if (cacheB.has(key)) return cacheB.get(key)!;
+    const { data } = await db.from("kategori_belanja").select("id").ilike("nama", nama).maybeSingle();
+    let id = (data as any)?.id;
+    if (!id) { const { data: b } = await db.from("kategori_belanja").insert({ nama }).select("id").single(); id = (b as any)?.id; }
+    cacheB.set(key, id); return id;
+  }
+
+  const MASUK = ["masuk", "income", "in", "kutipan", "+", "pendapatan"];
+  const KELUAR = ["keluar", "expense", "out", "belanja", "perbelanjaan", "-"];
+  const KAEDAH_SAH = ["tunai", "online", "cek"];
+  let masuk = 0, keluar = 0, jumMasuk = 0, jumKeluar = 0, gagal = 0;
+  const ralat: string[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i]; const baris = i + 2; // +1 header, +1 index
+    const jenis = String(r.jenis ?? "").trim().toLowerCase();
+    const jumlah = Number(String(r.jumlah ?? "").replace(/[^0-9.\-]/g, ""));
+    const tarikh = normalTarikh(String(r.tarikh ?? ""));
+    const kategori = String(r.kategori ?? "").trim();
+    const keterangan = String(r.keterangan ?? "").trim();
+    if (!jumlah || jumlah <= 0) { gagal++; ralat.push(`Baris ${baris}: jumlah tidak sah.`); continue; }
+    if (!kategori) { gagal++; ralat.push(`Baris ${baris}: kategori kosong.`); continue; }
+    if (!tarikh) { gagal++; ralat.push(`Baris ${baris}: tarikh tidak sah (guna YYYY-MM-DD atau DD/MM/YYYY).`); continue; }
+    const isMasuk = MASUK.includes(jenis), isKeluar = KELUAR.includes(jenis);
+    if (!isMasuk && !isKeluar) { gagal++; ralat.push(`Baris ${baris}: Jenis mesti 'Masuk' atau 'Keluar'.`); continue; }
+    try {
+      if (isMasuk) {
+        const kid = await katKutipan(kategori);
+        let kaedah = String(r.kaedah ?? "tunai").trim().toLowerCase();
+        if (!KAEDAH_SAH.includes(kaedah)) kaedah = "tunai";
+        await db.from("kutipan").insert({ kategori_id: kid, jumlah, kaedah, catatan: keterangan || null, tarikh, direkod_oleh: oleh });
+        masuk++; jumMasuk += jumlah;
+      } else {
+        const kid = await katBelanja(kategori);
+        await db.from("perbelanjaan").insert({ kategori_id: kid, jumlah, keterangan: keterangan || kategori, tarikh, dari_khairat: false, direkod_oleh: oleh });
+        keluar++; jumKeluar += jumlah;
+      }
+    } catch (e: any) { gagal++; ralat.push(`Baris ${baris}: ${e?.message ?? "ralat simpan"}`); }
+  }
+
+  revalidatePath("/admin/kewangan");
+  revalidatePath("/");
+  return { ok: true, masuk, keluar, jumMasuk, jumKeluar, gagal, ralat: ralat.slice(0, 25) };
+}
+
 export async function padamKutipan(formData: FormData) {
   if (!bolehKewangan(await getProfil())) return;
   const id = String(formData.get("id") ?? "");

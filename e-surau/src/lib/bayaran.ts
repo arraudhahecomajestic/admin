@@ -105,6 +105,20 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
         direkod_oleh: "CHIP",
       });
     }
+  } else if (b.jenis === "program" && b.rujukan_id) {
+    // Pendaftaran program berbayar (kem/kelas) — tandakan dibayar + rekod income
+    await db.from("program_pendaftaran").update({ status_bayar: "dibayar" }).eq("id", b.rujukan_id);
+    const katId = await pastiKategori(db, "Yuran Program", false);
+    if (katId) {
+      await db.from("kutipan").insert({
+        kategori_id: katId,
+        jumlah: Number(b.jumlah || 0),
+        kaedah: "online",
+        catatan: `Yuran program${b.no_rujukan ? " " + b.no_rujukan : ""}${b.nama ? " — " + b.nama : ""} (CHIP)`,
+        tarikh: new Date().toISOString().slice(0, 10),
+        direkod_oleh: "CHIP",
+      });
+    }
   } else if (b.jenis === "jamuan") {
     // Sumbangan jamuan tahlil / doa selamat → rekod dalam Tabung Khas
     const { data: kat } = await db.from("kategori_kutipan").select("id").eq("nama", "Tabung Khas").maybeSingle();

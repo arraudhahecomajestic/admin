@@ -3,10 +3,11 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { tarikhMs } from "@/lib/format";
 import ButangHantar from "@/components/ButangHantar";
 import { rsvpProgram } from "../actions";
+import BorangDaftarProgram from "@/components/BorangDaftarProgram";
 
 export const dynamic = "force-dynamic";
 
-export default async function JemputanProgramPage({ params, searchParams }: { params: { id: string }; searchParams: { rsvp?: string } }) {
+export default async function JemputanProgramPage({ params, searchParams }: { params: { id: string }; searchParams: { rsvp?: string; bayar?: string } }) {
   if (!adminConfigured)
     return <p className="text-center text-slate-500">Sistem belum dikonfigurasi.</p>;
 
@@ -21,8 +22,12 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
     );
   }
   const p: any = data;
-  const jumRsvp = (p.rsvp ?? []).reduce((s: number, r: any) => s + Number(r.bil_orang || 0), 0);
-  const penuh = p.had_peserta ? jumRsvp >= Number(p.had_peserta) : false;
+  let jumHadir = (p.rsvp ?? []).reduce((s: number, r: any) => s + Number(r.bil_orang || 0), 0);
+  if (p.berbayar) {
+    const { data: pd } = await db.from("program_pendaftaran").select("id").eq("program_id", p.id).eq("status_bayar", "dibayar");
+    jumHadir = ((pd as any[]) ?? []).length;
+  }
+  const penuh = p.had_peserta ? jumHadir >= Number(p.had_peserta) : false;
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -38,7 +43,8 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
           <div className="space-y-1 text-sm text-slate-600">
             <div>🗓️ {tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
             {p.lokasi && <div>📍 {p.lokasi}</div>}
-            <div>🙋 {jumRsvp} akan hadir{p.had_peserta ? ` / ${p.had_peserta}` : ""}</div>
+            <div>🙋 {jumHadir} {p.berbayar ? "peserta berdaftar" : "akan hadir"}{p.had_peserta ? ` / ${p.had_peserta}` : ""}</div>
+            {p.berbayar && p.yuran > 0 && <div>💳 Yuran: RM{Number(p.yuran).toFixed(2)}</div>}
           </div>
           {p.keterangan && <p className="whitespace-pre-line border-t pt-3 text-sm text-slate-700">{p.keterangan}</p>}
 
@@ -54,17 +60,33 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
               Maaf, pendaftaran telah penuh. Terima kasih atas minat anda.
             </div>
           )}
+          {searchParams.bayar === "ok" && (
+            <div className="mt-2 rounded-xl border-2 border-green-500 bg-green-50 p-5 text-center">
+              <div className="text-3xl">✓</div>
+              <div className="mt-1 text-lg font-bold text-green-700">Pendaftaran & bayaran berjaya!</div>
+              <div className="mt-1 text-sm text-green-700">Terima kasih. Resit dihantar ke e-mel anda. Jumpa di program, insyaAllah.</div>
+            </div>
+          )}
+          {searchParams.bayar === "gagal" && (
+            <div className="mt-2 rounded-xl border-2 border-red-300 bg-red-50 p-4 text-center text-sm font-semibold text-red-700">
+              Bayaran tidak berjaya atau dibatalkan. Sila cuba daftar semula di bawah.
+            </div>
+          )}
 
           {p.rsvp_dibuka && !penuh ? (
-            <form action={rsvpProgram} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-800">{searchParams.rsvp === "ok" ? "Kemas kini kehadiran anda" : "Sahkan Kehadiran (RSVP)"}</div>
-              <p className="text-xs text-slate-500">Guna nombor telefon yang sama untuk kemas kini — tak akan jadi pendaftaran berganda.</p>
-              <input type="hidden" name="program_id" value={p.id} />
-              <input name="nama" required placeholder="Nama anda" className="inp" />
-              <input name="telefon" placeholder="No. telefon (WhatsApp)" className="inp" />
-              <input name="bil_orang" type="number" min="1" defaultValue={1} title="Bilangan orang" className="inp" />
-              <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Sahkan Kehadiran →</ButangHantar>
-            </form>
+            p.berbayar ? (
+              <BorangDaftarProgram programId={p.id} yuran={Number(p.yuran || 0)} />
+            ) : (
+              <form action={rsvpProgram} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-800">{searchParams.rsvp === "ok" ? "Kemas kini kehadiran anda" : "Sahkan Kehadiran (RSVP)"}</div>
+                <p className="text-xs text-slate-500">Guna nombor telefon yang sama untuk kemas kini — tak akan jadi pendaftaran berganda.</p>
+                <input type="hidden" name="program_id" value={p.id} />
+                <input name="nama" required placeholder="Nama anda" className="inp" />
+                <input name="telefon" placeholder="No. telefon (WhatsApp)" className="inp" />
+                <input name="bil_orang" type="number" min="1" defaultValue={1} title="Bilangan orang" className="inp" />
+                <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Sahkan Kehadiran →</ButangHantar>
+              </form>
+            )
           ) : (
             <p className="mt-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
               {penuh ? "Pendaftaran telah penuh. Terima kasih." : "Pendaftaran ditutup."}

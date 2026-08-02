@@ -16,6 +16,8 @@ export async function tambahProgram(formData: FormData) {
     masa: String(formData.get("masa") ?? "") || null,
     lokasi: String(formData.get("lokasi") ?? "") || null,
     had_peserta: formData.get("had_peserta") ? Number(formData.get("had_peserta")) : null,
+    berbayar: String(formData.get("berbayar") ?? "") === "on",
+    yuran: formData.get("yuran") ? Number(formData.get("yuran")) : 0,
     rsvp_dibuka: String(formData.get("rsvp_dibuka") ?? "") === "on",
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
   });
@@ -37,6 +39,8 @@ export async function kemasProgram(formData: FormData) {
     masa: String(formData.get("masa") ?? "") || null,
     lokasi: String(formData.get("lokasi") ?? "") || null,
     had_peserta: formData.get("had_peserta") ? Number(formData.get("had_peserta")) : null,
+    berbayar: String(formData.get("berbayar") ?? "") === "on",
+    yuran: formData.get("yuran") ? Number(formData.get("yuran")) : 0,
     rsvp_dibuka: String(formData.get("rsvp_dibuka") ?? "") === "on",
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
   }).eq("id", id);

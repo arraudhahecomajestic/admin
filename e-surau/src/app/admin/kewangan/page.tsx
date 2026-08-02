@@ -6,6 +6,7 @@ import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
 import { CARA_BAYAR_BELANJA } from "@/lib/tetapan";
 import ButangHantar from "@/components/ButangHantar";
+import ImportCsvKewangan from "@/components/ImportCsvKewangan";
 import { tambahKutipan, tambahBelanja, padamKutipan, padamBelanja } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,8 @@ export default async function KewanganPage() {
         <Stat label="Kutipan Bulan Ini" nilai={rm(masukBulan)} warna="text-green-600" />
         <Stat label="Belanja Bulan Ini" nilai={rm(keluarBulan)} warna="text-red-600" />
       </div>
+
+      <ImportCsvKewangan />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Borang kutipan */}
