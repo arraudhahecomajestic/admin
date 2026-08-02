@@ -15,9 +15,16 @@ type Ahli = {
   peringkat: string | null;
   maklumat_disahkan: boolean;
   sumber: string;
+  tarikh_daftar: string | null;
+  tarikh_kemaskini: string | null;
 };
 
-type Tab = "semua" | "menunggu" | "lulus" | "baru" | "belum" | "sah";
+type Tab = "semua" | "terkini" | "menunggu" | "lulus" | "baru" | "belum" | "sah";
+
+const HARI_BARU = 7; // ambang "Baru" — aktiviti dalam 7 hari
+function masaAktiviti(a: Ahli): number {
+  return Math.max(new Date(a.tarikh_kemaskini || 0).getTime(), new Date(a.tarikh_daftar || 0).getTime());
+}
 
 // Label peringkat kelulusan — general, ikut tahap sebenar dalam sistem.
 function infoPeringkat(status: string, peringkat: string | null): { label: string; cls: string } {
@@ -61,18 +68,21 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
   const [disalin, setDisalin] = useState(false);
   const [muka, setMuka] = useState(1);
 
+  const ambangBaru = Date.now() - HARI_BARU * 86400000;
   const kira = useMemo(() => ({
     jumlah: senarai.length,
+    terkini: senarai.filter((a) => masaAktiviti(a) >= ambangBaru).length,
     menunggu: senarai.filter((a) => a.status === "menunggu").length,
     lulus: senarai.filter((a) => a.status === "lulus").length,
     belum: senarai.filter((a) => !a.maklumat_disahkan).length,
     baru: senarai.filter((a) => a.sumber === "baru").length,
     sah: senarai.filter((a) => a.maklumat_disahkan).length,
-  }), [senarai]);
+  }), [senarai, ambangBaru]);
 
   const ditapis = useMemo(() => {
     const cari = q.trim().toLowerCase();
     return senarai.filter((a) => {
+      if (tab === "terkini" && masaAktiviti(a) < ambangBaru) return false;
       if (tab === "menunggu" && a.status !== "menunggu") return false;
       if (tab === "lulus" && a.status !== "lulus") return false;
       if (tab === "baru" && a.sumber !== "baru") return false;
@@ -86,7 +96,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
         (a.telefon || "").includes(cari)
       );
     });
-  }, [senarai, q, tab]);
+  }, [senarai, q, tab, ambangBaru]);
 
   // Reset ke muka 1 bila carian/tab bertukar
   useEffect(() => { setMuka(1); }, [q, tab]);
@@ -165,6 +175,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
       {/* TAB */}
       <div className="flex flex-wrap gap-2">
         <TabBtn label="Semua" bil={kira.jumlah} aktif={tab === "semua"} onClick={() => setTab("semua")} warna="bg-slate-700" />
+        <TabBtn label="🆕 Terkini" bil={kira.terkini} aktif={tab === "terkini"} onClick={() => setTab("terkini")} warna="bg-blue-600" />
         <TabBtn label="Menunggu" bil={kira.menunggu} aktif={tab === "menunggu"} onClick={() => setTab("menunggu")} warna="bg-slate-500" />
         <TabBtn label="Diluluskan" bil={kira.lulus} aktif={tab === "lulus"} onClick={() => setTab("lulus")} warna="bg-green-700" />
         <TabBtn label="Pemohon Baru" bil={kira.baru} aktif={tab === "baru"} onClick={() => setTab("baru")} warna="bg-emerald-600" />
@@ -200,7 +211,10 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
                 <tr key={a.id} className={`border-b last:border-0 ${a.status === "lulus" ? "bg-green-50/60" : ""}`}>
                   <td className="px-4 py-2.5 font-mono text-xs">{a.no_ahli}</td>
                   <td className="px-4 py-2.5">
-                    <div className="font-medium text-slate-900">{a.nama}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-900">{a.nama}</span>
+                      {masaAktiviti(a) >= ambangBaru && <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">🆕 Baru</span>}
+                    </div>
                     <div className="font-mono text-xs text-slate-400">{bolehLihat ? (a.no_kp || "—") : topengKp(a.no_kp)}</div>
                   </td>
                   <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{bolehLihat ? (a.telefon || "—") : topengTel(a.telefon)}</td>

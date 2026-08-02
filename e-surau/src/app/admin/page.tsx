@@ -20,10 +20,13 @@ export default async function AdminPage() {
   const db = createAdminClient();
   const { data, error } = await db
     .from("ahli_kariah")
-    .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, sumber, tarikh_daftar")
+    .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, sumber, tarikh_daftar, tarikh_kemaskini")
     .order("tarikh_daftar", { ascending: false });
 
-  const senarai = (data as any[]) ?? [];
+  // Susun ikut aktiviti terkini (mohon baru ATAU kemas kini baru) — yang terbaru di atas
+  const masaAktiviti = (a: any) =>
+    Math.max(new Date(a.tarikh_kemaskini || 0).getTime(), new Date(a.tarikh_daftar || 0).getTime());
+  const senarai = ((data as any[]) ?? []).sort((a, b) => masaAktiviti(b) - masaAktiviti(a));
 
   return (
     <div className="space-y-6">
