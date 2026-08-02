@@ -91,11 +91,12 @@ async function ambilPieTabung(): Promise<PieSlice[]> {
   if (!adminConfigured) return [];
   try {
     const db = createAdminClient();
+    const tahun = new Date().getFullYear();
     const { data } = await db
       .from("kutipan")
       .select("jumlah, kategori:kategori_kutipan(nama, papar_awam)")
-      .gte("tarikh", "2026-01-01")
-      .lte("tarikh", "2026-06-30");
+      .gte("tarikh", `${tahun}-01-01`)
+      .lte("tarikh", `${tahun}-12-31`);
     const rows = (data as any[]) ?? [];
     const kira: Record<string, number> = {};
     for (const k of rows) {
@@ -114,6 +115,7 @@ export default async function Home() {
   const namaSurau = NAMA_SURAU;
   const lang = bahasaSemasa();
   const tr = buatT(lang);
+  const tahunPie = new Date().getFullYear();
   const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, pieTabung] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
@@ -245,12 +247,12 @@ export default async function Home() {
           <PieTabung
             data={pieData}
             lang={lang}
-            tajuk={tr("Kutipan Tabung Januari–Jun 2026", "Fund Collections January–June 2026")}
+            tajuk={tr(`Kutipan Tabung ${tahunPie}`, `Fund Collections ${tahunPie}`)}
             labelJumlah={tr("Jumlah Kutipan", "Total Collected")}
             labelKlik={tr("Klik mana-mana bahagian untuk buka detail tabung.", "Click any segment to expand the fund details.")}
             nota={tr(
-              "Jumlah kutipan masuk (derma, wakaf, infaq & lain-lain) bagi separuh pertama 2026. Dikemas kini automatik apabila bendahari merekod kutipan.",
-              "Total incoming collections (donations, waqf, infaq & others) for the first half of 2026. Updated automatically when the treasurer records a collection.",
+              `Jumlah kutipan masuk (derma, wakaf, infaq & lain-lain) bagi tahun ${tahunPie}. Dikemas kini automatik apabila bendahari merekod kutipan.`,
+              `Total incoming collections (donations, waqf, infaq & others) for ${tahunPie}. Updated automatically when the treasurer records a collection.`,
             )}
           />
         </div>
