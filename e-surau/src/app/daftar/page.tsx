@@ -588,6 +588,12 @@ export default function DaftarPage() {
       <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-surau">Pengesahan Identiti</h2>
         <p className="text-xs text-slate-500">Sila turunkan tandatangan & ambil swafoto sebagai bukti pengesahan diri.</p>
+        <div className="rounded-lg border border-surau/20 bg-surau/5 p-3 text-xs leading-relaxed text-slate-600">
+          <b className="text-slate-800">🤳 Kenapa perlu swafoto?</b> Swafoto memastikan orang yang mendaftar benar-benar pemilik Kad Pengenalan tersebut —
+          bagi mengelak penyalahgunaan atau penyamaran identiti, dan melindungi hak ahli (terutama pampasan khairat kematian).
+          Gambar ini <b>sulit</b>, disimpan dengan selamat, dan hanya boleh dilihat oleh pentadbir surau yang dibenarkan.
+          Lihat <Link href="/dasar-privasi" className="font-medium text-surau underline">Dasar Privasi</Link>.
+        </div>
         <div>
           <span className="mb-1 block text-sm font-medium text-slate-700">e-Tandatangan *</span>
           <SignaturePad onChange={(v) => { setTtdBaru(v); if (selesai && !selesai.ok) setSelesai(null); }} />

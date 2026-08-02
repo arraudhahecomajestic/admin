@@ -39,6 +39,13 @@ export default function DasarPrivasiPage() {
         <li>Pemprosesan pembayaran, resit, baucer & rekod kewangan.</li>
         <li>Pengesahan identiti dan komunikasi rasmi surau.</li>
       </ul>
+      <p className="rounded-lg bg-slate-50 p-3">
+        <b>Kenapa swafoto (selfie) diperlukan?</b> Swafoto digunakan untuk mengesahkan bahawa individu yang mendaftar
+        benar-benar pemilik Kad Pengenalan yang diberikan — bagi <b>mengelak penyamaran & penyalahgunaan identiti</b>,
+        dan melindungi hak ahli, terutamanya bagi tuntutan <b>pampasan khairat kematian</b>. Swafoto anda
+        <b> tidak digunakan untuk tujuan lain</b>, tidak dikongsi secara komersial, dan hanya boleh dilihat oleh
+        pentadbir surau yang dibenarkan.
+      </p>
 
       <H>3. Perkongsian data</H>
       <p>
