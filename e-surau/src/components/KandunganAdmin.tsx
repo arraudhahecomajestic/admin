@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { simpanVisiMisi, tambahCarta, padamCarta, tambahBuletin, padamBuletin, toggleBuletin } from "@/app/admin/kandungan/actions";
+import { simpanVisiMisi, tambahCarta, padamCarta, tambahBuletin, padamBuletin, toggleBuletin, drafBuletinAI } from "@/app/admin/kandungan/actions";
 import { tarikhMs } from "@/lib/format";
 
 type Carta = { id: string; jawatan: string; nama: string | null; gambar_url: string | null; susunan: number };
-type Buletin = { id: string; tajuk: string; keterangan: string | null; url_fail: string | null; jenis_fail: string | null; tarikh: string; diterbitkan: boolean };
+type Buletin = { id: string; tajuk: string; keterangan: string | null; url_fail: string | null; jenis_fail: string | null; tarikh: string; diterbitkan: boolean; gambar?: string[] | null };
 
 async function muatFail(f: File): Promise<{ url: string; jenis: string } | null> {
   try {
@@ -122,23 +122,55 @@ function BuletinSeksyen({ buletin, onDone }: { buletin: Buletin[]; onDone: () =>
   const [tajuk, setTajuk] = useState("");
   const [ket, setKet] = useState("");
   const [tarikh, setTarikh] = useState("");
-  const [urlFail, setUrlFail] = useState("");
-  const [jenisFail, setJenisFail] = useState("");
+  const [gambar, setGambar] = useState<string[]>([]); // banyak gambar
+  const [urlPdf, setUrlPdf] = useState(""); // PDF (pilihan, berasingan)
   const [busy, setBusy] = useState(false);
+  const [ai, setAi] = useState(false);
   const [msg, setMsg] = useState("");
 
-  async function pilihFail(e: React.ChangeEvent<HTMLInputElement>) {
+  async function pilihGambar(e: React.ChangeEvent<HTMLInputElement>) {
+    const fail = Array.from(e.target.files || []);
+    e.target.value = ""; // benarkan pilih fail sama semula
+    if (!fail.length) return;
+    setBusy(true); setMsg("");
+    const url: string[] = [];
+    for (const f of fail) {
+      const res = await muatFail(f);
+      if (res) url.push(res.url);
+    }
+    setBusy(false);
+    if (url.length) setGambar((g) => [...g, ...url]);
+    else setMsg("Gagal muat naik gambar.");
+  }
+  function buangGambar(i: number) {
+    setGambar((g) => g.filter((_, idx) => idx !== i));
+  }
+  async function pilihPdf(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return;
-    setBusy(true);
+    setBusy(true); setMsg("");
     const res = await muatFail(f);
     setBusy(false);
-    if (res) { setUrlFail(res.url); setJenisFail(res.jenis); } else setMsg("Gagal muat naik fail.");
+    if (res) setUrlPdf(res.url); else setMsg("Gagal muat naik PDF.");
+  }
+  async function drafAI() {
+    setMsg(""); setAi(true);
+    const res = await drafBuletinAI({ tajuk, idea: ket });
+    setAi(false);
+    if (!res.ok) { setMsg(res.msg ?? "AI gagal."); return; }
+    setKet(res.teks || "");
   }
   async function tambah() {
     setMsg("");
-    const res = await tambahBuletin({ tajuk, keterangan: ket, urlFail: urlFail || undefined, jenisFail: jenisFail || undefined, tarikh: tarikh || undefined });
+    const res = await tambahBuletin({
+      tajuk,
+      keterangan: ket,
+      urlFail: urlPdf || undefined,
+      jenisFail: urlPdf ? "pdf" : undefined,
+      gambar,
+      tarikh: tarikh || undefined,
+    });
     if (!res.ok) { setMsg(res.msg ?? "Ralat."); return; }
-    setTajuk(""); setKet(""); setTarikh(""); setUrlFail(""); setJenisFail("");
+    setTajuk(""); setKet(""); setTarikh(""); setGambar([]); setUrlPdf("");
     onDone();
   }
   return (
@@ -146,31 +178,76 @@ function BuletinSeksyen({ buletin, onDone }: { buletin: Buletin[]; onDone: () =>
       <h2 className="mb-3 font-semibold text-slate-900">Buletin Surau</h2>
       <div className="mb-4 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-2">
         <input value={tajuk} onChange={(e) => setTajuk(e.target.value)} placeholder="Tajuk buletin" className="inp sm:col-span-2" />
-        <textarea value={ket} onChange={(e) => setKet(e.target.value)} rows={2} placeholder="Keterangan ringkas (pilihan)" className="inp sm:col-span-2" />
-        <label className="text-sm text-slate-600">Tarikh<input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="inp" /></label>
-        <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
-          <input type="file" accept="application/pdf,image/*" className="hidden" onChange={pilihFail} />
-          {urlFail ? `✓ Fail dilampir (${jenisFail})` : busy ? "Memuat naik…" : "Lampir PDF / Gambar"}
-        </label>
+
+        {/* Keterangan + Draf dengan AI */}
         <div className="sm:col-span-2">
-          <button onClick={tambah} disabled={busy} className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">Terbit Buletin</button>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <span className="text-sm font-medium text-slate-700">Isi kandungan</span>
+            <button
+              type="button"
+              onClick={drafAI}
+              disabled={ai || busy}
+              className="rounded-lg border border-surau/40 bg-surau/5 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/10 disabled:opacity-60"
+              title="Bagi tajuk + idea kasar, AI karang konten penuh"
+            >
+              {ai ? "AI sedang mengarang…" : "Draf dengan AI"}
+            </button>
+          </div>
+          <textarea value={ket} onChange={(e) => setKet(e.target.value)} rows={5} placeholder="Taip idea/isi kasar, kemudian tekan “Draf dengan AI” untuk karang konten penuh — atau tulis sendiri di sini." className="inp" />
+          <p className="mt-1 text-xs text-slate-400">Tip: isi tajuk + beberapa poin idea, tekan “Draf dengan AI”. Anda boleh sunting hasil AI sebelum terbit.</p>
+        </div>
+
+        <label className="text-sm text-slate-600">Tarikh<input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="inp" /></label>
+
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
+          <input type="file" accept="image/*" multiple className="hidden" onChange={pilihGambar} />
+          {busy ? "Memuat naik…" : "Tambah Gambar (boleh banyak)"}
+        </label>
+
+        {/* Pratonton gambar */}
+        {gambar.length > 0 && (
+          <div className="sm:col-span-2 flex flex-wrap gap-2">
+            {gambar.map((u, i) => (
+              <div key={i} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={u} alt={`Gambar ${i + 1}`} className="h-20 w-20 rounded-lg object-cover" />
+                <button type="button" onClick={() => buangGambar(i)} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white" title="Buang">×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <label className="sm:col-span-2 flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
+          <input type="file" accept="application/pdf" className="hidden" onChange={pilihPdf} />
+          {urlPdf ? "PDF dilampir — tekan untuk ganti" : "Lampir PDF (pilihan)"}
+        </label>
+
+        <div className="sm:col-span-2">
+          <button onClick={tambah} disabled={busy || ai} className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">Terbit Buletin</button>
           {msg && <span className="ml-3 text-sm text-red-600">{msg}</span>}
         </div>
       </div>
       <div className="divide-y divide-slate-100">
         {buletin.length === 0 && <p className="text-sm text-slate-400">Tiada buletin lagi.</p>}
-        {buletin.map((b) => (
-          <div key={b.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-            <div>
-              <div className="font-medium text-slate-800">{b.tajuk} {!b.diterbitkan && <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">Draf</span>}</div>
-              <div className="text-xs text-slate-500">{tarikhMs(b.tarikh)}{b.url_fail ? ` · ${b.jenis_fail === "pdf" ? "PDF" : "Gambar"}` : ""}</div>
+        {buletin.map((b) => {
+          const bilGambar = (b.gambar?.length ?? 0) || (b.url_fail && b.jenis_fail === "imej" ? 1 : 0);
+          return (
+            <div key={b.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+              <div>
+                <div className="font-medium text-slate-800">{b.tajuk} {!b.diterbitkan && <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">Draf</span>}</div>
+                <div className="text-xs text-slate-500">
+                  {tarikhMs(b.tarikh)}
+                  {bilGambar > 0 ? ` · ${bilGambar} gambar` : ""}
+                  {b.url_fail && b.jenis_fail === "pdf" ? " · PDF" : ""}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={async () => { await toggleBuletin(b.id, !b.diterbitkan); onDone(); }} className="text-xs font-semibold text-surau hover:underline">{b.diterbitkan ? "Sorok" : "Terbit"}</button>
+                <button onClick={async () => { await padamBuletin(b.id); onDone(); }} className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={async () => { await toggleBuletin(b.id, !b.diterbitkan); onDone(); }} className="text-xs font-semibold text-surau hover:underline">{b.diterbitkan ? "Sorok" : "Terbit"}</button>
-              <button onClick={async () => { await padamBuletin(b.id); onDone(); }} className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

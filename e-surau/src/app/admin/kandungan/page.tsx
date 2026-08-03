@@ -17,7 +17,7 @@ export default async function AdminKandunganPage() {
   const [{ data: kv }, { data: carta }, { data: buletin }] = await Promise.all([
     db.from("kandungan_surau").select("kunci, nilai"),
     db.from("carta_organisasi").select("id, jawatan, nama, gambar_url, susunan").order("susunan"),
-    db.from("buletin").select("id, tajuk, keterangan, url_fail, jenis_fail, tarikh, diterbitkan").order("tarikh", { ascending: false }),
+    db.from("buletin").select("id, tajuk, keterangan, url_fail, jenis_fail, tarikh, diterbitkan, gambar").order("tarikh", { ascending: false }),
   ]);
   const map: Record<string, string> = {};
   for (const r of (kv as any[]) ?? []) map[r.kunci] = r.nilai ?? "";

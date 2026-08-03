@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { NAMA_SURAU } from "@/lib/tetapan";
 import { tarikhMs } from "@/lib/format";
 import { bahasaSemasa } from "@/lib/bahasa";
 import { buatT } from "@/lib/i18n";
+import ShareButton from "@/components/ShareButton";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,7 @@ export default async function TentangPage() {
     const [{ data: kv }, { data: c }, { data: b }] = await Promise.all([
       db.from("kandungan_surau").select("kunci, nilai"),
       db.from("carta_organisasi").select("jawatan, nama, gambar_url, susunan").eq("aktif", true).order("susunan"),
-      db.from("buletin").select("tajuk, keterangan, url_fail, jenis_fail, tarikh").eq("diterbitkan", true).order("tarikh", { ascending: false }).limit(30),
+      db.from("buletin").select("id, tajuk, keterangan, url_fail, jenis_fail, tarikh, gambar").eq("diterbitkan", true).order("tarikh", { ascending: false }).limit(30),
     ]);
     const map: Record<string, string> = {};
     for (const r of (kv as any[]) ?? []) map[r.kunci] = r.nilai ?? "";
@@ -84,26 +86,48 @@ export default async function TentangPage() {
         <h2 className="mb-4 text-xl font-bold text-slate-900">{tr("Buletin Surau", "Surau Bulletin")}</h2>
         {buletin.length > 0 ? (
           <div className="space-y-3">
-            {buletin.map((b, i) => (
-              <article key={i} className="rounded-xl bg-white p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-slate-900">{b.tajuk}</h3>
-                    <div className="text-xs text-slate-500">{tarikhMs(b.tarikh)}</div>
-                    {b.keterangan && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{b.keterangan}</p>}
+            {buletin.map((b, i) => {
+              // Gabung gambar lama (url_fail imej) + array gambar baharu
+              const gambar: string[] = Array.from(new Set([
+                ...(b.url_fail && b.jenis_fail === "imej" ? [b.url_fail] : []),
+                ...((b.gambar as string[]) ?? []),
+              ].filter(Boolean)));
+              const adaPdf = b.url_fail && b.jenis_fail === "pdf";
+              return (
+                <article key={i} className="rounded-xl bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">
+                        <Link href={`/buletin/${b.id}`} className="hover:text-surau hover:underline">{b.tajuk}</Link>
+                      </h3>
+                      <div className="text-xs text-slate-500">{tarikhMs(b.tarikh)}</div>
+                      {b.keterangan && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{b.keterangan}</p>}
+                    </div>
+                    {adaPdf && (
+                      <a href={b.url_fail} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg bg-surau px-3 py-1.5 text-xs font-semibold text-white hover:bg-surau-dark">
+                        {tr("Buka PDF", "Open PDF")}
+                      </a>
+                    )}
                   </div>
-                  {b.url_fail && (
-                    <a href={b.url_fail} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg bg-surau px-3 py-1.5 text-xs font-semibold text-white hover:bg-surau-dark">
-                      {b.jenis_fail === "pdf" ? tr("Buka PDF", "Open PDF") : tr("Lihat", "View")}
-                    </a>
+
+                  {/* Galeri gambar */}
+                  {gambar.length > 0 && (
+                    <div className={`mt-3 grid gap-2 ${gambar.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3"}`}>
+                      {gambar.map((u, gi) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={gi} src={u} alt={`${b.tajuk} ${gi + 1}`} className={gambar.length === 1 ? "max-h-96 w-auto rounded-lg" : "h-32 w-full rounded-lg object-cover"} />
+                      ))}
+                    </div>
                   )}
-                </div>
-                {b.url_fail && b.jenis_fail === "imej" && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.url_fail} alt={b.tajuk} className="mt-3 max-h-96 w-auto rounded-lg" />
-                )}
-              </article>
-            ))}
+
+                  {/* Baca lanjut + Kongsi */}
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <Link href={`/buletin/${b.id}`} className="text-sm font-medium text-surau hover:underline">{tr("Baca & kongsi", "Read & share")}</Link>
+                    <ShareButton tajuk={b.tajuk} path={`/buletin/${b.id}`} ringkas />
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-xl bg-white p-6 text-center text-sm text-slate-400 shadow-sm">
