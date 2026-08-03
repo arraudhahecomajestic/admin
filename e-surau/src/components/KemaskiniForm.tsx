@@ -55,6 +55,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
   const [hantar, setHantar] = useState(false);
   const [selesai, setSelesai] = useState<null | { ok: boolean; msg: string }>(null);
   const [setuju, setSetuju] = useState(false);
+  const [pengakuan, setPengakuan] = useState(false);
 
   function ubahT(i: number, k: keyof Tgg, v: any) {
     setTanggungan((t) => t.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
@@ -114,6 +115,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
     if (!urlDepan || !urlBelakang) { setSelesai({ ok: false, msg: "Sila muat naik gambar Kad Pengenalan (depan & belakang)." }); return; }
     if (!ttdBaru && !urlTtd) { setSelesai({ ok: false, msg: "Sila turunkan e-tandatangan anda." }); return; }
     if (!urlSelfie) { setSelesai({ ok: false, msg: "Sila ambil swafoto (selfie) untuk pengesahan." }); return; }
+    if (!pengakuan) { setSelesai({ ok: false, msg: "Sila tandakan pengakuan bahawa maklumat yang diberi adalah benar." }); return; }
     if (!setuju) { setSelesai({ ok: false, msg: "Sila bersetuju dengan Dasar Privasi & Terma Penggunaan sebelum menghantar." }); return; }
     setHantar(true);
     let ttdPath = urlTtd;
@@ -128,7 +130,7 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
       telefon: hp, emel: emel.trim().toLowerCase(), status_perkahwinan: statusKahwin,
       tempoh_menetap_nilai: tempohNilai, tempoh_menetap_unit: tempohUnit,
       url_kp_depan: urlDepan, url_kp_belakang: urlBelakang,
-      url_tandatangan: ttdPath, url_selfie: urlSelfie,
+      url_tandatangan: ttdPath, url_selfie: urlSelfie, pengakuan,
       tanggungan: tanggungan.filter((t) => t.nama.trim()).map((t) => ({ ...t, nama: UP(t.nama) })),
     });
     setHantar(false);
@@ -315,6 +317,12 @@ export default function KemaskiniForm({ awal }: { awal: any }) {
           </label>
         </div>
       </section>
+
+      {/* Pengakuan (Bahagian A no.8) — wajib */}
+      <label className="flex items-start gap-3 rounded-xl border-2 border-surau/30 bg-surau/5 p-4 text-sm text-slate-700">
+        <input type="checkbox" className="mt-1" checked={pengakuan} onChange={(e) => setPengakuan(e.target.checked)} />
+        <span>Saya mengaku bahawa segala maklumat yang diberikan dalam borang ini adalah <b>benar dan tepat</b>. <span className="text-red-500">*</span></span>
+      </label>
 
       {/* Persetujuan PDPA — wajib sebelum hantar */}
       <label className="flex items-start gap-3 rounded-xl border-2 border-surau/30 bg-surau/5 p-4 text-sm text-slate-700">

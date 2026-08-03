@@ -51,6 +51,7 @@ export async function simpanKemaskini(data: any): Promise<{ ok: boolean; msg?: s
     maklumat_disahkan: true,
     tarikh_kemaskini: new Date().toISOString(),
   };
+  if (data.pengakuan) patch.pengakuan = true;
   if (data.url_kp_depan) patch.url_kp_depan = data.url_kp_depan;
   if (data.url_kp_belakang) patch.url_kp_belakang = data.url_kp_belakang;
   if (data.url_tandatangan) patch.url_tandatangan = data.url_tandatangan;
