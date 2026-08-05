@@ -39,6 +39,11 @@ export default async function BaucerPage({ params }: { params: { id: string } })
           <h1 className="mt-2 text-lg font-bold text-slate-900">{NAMA_SURAU}</h1>
           <p className="text-xs text-slate-500">{ALAMAT_SURAU}</p>
           <p className="mt-1 text-sm font-semibold tracking-wide text-surau-dark">BAUCER BAYARAN</p>
+          {b.status && b.status !== "dibayar" && (
+            <p className="mt-1 text-xs font-bold uppercase tracking-wider text-amber-600">
+              {b.status === "menunggu" ? "Menunggu Kelulusan Pengerusi" : b.status === "lulus" ? "Diluluskan — Belum Dibayar" : b.status === "tolak" ? "Ditolak" : ""}
+            </p>
+          )}
         </div>
 
         {/* Butiran baucer */}
@@ -60,11 +65,11 @@ export default async function BaucerPage({ params }: { params: { id: string } })
         </div>
         <p className="mt-2 text-sm italic text-slate-600">{ringgitPerkataan(b.jumlah)}</p>
 
-        {/* Pengesahan */}
+        {/* Pengesahan — auto-isi nama & tarikh dari rekod */}
         <div className="mt-6 grid grid-cols-3 gap-4 text-center text-xs">
-          <TTD tajuk="Disediakan Oleh" jawatan="Penolong Bendahari" />
-          <TTD tajuk="Kelulusan Oleh" jawatan="Setiausaha / Pengerusi" />
-          <TTD tajuk="Dibayar Oleh" jawatan="Bendahari" />
+          <TTD tajuk="Disediakan Oleh" jawatan="Bendahari" nama={b.direkod_oleh} tarikh={b.tarikh} />
+          <TTD tajuk="Kelulusan Oleh" jawatan="Setiausaha / Pengerusi" nama={b.diluluskan_oleh} tarikh={b.tarikh_lulus} />
+          <TTD tajuk="Dibayar Oleh" jawatan="Bendahari" nama={b.dibayar_oleh} tarikh={b.tarikh_bayar} />
         </div>
 
         {/* Diterima oleh */}
@@ -104,11 +109,14 @@ function Baris({ k, v }: { k: string; v?: string | null }) {
   );
 }
 
-function TTD({ tajuk, jawatan }: { tajuk: string; jawatan: string }) {
+function TTD({ tajuk, jawatan, nama, tarikh }: { tajuk: string; jawatan: string; nama?: string | null; tarikh?: string | null }) {
+  const t = tarikh ? new Date(tarikh).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Kuala_Lumpur" }) : "";
   return (
     <div>
       <div className="font-semibold text-slate-700">{tajuk}</div>
-      <div className="mt-10 border-t border-slate-400 pt-1 text-slate-500">{jawatan}</div>
+      <div className="mt-8 border-t border-slate-400 pt-1 font-medium text-slate-700">{nama || " "}</div>
+      <div className="text-slate-500">{jawatan}</div>
+      {t && <div className="text-[10px] text-slate-400">{t}</div>}
     </div>
   );
 }

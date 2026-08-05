@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, bolehKewangan } from "@/lib/sesi";
+import { getProfil, bolehKewangan, isPentadbir, isMaster, type Profil } from "@/lib/sesi";
+
+// Kelulusan bayaran = Pengerusi/Setiausaha (pentadbir) atau master — bukan bendahari sahaja.
+function bolehLulusBayaran(p: Profil | null): boolean {
+  return isPentadbir(p) || isMaster(p);
+}
+const namaProfil = (p: Profil | null) => p?.nama ?? p?.emel ?? "admin";
 
 export async function tambahKutipan(formData: FormData) {
   if (!bolehKewangan(await getProfil())) return;
@@ -20,21 +26,83 @@ export async function tambahKutipan(formData: FormData) {
   revalidatePath("/admin/kewangan");
 }
 
+// Sedia baucer bayaran (BELUM dibayar) → status 'menunggu' untuk kelulusan Pengerusi.
 export async function tambahBelanja(formData: FormData) {
-  if (!bolehKewangan(await getProfil())) return;
+  const p = await getProfil();
+  if (!bolehKewangan(p)) return;
   const db = createAdminClient();
   await db.from("perbelanjaan").insert({
     kategori_id: Number(formData.get("kategori_id")),
     jumlah: Number(formData.get("jumlah")),
     keterangan: String(formData.get("keterangan") ?? ""),
     bayar_kepada: String(formData.get("bayar_kepada") ?? "") || null,
-    cara_bayar: String(formData.get("cara_bayar") ?? "") || null,
-    no_rujukan_bayar: String(formData.get("no_rujukan_bayar") ?? "") || null,
     dari_khairat: String(formData.get("dari_khairat") ?? "") === "on",
     tarikh: String(formData.get("tarikh") ?? "") || new Date().toISOString().slice(0, 10),
-    direkod_oleh: "admin",
+    status: "menunggu",
+    direkod_oleh: namaProfil(p),
   });
   revalidatePath("/admin/kewangan");
+}
+
+// Pengerusi luluskan baucer.
+export async function luluskanBelanja(id: string): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!bolehLulusBayaran(p)) return { ok: false, msg: "Hanya Pengerusi/Setiausaha boleh meluluskan." };
+  const db = createAdminClient();
+  const { error } = await db.from("perbelanjaan").update({
+    status: "lulus", diluluskan_oleh: namaProfil(p), tarikh_lulus: new Date().toISOString(), sebab_tolak: null,
+  }).eq("id", id).eq("status", "menunggu");
+  if (error) return { ok: false, msg: error.message };
+  revalidatePath("/admin/kewangan");
+  return { ok: true };
+}
+
+// Pengerusi tolak baucer.
+export async function tolakBelanja(id: string, sebab: string): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!bolehLulusBayaran(p)) return { ok: false, msg: "Hanya Pengerusi/Setiausaha boleh menolak." };
+  const db = createAdminClient();
+  const { error } = await db.from("perbelanjaan").update({
+    status: "tolak", sebab_tolak: (sebab || "").trim() || "Tidak diluluskan",
+  }).eq("id", id).eq("status", "menunggu");
+  if (error) return { ok: false, msg: error.message };
+  revalidatePath("/admin/kewangan");
+  return { ok: true };
+}
+
+// Bendahari tanda sudah dibayar (selepas kelulusan) + isi butiran bayaran.
+export async function tandaBayarBelanja(id: string, input: { cara_bayar?: string; no_rujukan_bayar?: string; tarikh_bayar?: string; url_slip?: string }): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!bolehKewangan(p)) return { ok: false, msg: "Tiada akses." };
+  const db = createAdminClient();
+  const { error } = await db.from("perbelanjaan").update({
+    status: "dibayar",
+    cara_bayar: (input.cara_bayar || "").trim() || null,
+    no_rujukan_bayar: (input.no_rujukan_bayar || "").trim() || null,
+    tarikh_bayar: input.tarikh_bayar || new Date().toISOString().slice(0, 10),
+    url_slip: input.url_slip || null,
+    dibayar_oleh: namaProfil(p),
+  }).eq("id", id).eq("status", "lulus");
+  if (error) return { ok: false, msg: error.message };
+  // Selaras: jika baucer ini dijana dari tuntutan pembekal, tandakan tuntutan 'dibayar' + slip.
+  await db.from("tuntutan_bayaran").update({
+    status: "dibayar",
+    rujukan_bayar: (input.no_rujukan_bayar || "").trim() || null,
+    url_slip: input.url_slip || null,
+    tarikh_bayar: new Date().toISOString(),
+  }).eq("perbelanjaan_id", id).eq("status", "diluluskan");
+  revalidatePath("/admin/kewangan");
+  revalidatePath("/admin/kewangan/laporan");
+  revalidatePath("/admin/tuntutan");
+  return { ok: true };
+}
+
+export async function padamBelanjaId(id: string): Promise<{ ok: boolean }> {
+  if (!bolehKewangan(await getProfil())) return { ok: false };
+  const db = createAdminClient();
+  await db.from("perbelanjaan").delete().eq("id", id);
+  revalidatePath("/admin/kewangan");
+  return { ok: true };
 }
 
 // ---- Import CSV bulanan: kutipan (Masuk) & perbelanjaan (Keluar) sekali gus ----
@@ -108,7 +176,7 @@ export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean
         masuk++; jumMasuk += jumlah;
       } else {
         const kid = await katBelanja(kategori);
-        barisBelanja.push({ kategori_id: kid, jumlah, keterangan: keterangan || kategori, tarikh, dari_khairat: false, direkod_oleh: oleh });
+        barisBelanja.push({ kategori_id: kid, jumlah, keterangan: keterangan || kategori, tarikh, dari_khairat: false, status: "dibayar", direkod_oleh: oleh });
         keluar++; jumKeluar += jumlah;
       }
     } catch (e: any) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: ${e?.message ?? "ralat simpan"}`); }

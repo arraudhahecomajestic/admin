@@ -36,11 +36,14 @@ export async function sahAjk(formData: FormData) {
   segar();
 }
 
-// Bendahari: luluskan (disah_ajk → diluluskan) + cipta rekod Perbelanjaan + Baucer
+// Bendahari: assign kategori + jana Baucer dari tuntutan (disah_ajk → diluluskan).
+// Baucer dijana AUTOMATIK dari data tuntutan (bendahari tak perlu taip) — status
+// 'menunggu' supaya masuk aliran kelulusan Pengerusi di Kewangan.
 export async function lulusBendahari(formData: FormData) {
   const p = await getProfil();
   if (!bolehKewangan(p)) return;
   const id = String(formData.get("id") ?? "");
+  const katPilih = Number(formData.get("kategori_id") ?? 0);
   if (!id) return;
   const db = createAdminClient();
 
@@ -52,13 +55,15 @@ export async function lulusBendahari(formData: FormData) {
   const tu: any = t;
   if (!tu || tu.status !== "disah_ajk") return;
 
-  // Pastikan kategori belanja "Tuntutan Pembekal"
-  let katId: number | null = null;
-  const { data: kat } = await db.from("kategori_belanja").select("id").eq("nama", "Tuntutan Pembekal").maybeSingle();
-  if (kat) katId = (kat as any).id;
-  else {
-    const { data: baru } = await db.from("kategori_belanja").insert({ nama: "Tuntutan Pembekal" }).select("id").maybeSingle();
-    katId = (baru as any)?.id ?? null;
+  // Kategori yang dipilih bendahari; jika tiada, guna/cipta "Tuntutan Pembekal".
+  let katId: number | null = katPilih || null;
+  if (!katId) {
+    const { data: kat } = await db.from("kategori_belanja").select("id").eq("nama", "Tuntutan Pembekal").maybeSingle();
+    katId = (kat as any)?.id ?? null;
+    if (!katId) {
+      const { data: baru } = await db.from("kategori_belanja").insert({ nama: "Tuntutan Pembekal" }).select("id").maybeSingle();
+      katId = (baru as any)?.id ?? null;
+    }
   }
   if (!katId) return;
 
@@ -67,10 +72,9 @@ export async function lulusBendahari(formData: FormData) {
     jumlah: Number(tu.jumlah),
     keterangan: `${tu.no_tuntutan} — ${tu.butiran}`,
     bayar_kepada: tu.pembekal?.nama ?? null,
-    cara_bayar: "Pindahan Atas Talian",
-    no_rujukan_bayar: tu.no_tuntutan,
     dari_khairat: false,
     tarikh: new Date().toISOString().slice(0, 10),
+    status: "menunggu",             // masuk aliran kelulusan Pengerusi
     direkod_oleh: p?.nama ?? "bendahari",
   }).select("id").single();
 

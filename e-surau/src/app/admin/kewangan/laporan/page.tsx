@@ -26,7 +26,7 @@ export default async function LaporanPage({ searchParams }: { searchParams: { ta
   const db = createAdminClient();
   const [kutipanRes, belanjaRes] = await Promise.all([
     db.from("kutipan").select("jumlah, tarikh, kategori:kategori_kutipan(nama, jenis_khairat)").gte("tarikh", mula).lte("tarikh", tamat),
-    db.from("perbelanjaan").select("jumlah, tarikh, dari_khairat, kategori:kategori_belanja(nama)").gte("tarikh", mula).lte("tarikh", tamat),
+    db.from("perbelanjaan").select("jumlah, tarikh, dari_khairat, kategori:kategori_belanja(nama)").eq("status", "dibayar").gte("tarikh", mula).lte("tarikh", tamat),
   ]);
   const kutipan = (kutipanRes.data as any[]) ?? [];
   const belanja = (belanjaRes.data as any[]) ?? [];

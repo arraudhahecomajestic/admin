@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { getProfil, bolehKewangan } from "@/lib/sesi";
+import { getProfil, bolehKewangan, isPentadbir, isMaster } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
-import { CARA_BAYAR_BELANJA } from "@/lib/tetapan";
 import ButangHantar from "@/components/ButangHantar";
 import ImportCsvKewangan from "@/components/ImportCsvKewangan";
-import { tambahKutipan, tambahBelanja, padamKutipan, padamBelanja } from "./actions";
+import SenaraiBelanja from "@/components/SenaraiBelanja";
+import { tambahKutipan, tambahBelanja, padamKutipan } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function KewanganPage() {
     db.from("kategori_kutipan").select("id, nama, jenis_khairat").order("id"),
     db.from("kategori_belanja").select("id, nama").order("id"),
     db.from("kutipan").select("id, no_resit, jumlah, kaedah, tarikh, catatan, kategori:kategori_kutipan(nama, jenis_khairat), ahli:ahli_kariah(nama)").order("dicipta", { ascending: false }).limit(200),
-    db.from("perbelanjaan").select("id, no_baucer, jumlah, keterangan, tarikh, dari_khairat, kategori:kategori_belanja(nama)").order("dicipta", { ascending: false }).limit(200),
+    db.from("perbelanjaan").select("id, no_baucer, jumlah, keterangan, tarikh, dari_khairat, status, bayar_kepada, diluluskan_oleh, tarikh_bayar, sebab_tolak, url_slip, kategori:kategori_belanja(nama)").order("dicipta", { ascending: false }).limit(200),
     db.from("tuntutan_khairat").select("jumlah_pampasan, status").eq("status", "dibayar"),
     db.from("ahli_kariah").select("id, nama, no_ahli").eq("status", "lulus").order("nama"),
   ]);
@@ -39,10 +39,12 @@ export default async function KewanganPage() {
   const jum = (arr: any[], f: (x: any) => boolean, key = "jumlah") =>
     arr.filter(f).reduce((s, x) => s + Number(x[key] || 0), 0);
 
+  // Hanya baucer berstatus 'dibayar' dikira sebagai wang keluar sebenar.
+  const dibayar = (b: any) => b.status === "dibayar";
   const masukAm = jum(kutipan, (k) => !k.kategori?.jenis_khairat);
   const masukKhairat = jum(kutipan, (k) => !!k.kategori?.jenis_khairat);
-  const keluarAm = jum(belanja, (b) => !b.dari_khairat);
-  const keluarKhairatBelanja = jum(belanja, (b) => !!b.dari_khairat);
+  const keluarAm = jum(belanja, (b) => !b.dari_khairat && dibayar(b));
+  const keluarKhairatBelanja = jum(belanja, (b) => !!b.dari_khairat && dibayar(b));
   const pampasanDibayar = jum(tuntutan, () => true, "jumlah_pampasan");
 
   const bakiAm = masukAm - keluarAm;
@@ -50,7 +52,20 @@ export default async function KewanganPage() {
 
   const bln = bulanIni();
   const masukBulan = jum(kutipan, (k) => String(k.tarikh).startsWith(bln));
-  const keluarBulan = jum(belanja, (b) => String(b.tarikh).startsWith(bln));
+  const keluarBulan = jum(belanja, (b) => String(b.tarikh).startsWith(bln) && dibayar(b));
+  const menungguJum = jum(belanja, (b) => b.status === "menunggu" || b.status === "lulus");
+  const menungguBil = belanja.filter((b) => b.status === "menunggu").length;
+  const bolehLulus = isPentadbir(profil) || isMaster(profil);
+
+  // Pautan bertandatangan untuk slip bayaran (storan peribadi).
+  const slipUrls: Record<string, string | null> = {};
+  await Promise.all(
+    belanja.filter((b) => b.url_slip).map(async (b) => {
+      const rel = String(b.url_slip).replace(/^salinan-kp\//, "");
+      const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
+      slipUrls[b.id] = data?.signedUrl ?? null;
+    }),
+  );
 
   return (
     <div className="space-y-6">
@@ -66,8 +81,15 @@ export default async function KewanganPage() {
         <Stat label="Baki Tabung Am" nilai={rm(bakiAm)} warna="text-surau" />
         <Stat label="Baki Tabung Khairat" nilai={rm(bakiKhairat)} warna="text-teal-600" />
         <Stat label="Kutipan Bulan Ini" nilai={rm(masukBulan)} warna="text-green-600" />
-        <Stat label="Belanja Bulan Ini" nilai={rm(keluarBulan)} warna="text-red-600" />
+        <Stat label="Belanja Dibayar (Bulan Ini)" nilai={rm(keluarBulan)} warna="text-red-600" />
       </div>
+
+      {menungguJum > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <span className="font-semibold">{rm(menungguJum)}</span> baucer belum dibayar
+          {menungguBil > 0 && <> · <span className="font-semibold">{menungguBil}</span> menunggu kelulusan Pengerusi</>}. Jumlah ini belum dikira sebagai wang keluar sehingga ditandakan "Dibayar".
+        </div>
+      )}
 
       <ImportCsvKewangan />
 
@@ -103,9 +125,10 @@ export default async function KewanganPage() {
           </form>
         </section>
 
-        {/* Borang belanja */}
+        {/* Borang sedia baucer */}
         <section className="rounded-xl bg-white p-5 shadow-sm">
-          <h2 className="mb-3 font-semibold text-slate-900">Rekod Perbelanjaan</h2>
+          <h2 className="mb-1 font-semibold text-slate-900">Sedia Baucer Bayaran</h2>
+          <p className="mb-3 text-xs text-slate-500">Baucer disedia dahulu (belum bayar) → Pengerusi luluskan → baru tanda "Dibayar".</p>
           <form action={tambahBelanja} className="space-y-3">
             <select name="kategori_id" required className="inp">
               {(katB.data ?? []).map((k: any) => (
@@ -113,20 +136,14 @@ export default async function KewanganPage() {
               ))}
             </select>
             <input name="jumlah" type="number" step="0.01" min="0.01" placeholder="Jumlah (RM)" required className="inp" />
-            <input name="keterangan" placeholder="Keterangan / butiran" required className="inp" />
+            <input name="keterangan" placeholder="Keterangan / butiran perbelanjaan" required className="inp" />
             <input name="bayar_kepada" placeholder="Bayar kepada (nama penerima)" className="inp" />
-            <div className="grid grid-cols-2 gap-3">
-              <select name="cara_bayar" className="inp">
-                {CARA_BAYAR_BELANJA.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <input name="no_rujukan_bayar" placeholder="No. rujukan bayaran" className="inp" />
-            </div>
             <label className="flex items-center gap-2 text-sm text-slate-600">
               <input type="checkbox" name="dari_khairat" /> Keluar dari tabung khairat
             </label>
             <input name="tarikh" type="date" defaultValue={hariIni()} className="inp" />
             <ButangHantar className="w-full rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-60" pendingText="Menyimpan…">
-              Simpan Perbelanjaan
+              Sedia Baucer (Menunggu Kelulusan)
             </ButangHantar>
           </form>
         </section>
@@ -176,47 +193,8 @@ export default async function KewanganPage() {
         </div>
       </section>
 
-      {/* Belanja terkini */}
-      <section className="rounded-xl bg-white shadow-sm">
-        <h2 className="border-b px-5 py-3 font-semibold text-slate-900">Perbelanjaan Terkini</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-2">Tarikh</th>
-                <th className="px-4 py-2">Kategori</th>
-                <th className="px-4 py-2">Keterangan</th>
-                <th className="px-4 py-2">Tabung</th>
-                <th className="px-4 py-2 text-right">Jumlah</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {belanja.slice(0, 15).map((b) => (
-                <tr key={b.id} className="border-b last:border-0">
-                  <td className="px-4 py-2">{tarikhMs(b.tarikh)}</td>
-                  <td className="px-4 py-2">{b.kategori?.nama}</td>
-                  <td className="px-4 py-2">{b.keterangan}</td>
-                  <td className="px-4 py-2">{b.dari_khairat ? "Khairat" : "Am"}</td>
-                  <td className="px-4 py-2 text-right font-medium text-red-600">{rm(b.jumlah)}</td>
-                  <td className="px-4 py-2 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <Link href={`/admin/kewangan/baucer/${b.id}`} target="_blank" className="text-xs font-semibold text-surau hover:underline">Baucer</Link>
-                      <form action={padamBelanja}>
-                        <input type="hidden" name="id" value={b.id} />
-                        <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {belanja.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Tiada perbelanjaan lagi.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {/* Baucer & Perbelanjaan (dengan aliran kelulusan) */}
+      <SenaraiBelanja belanja={belanja as any} bolehLulus={bolehLulus} slipUrls={slipUrls} />
 
       <style>{inpStyle}</style>
     </div>

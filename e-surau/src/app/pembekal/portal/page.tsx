@@ -5,6 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { rm, tarikhMs } from "@/lib/format";
 import { STATUS_TUNTUTAN, STATUS_PEMBEKAL } from "@/lib/pembekal";
 import TuntutanPembekalForm from "@/components/TuntutanPembekalForm";
+import ProgresTuntutan from "@/components/ProgresTuntutan";
 
 export const dynamic = "force-dynamic";
 
@@ -50,8 +51,17 @@ export default async function PembekalPortalPage() {
     const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
     return data?.signedUrl ?? null;
   }
+  // Slip bayaran (bukti pindahan dari bendahari) untuk setiap tuntutan.
   const slipMap: Record<string, string | null> = {};
-  await Promise.all(tuntutan.filter((t) => t.url_dokumen).map(async (t) => { slipMap[t.id] = await signed(t.url_dokumen); }));
+  await Promise.all(tuntutan.filter((t) => t.url_slip).map(async (t) => { slipMap[t.id] = await signed(t.url_slip); }));
+
+  // Baucer berkaitan (untuk tarikh kelulusan Pengerusi).
+  const pbIds = tuntutan.map((t) => t.perbelanjaan_id).filter(Boolean);
+  const pbMap: Record<string, any> = {};
+  if (pbIds.length) {
+    const { data: pbs } = await db.from("perbelanjaan").select("id, status, tarikh_lulus").in("id", pbIds);
+    for (const x of (pbs as any[]) ?? []) pbMap[x.id] = x;
+  }
 
   const stPb = STATUS_PEMBEKAL[p?.status] ?? STATUS_PEMBEKAL.menunggu;
 
@@ -82,38 +92,47 @@ export default async function PembekalPortalPage() {
 
       {p?.status === "lulus" && <TuntutanPembekalForm />}
 
-      <section className="rounded-xl bg-white shadow-sm">
-        <h2 className="border-b px-5 py-3 font-semibold text-slate-900">Tuntutan Saya</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-2">No.</th>
-                <th className="px-4 py-2">Tarikh</th>
-                <th className="px-4 py-2">Butiran</th>
-                <th className="px-4 py-2 text-right">Jumlah</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Slip</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tuntutan.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Tiada tuntutan lagi.</td></tr>}
-              {tuntutan.map((t) => {
-                const st = STATUS_TUNTUTAN[t.status] ?? STATUS_TUNTUTAN.baru;
-                return (
-                  <tr key={t.id} className="border-b last:border-0">
-                    <td className="px-4 py-2 font-mono text-xs">{t.no_tuntutan}</td>
-                    <td className="px-4 py-2">{tarikhMs(t.dicipta)}</td>
-                    <td className="px-4 py-2">{t.butiran}</td>
-                    <td className="px-4 py-2 text-right font-medium">{rm(t.jumlah)}</td>
-                    <td className="px-4 py-2"><span className={`rounded px-2 py-0.5 text-xs font-semibold ${st.warna}`}>{st.label}</span></td>
-                    <td className="px-4 py-2">{slipMap[t.id] ? <a href={slipMap[t.id]!} target="_blank" className="text-xs font-semibold text-surau hover:underline">Lihat</a> : "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <section className="space-y-4">
+        <h2 className="font-semibold text-slate-900">Tuntutan Saya</h2>
+        {tuntutan.length === 0 && <p className="rounded-xl bg-white p-6 text-center text-slate-400 shadow-sm">Tiada tuntutan lagi.</p>}
+        {tuntutan.map((t) => {
+          const st = STATUS_TUNTUTAN[t.status] ?? STATUS_TUNTUTAN.baru;
+          const pb = t.perbelanjaan_id ? pbMap[t.perbelanjaan_id] : null;
+          const langkah = [
+            { label: "Tuntutan dihantar", tarikh: t.dicipta, done: true },
+            { label: "Disahkan AJK", tarikh: t.tarikh_sah_ajk, done: ["disah_ajk", "diluluskan", "dibayar"].includes(t.status) },
+            { label: "Baucer disedia (Bendahari)", tarikh: t.tarikh_lulus, done: ["diluluskan", "dibayar"].includes(t.status) },
+            { label: "Diluluskan Pengerusi", tarikh: pb?.tarikh_lulus, done: pb ? ["lulus", "dibayar"].includes(pb.status) : false },
+            { label: "Bayaran selesai", tarikh: t.tarikh_bayar, done: t.status === "dibayar" },
+          ];
+          return (
+            <div key={t.id} className="rounded-xl bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-2 border-b pb-3">
+                <div>
+                  <span className="font-mono text-xs text-slate-400">{t.no_tuntutan}</span>
+                  <div className="font-semibold text-slate-900">{t.butiran}</div>
+                  <div className="text-xs text-slate-500">Dihantar: {tarikhMs(t.dicipta)}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-surau">{rm(t.jumlah)}</div>
+                  <span className={`rounded px-2 py-0.5 text-xs font-semibold ${st.warna}`}>{st.label}</span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <ProgresTuntutan langkah={langkah} ditolak={t.status === "ditolak"} sebab={t.catatan} />
+              </div>
+              {t.status === "dibayar" && (
+                <div className="mt-3 flex items-center gap-3 border-t pt-3 text-sm">
+                  <span className="text-slate-500">Bukti bayaran:</span>
+                  {slipMap[t.id]
+                    ? <a href={slipMap[t.id]!} target="_blank" rel="noreferrer" className="font-semibold text-surau hover:underline">Lihat Slip Bayaran</a>
+                    : <span className="text-slate-400">Slip belum dimuat naik</span>}
+                  {t.rujukan_bayar && <span className="text-xs text-slate-400">· Ruj: {t.rujukan_bayar}</span>}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </section>
     </div>
   );

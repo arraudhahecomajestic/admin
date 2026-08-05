@@ -4,7 +4,6 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
-import SlipTuntutanForm from "@/components/SlipTuntutanForm";
 import { rm, tarikhMs } from "@/lib/format";
 import { STATUS_TUNTUTAN, STATUS_PEMBEKAL } from "@/lib/pembekal";
 import { tetapkanStatusPembekal, sahAjk, lulusBendahari, tolakTuntutan } from "./actions";
@@ -18,12 +17,14 @@ export default async function AdminTuntutanPage() {
   if (!isPentadbir(profil) && !bolehKewangan(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
-  const [pbRes, tuRes] = await Promise.all([
+  const [pbRes, tuRes, katRes] = await Promise.all([
     db.from("pembekal").select("*").order("dicipta", { ascending: false }),
     db.from("tuntutan_bayaran").select("*, pembekal:pembekal(nama, jenis, bank, no_akaun, nama_akaun, telefon)").order("dicipta", { ascending: false }),
+    db.from("kategori_belanja").select("id, nama").order("id"),
   ]);
   const pembekal = (pbRes.data as any[]) ?? [];
   const tuntutan = (tuRes.data as any[]) ?? [];
+  const katBelanja = (katRes.data as any[]) ?? [];
 
   async function signed(path: string | null) {
     if (!path) return null;
@@ -114,13 +115,22 @@ export default async function AdminTuntutanPage() {
                   <form action={sahAjk}><input type="hidden" name="id" value={t.id} /><ButangHantar className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">✓ Sahkan</ButangHantar></form>
                 )}
                 {t.status === "disah_ajk" && boleh$ && (
-                  <form action={lulusBendahari}><input type="hidden" name="id" value={t.id} /><ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">Luluskan + Jana Baucer</ButangHantar></form>
+                  <form action={lulusBendahari} className="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={t.id} />
+                    <select name="kategori_id" required defaultValue="" className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs">
+                      <option value="" disabled>Pilih kategori belanja…</option>
+                      {katBelanja.map((k) => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                    </select>
+                    <ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">Jana Baucer</ButangHantar>
+                  </form>
                 )}
                 {t.perbelanjaan_id && (
                   <Link href={`/admin/kewangan/baucer/${t.perbelanjaan_id}`} target="_blank" className="rounded-lg border border-surau/40 px-3 py-1.5 text-xs font-semibold text-surau hover:bg-surau/10">Baucer</Link>
                 )}
-                {t.status === "diluluskan" && boleh$ && <SlipTuntutanForm id={t.id} />}
-                {t.status === "dibayar" && <span className="text-xs font-semibold text-green-700">✓ Selesai dibayar{t.rujukan_bayar ? ` · Ruj: ${t.rujukan_bayar}` : ""}</span>}
+                {t.status === "diluluskan" && (
+                  <span className="text-xs text-amber-600">Baucer dijana — luluskan Pengerusi &amp; bayar di <Link href="/admin/kewangan" className="font-semibold underline">Kewangan</Link></span>
+                )}
+                {t.status === "dibayar" && <span className="text-xs font-semibold text-green-700">Selesai dibayar{t.rujukan_bayar ? ` · Ruj: ${t.rujukan_bayar}` : ""}</span>}
                 {["baru", "disah_ajk"].includes(t.status) && (
                   <form action={tolakTuntutan} className="ml-auto"><input type="hidden" name="id" value={t.id} /><ButangHantar className="text-xs font-semibold text-red-600 hover:underline" pendingText="…">Tolak</ButangHantar></form>
                 )}
