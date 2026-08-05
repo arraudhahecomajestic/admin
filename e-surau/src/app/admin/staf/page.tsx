@@ -4,6 +4,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import AdminStafPanel from "@/components/AdminStafPanel";
 import JadualKerjaStaf from "@/components/JadualKerjaStaf";
+import KehadiranBulanan from "@/components/KehadiranBulanan";
 import { hariIni } from "@/lib/staf";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,16 @@ export default async function AdminStafPage() {
     .limit(60);
   const jadual = (jadualData as any[]) ?? [];
 
+  // Review bulanan: jadual + kehadiran untuk bulan semasa (waktu Malaysia)
+  const bulanSemasa = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).slice(0, 7);
+  const awalBln = `${bulanSemasa}-01`;
+  const akhirHari = new Date(Number(bulanSemasa.slice(0, 4)), Number(bulanSemasa.slice(5, 7)), 0).getDate();
+  const akhirBln = `${bulanSemasa}-${String(akhirHari).padStart(2, "0")}`;
+  const [{ data: jBln }, { data: kBln }] = await Promise.all([
+    db.from("staf_jadual").select("tarikh, shift, catatan, nama").gte("tarikh", awalBln).lte("tarikh", akhirBln).order("tarikh", { ascending: true }),
+    db.from("staf_kehadiran").select("tarikh, shift, masuk, keluar, nama").gte("tarikh", awalBln).lte("tarikh", akhirBln).order("tarikh", { ascending: true }),
+  ]);
+
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/staf" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} master={profil.master} />
@@ -52,6 +63,7 @@ export default async function AdminStafPage() {
         <a href="/admin/staf/gaji" className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Gaji Staf</a>
       </div>
       <JadualKerjaStaf awal={jadual} />
+      <KehadiranBulanan awal={{ bulan: bulanSemasa, jadual: (jBln as any[]) ?? [], kehadiran: (kBln as any[]) ?? [] }} />
       <AdminStafPanel kehadiran={kehadiran} tugasan={tugasan} laporan={laporan} checklist={checklist} log={log} />
     </div>
   );

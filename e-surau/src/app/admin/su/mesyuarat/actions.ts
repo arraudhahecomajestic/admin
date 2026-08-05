@@ -3,9 +3,55 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil, isPentadbir, isMaster, type Profil } from "@/lib/sesi";
+import { NAMA_SURAU } from "@/lib/tetapan";
+import { panggilAI } from "@/lib/ai";
 
 function boleh(p: Profil | null): boolean {
   return isPentadbir(p) || isMaster(p);
+}
+
+// Kemas nota kasar mesyuarat → minit yang tersusun & profesional (guna AI).
+export async function kemasMinitAI(input: {
+  tajuk?: string; jenis?: string; agenda?: string; kehadiran?: string; nota: string;
+}): Promise<{ ok: boolean; teks?: string; msg?: string }> {
+  if (!boleh(await getProfil())) return { ok: false, msg: "Tiada akses." };
+  const nota = (input.nota || "").trim();
+  if (nota.length < 10) return { ok: false, msg: "Sila taip nota/perbincangan kasar dahulu (sekurang-kurangnya beberapa ayat)." };
+
+  const sistem = `Anda pembantu setiausaha untuk ${NAMA_SURAU}. Tugas anda menyusun nota mesyuarat yang kasar/berselerak menjadi MINIT MESYUARAT yang kemas, formal dan profesional dalam Bahasa Melayu.
+
+GARIS PANDUAN:
+- Susun ikut agenda/perkara. Guna penomboran perkara (cth 1.0, 2.0) dan sub-perkara (1.1, 1.2) jika sesuai.
+- Setiap perkara: nyatakan perbincangan secara ringkas & padat, dan keputusan/ketetapan jika ada.
+- Gunakan ayat pasif formal minit (cth "Mesyuarat bersetuju…", "Dimaklumkan bahawa…", "AJK dicadangkan…").
+- JANGAN reka fakta, nama, angka atau keputusan yang tiada dalam nota. Kekalkan maklumat asal — cuma kemaskan bahasa & susunan.
+- Jika sesuatu tidak jelas, biarkan seperti adanya tanpa menambah andaian.
+- Keluarkan HANYA teks minit yang telah dikemas. Jangan tambah tajuk mesyuarat, senarai kehadiran, tandatangan, atau komen.`;
+
+  const konteks = [
+    input.tajuk ? `Tajuk: ${input.tajuk}` : "",
+    input.jenis ? `Jenis: ${input.jenis}` : "",
+    input.agenda ? `Agenda:\n${input.agenda}` : "",
+    input.kehadiran ? `Kehadiran: ${input.kehadiran.replace(/\n/g, ", ")}` : "",
+    `\nNota kasar / perbincangan untuk dikemas:\n${nota}`,
+  ].filter(Boolean).join("\n");
+
+  return panggilAI(sistem, konteks, 2000);
+}
+
+// Ambil senarai AJK (dari carta organisasi) untuk auto-isi kehadiran.
+export async function senaraiAjkKehadiran(): Promise<{ ok: boolean; teks?: string }> {
+  if (!boleh(await getProfil())) return { ok: false };
+  const db = createAdminClient();
+  const { data } = await db
+    .from("carta_organisasi")
+    .select("jawatan, nama, susunan")
+    .eq("aktif", true)
+    .order("susunan", { ascending: true });
+  const baris = ((data as any[]) ?? [])
+    .filter((c) => c.nama)
+    .map((c) => `${c.nama}${c.jawatan ? ` (${c.jawatan})` : ""}`);
+  return { ok: true, teks: baris.join("\n") };
 }
 
 export async function ciptaMesyuarat(input: {

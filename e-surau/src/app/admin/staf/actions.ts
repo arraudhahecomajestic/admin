@@ -51,6 +51,24 @@ export async function janaJadualBulan(bulan: string, corak: Record<string, strin
   return { ok: true, bil: baris.length };
 }
 
+// Ambil jadual + kehadiran untuk satu bulan (untuk review sejarah).
+export async function ambilKehadiranBulan(
+  bulan: string,
+): Promise<{ ok: boolean; jadual: any[]; kehadiran: any[]; msg?: string }> {
+  if (!bolehUrus(await getProfil())) return { ok: false, jadual: [], kehadiran: [], msg: "Tiada akses." };
+  const m = (bulan || "").match(/^(\d{4})-(\d{2})$/);
+  if (!m) return { ok: false, jadual: [], kehadiran: [], msg: "Bulan tidak sah." };
+  const akhir = new Date(Number(m[1]), Number(m[2]), 0).getDate();
+  const start = `${m[1]}-${m[2]}-01`;
+  const end = `${m[1]}-${m[2]}-${String(akhir).padStart(2, "0")}`;
+  const db = createAdminClient();
+  const [{ data: j }, { data: k }] = await Promise.all([
+    db.from("staf_jadual").select("tarikh, shift, catatan, nama").gte("tarikh", start).lte("tarikh", end).order("tarikh", { ascending: true }),
+    db.from("staf_kehadiran").select("tarikh, shift, masuk, keluar, nama").gte("tarikh", start).lte("tarikh", end).order("tarikh", { ascending: true }),
+  ]);
+  return { ok: true, jadual: (j as any[]) ?? [], kehadiran: (k as any[]) ?? [] };
+}
+
 export async function padamJadual(id: string): Promise<{ ok: boolean }> {
   if (!bolehUrus(await getProfil())) return { ok: false };
   const db = createAdminClient();

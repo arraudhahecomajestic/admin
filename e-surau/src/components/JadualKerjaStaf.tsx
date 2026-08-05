@@ -30,7 +30,8 @@ export default function JadualKerjaStaf({ awal }: { awal: Jadual[] }) {
   // Penjana bulanan
   const [bulan, setBulan] = useState("");
   const [jana, setJana] = useState(false);
-  const [corak, setCorak] = useState<Record<string, string>>({ "1": "pagi", "2": "pagi", "3": "pagi", "4": "petang", "5": "pagi", "6": "petang", "0": "petang" });
+  // Lalai: satu hari cuti mingguan (Rabu). Boleh ubah sebelum jana.
+  const [corak, setCorak] = useState<Record<string, string>>({ "1": "pagi", "2": "pagi", "3": "cuti", "4": "petang", "5": "pagi", "6": "petang", "0": "petang" });
   const setHariCorak = (wd: string, v: string) => setCorak((c) => ({ ...c, [wd]: v }));
 
   async function janaBulanan() {

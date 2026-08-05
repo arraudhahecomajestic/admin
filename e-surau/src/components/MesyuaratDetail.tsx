@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { simpanMesyuarat, padamMesyuarat, tambahTindakan, ubahStatusTindakan, padamTindakan } from "@/app/admin/su/mesyuarat/actions";
+import { simpanMesyuarat, padamMesyuarat, tambahTindakan, ubahStatusTindakan, padamTindakan, kemasMinitAI, senaraiAjkKehadiran } from "@/app/admin/su/mesyuarat/actions";
 import { JENIS_MESYUARAT, STATUS_TINDAKAN, labelStatusTindakan } from "@/lib/su";
 import { NAMA_SURAU, ALAMAT_SURAU, EMEL_SURAU, LOGO_SURAU } from "@/lib/tetapan";
 import { tarikhMs } from "@/lib/format";
@@ -14,7 +14,24 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
   const [f, setF] = useState<any>({ ...m0 });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [ai, setAi] = useState(false);
   const set = (k: string, v: any) => setF((s: any) => ({ ...s, [k]: v }));
+
+  async function isiAjk() {
+    const res = await senaraiAjkKehadiran();
+    if (res.ok && res.teks) {
+      set("kehadiran", f.kehadiran?.trim() ? `${f.kehadiran.trim()}\n${res.teks}` : res.teks);
+    } else {
+      setMsg("Tiada nama AJK dalam carta organisasi.");
+    }
+  }
+  async function kemasAI() {
+    setMsg(""); setAi(true);
+    const res = await kemasMinitAI({ tajuk: f.tajuk, jenis: f.jenis, agenda: f.agenda, kehadiran: f.kehadiran, nota: f.minit || "" });
+    setAi(false);
+    if (!res.ok) { setMsg(res.msg ?? "AI gagal."); return; }
+    set("minit", res.teks || "");
+  }
 
   async function simpan() {
     setBusy(true); setMsg("");
@@ -64,9 +81,24 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
             <label className="text-sm text-slate-600">Tempat<input value={f.tempat ?? ""} onChange={(e) => set("tempat", e.target.value)} className="inp" /></label>
             <label className="text-sm text-slate-600">Pengerusi<input value={f.pengerusi ?? ""} onChange={(e) => set("pengerusi", e.target.value)} className="inp" /></label>
             <label className="text-sm text-slate-600">Pencatat<input value={f.pencatat ?? ""} onChange={(e) => set("pencatat", e.target.value)} className="inp" /></label>
-            <label className="text-sm text-slate-600 sm:col-span-2">Kehadiran (satu nama satu baris)<textarea rows={4} value={f.kehadiran ?? ""} onChange={(e) => set("kehadiran", e.target.value)} className="inp" /></label>
+            <div className="sm:col-span-2">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-sm text-slate-600">Kehadiran (satu nama satu baris)</span>
+                <button type="button" onClick={isiAjk} className="rounded-lg border border-surau/40 bg-surau/5 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/10">Isi nama AJK</button>
+              </div>
+              <textarea rows={4} value={f.kehadiran ?? ""} onChange={(e) => set("kehadiran", e.target.value)} className="inp" placeholder="Cth: Ahmad bin Ali (Pengerusi)&#10;— atau tekan 'Isi nama AJK'" />
+            </div>
             <label className="text-sm text-slate-600 sm:col-span-2">Agenda (satu perkara satu baris)<textarea rows={4} value={f.agenda ?? ""} onChange={(e) => set("agenda", e.target.value)} className="inp" /></label>
-            <label className="text-sm text-slate-600 sm:col-span-2">Minit / Perbincangan<textarea rows={10} value={f.minit ?? ""} onChange={(e) => set("minit", e.target.value)} className="inp" /></label>
+            <div className="sm:col-span-2">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-sm text-slate-600">Minit / Perbincangan</span>
+                <button type="button" onClick={kemasAI} disabled={ai || busy} className="rounded-lg border border-surau/40 bg-surau/5 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/10 disabled:opacity-60" title="Tukar nota kasar jadi minit kemas">
+                  {ai ? "AI sedang mengemas…" : "Kemas dengan AI"}
+                </button>
+              </div>
+              <textarea rows={10} value={f.minit ?? ""} onChange={(e) => set("minit", e.target.value)} className="inp" placeholder="Taip nota kasar semasa mesyuarat di sini, kemudian tekan 'Kemas dengan AI' untuk susun jadi minit rasmi." />
+              <p className="mt-1 text-xs text-slate-400">Tip: taip poin kasar semasa mesyuarat, tekan "Kemas dengan AI", kemudian semak & simpan.</p>
+            </div>
           </div>
           <div className="mt-3 flex items-center gap-3">
             <button onClick={simpan} disabled={busy} className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">{busy ? "…" : "Simpan"}</button>
