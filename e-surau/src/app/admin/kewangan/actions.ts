@@ -2,16 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, bolehKewangan, isPentadbir, isMaster, type Profil } from "@/lib/sesi";
+import { getProfil, bolehKewanganModul, isAdmin, type Profil } from "@/lib/sesi";
 
 // Kelulusan bayaran = Pengerusi/Setiausaha (pentadbir) atau master — bukan bendahari sahaja.
 function bolehLulusBayaran(p: Profil | null): boolean {
-  return isPentadbir(p) || isMaster(p);
+  return isAdmin(p);
 }
 const namaProfil = (p: Profil | null) => p?.nama ?? p?.emel ?? "admin";
 
 export async function tambahKutipan(formData: FormData) {
-  if (!bolehKewangan(await getProfil())) return;
+  if (!bolehKewanganModul(await getProfil())) return;
   const db = createAdminClient();
   const ahli = String(formData.get("ahli_id") ?? "");
   await db.from("kutipan").insert({
@@ -29,7 +29,7 @@ export async function tambahKutipan(formData: FormData) {
 // Sedia baucer bayaran (BELUM dibayar) → status 'menunggu' untuk kelulusan Pengerusi.
 export async function tambahBelanja(formData: FormData) {
   const p = await getProfil();
-  if (!bolehKewangan(p)) return;
+  if (!bolehKewanganModul(p)) return;
   const db = createAdminClient();
   await db.from("perbelanjaan").insert({
     kategori_id: Number(formData.get("kategori_id")),
@@ -73,7 +73,7 @@ export async function tolakBelanja(id: string, sebab: string): Promise<{ ok: boo
 // Bendahari tanda sudah dibayar (selepas kelulusan) + isi butiran bayaran.
 export async function tandaBayarBelanja(id: string, input: { cara_bayar?: string; no_rujukan_bayar?: string; tarikh_bayar?: string; url_slip?: string }): Promise<{ ok: boolean; msg?: string }> {
   const p = await getProfil();
-  if (!bolehKewangan(p)) return { ok: false, msg: "Tiada akses." };
+  if (!bolehKewanganModul(p)) return { ok: false, msg: "Tiada akses." };
   const db = createAdminClient();
   const { error } = await db.from("perbelanjaan").update({
     status: "dibayar",
@@ -98,7 +98,7 @@ export async function tandaBayarBelanja(id: string, input: { cara_bayar?: string
 }
 
 export async function padamBelanjaId(id: string): Promise<{ ok: boolean }> {
-  if (!bolehKewangan(await getProfil())) return { ok: false };
+  if (!bolehKewanganModul(await getProfil())) return { ok: false };
   const db = createAdminClient();
   await db.from("perbelanjaan").delete().eq("id", id);
   revalidatePath("/admin/kewangan");
@@ -122,7 +122,7 @@ export type BarisCsv = { jenis: string; tarikh: string; kategori: string; jumlah
 export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean; masuk: number; keluar: number; jumMasuk: number; jumKeluar: number; gagal: number; ralat: string[]; msg?: string }> {
   const p = await getProfil();
   const kosong = { ok: false, masuk: 0, keluar: 0, jumMasuk: 0, jumKeluar: 0, gagal: 0, ralat: [] as string[] };
-  if (!bolehKewangan(p)) return { ...kosong, msg: "Tiada akses." };
+  if (!bolehKewanganModul(p)) return { ...kosong, msg: "Tiada akses." };
   if (!Array.isArray(rows) || rows.length === 0) return { ...kosong, msg: "Fail kosong atau tiada baris data." };
 
   const db = createAdminClient();
@@ -193,7 +193,7 @@ export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean
 }
 
 export async function padamKutipan(formData: FormData) {
-  if (!bolehKewangan(await getProfil())) return;
+  if (!bolehKewanganModul(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();
@@ -202,7 +202,7 @@ export async function padamKutipan(formData: FormData) {
 }
 
 export async function padamBelanja(formData: FormData) {
-  if (!bolehKewangan(await getProfil())) return;
+  if (!bolehKewanganModul(await getProfil())) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();

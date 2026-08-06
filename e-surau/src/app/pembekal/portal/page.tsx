@@ -75,6 +75,9 @@ export default async function PembekalPortalPage() {
         </div>
         <div className="flex items-center gap-3">
           <span className={`rounded px-2 py-0.5 text-xs font-semibold ${stPb.warna}`}>{stPb.label}</span>
+          {profil.ahli_id
+            ? <Link href="/ahli" className="rounded-lg border border-surau/40 px-3 py-1 text-sm font-medium text-surau hover:bg-surau/10">Portal Ahli</Link>
+            : <Link href="/daftar" className="rounded-lg border border-surau/40 px-3 py-1 text-sm font-medium text-surau hover:bg-surau/10">Daftar Ahli Kariah</Link>}
           <form action="/masuk/logout" method="post"><button className="text-sm text-slate-500 hover:underline">Log keluar</button></form>
         </div>
       </div>

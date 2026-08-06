@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir, bolehKewangan, bolehLulusVendor } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehKewangan, bolehKewanganModul, bolehLulusVendor } from "@/lib/sesi";
 
 function segar() {
   revalidatePath("/admin/tuntutan");
@@ -41,7 +41,7 @@ export async function sahAjk(formData: FormData) {
 // 'menunggu' supaya masuk aliran kelulusan Pengerusi di Kewangan.
 export async function lulusBendahari(formData: FormData) {
   const p = await getProfil();
-  if (!bolehKewangan(p)) return;
+  if (!bolehKewanganModul(p)) return;
   const id = String(formData.get("id") ?? "");
   const katPilih = Number(formData.get("kategori_id") ?? 0);
   if (!id) return;

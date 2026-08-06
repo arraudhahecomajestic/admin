@@ -6,17 +6,21 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { buatT, bahasaCookieKlien, type Bahasa } from "@/lib/i18n";
 import { pautkanPembekal } from "@/app/pembekal/portal/actions";
+import { pautkanAhli } from "@/app/daftar/actions";
 
 async function destIkutPeranan(supabase: any): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return "";
-  const { data: prof } = await supabase.from("profil").select("peranan, pembekal_id").eq("id", user.id).single();
+  const { data: prof } = await supabase.from("profil").select("peranan, pembekal_id, ahli_id").eq("id", user.id).single();
   if (prof?.peranan === "kerani") return "/kerani";
   if (prof?.peranan === "bendahari") return "/admin/kewangan";
   if (prof?.peranan === "imam") return "/admin/tahlil";
-  if (prof && ["admin", "ajk"].includes(prof.peranan)) return "/admin";
-  // Pembekal — cuba auto-sambung ikut e-mel jika belum dipautkan.
+  if (prof?.peranan === "admin") return "/admin";
+  if (prof?.peranan === "ajk") return "/admin/program";
+  // Auto-sambung ikut e-mel jika belum dipautkan (boleh jadi ahli & pembekal serentak).
+  const aid = prof?.ahli_id ?? (await pautkanAhli());
   const pid = prof?.pembekal_id ?? (await pautkanPembekal());
+  if (aid) return "/ahli";           // ahli kariah → portal ahli (boleh ke portal pembekal dari sana)
   if (pid) return "/pembekal/portal";
   return "/ahli";
 }

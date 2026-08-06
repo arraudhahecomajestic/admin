@@ -1,6 +1,26 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabaseAdmin";
+import { getProfil } from "@/lib/sesi";
+
+// Auto-sambung akaun login → rekod ahli kariah ikut e-mel yang sama.
+// Membolehkan seseorang (cth pembekal sedia ada) menjadi ahli kariah tanpa
+// perlu akaun baharu — rekod ahli dipaut ke akaun sedia ada.
+export async function pautkanAhli(): Promise<string | null> {
+  const p = await getProfil();
+  if (!p) return null;
+  if (p.ahli_id) return p.ahli_id;
+  if (!p.emel) return null;
+  const db = createAdminClient();
+  const { data } = await db
+    .from("ahli_kariah")
+    .select("id")
+    .eq("emel", p.emel.toLowerCase())
+    .limit(1);
+  const id = (data as any[])?.[0]?.id ?? null;
+  if (id) await db.from("profil").update({ ahli_id: id }).eq("id", p.id);
+  return id;
+}
 
 // Semakan pertama: adakah No. KP ini sudah wujud dalam rekod ahli kariah?
 export async function semakKpDaftar(noKp: string): Promise<{

@@ -13,7 +13,32 @@ export default function SetKataLaluanPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => { if (data.session) setSesiOk(true); });
+    (async () => {
+      try {
+        const url = new URL(window.location.href);
+        const qp = url.searchParams;
+        const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+        const token_hash = qp.get("token_hash");
+        const type = qp.get("type");
+        const code = qp.get("code");
+        // 1) Aliran token_hash (paling mantap — berfungsi merentas pelayar/in-app browser)
+        if (token_hash && type) {
+          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any });
+          if (!error) setSesiOk(true);
+        }
+        // 2) Aliran PKCE (?code=) — bila dibuka dalam pelayar sama
+        else if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error) setSesiOk(true);
+        }
+        // 3) Aliran implisit (#access_token) — pustaka auto-set; sahkan di bawah
+        else if (hash.get("access_token")) {
+          // ditangani oleh detectSessionInUrl
+        }
+      } catch { /* abai */ }
+      const { data } = await supabase.auth.getSession();
+      if (data.session) setSesiOk(true);
+    })();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setSesiOk(true);
     });

@@ -4,6 +4,7 @@ import { PerluMasuk } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { rm, tarikhMs } from "@/lib/format";
 import { sertaiKhairat } from "./actions";
+import { pautkanAhli } from "@/app/daftar/actions";
 import PautRekodForm from "@/components/PautRekodForm";
 import BayarKhairatButton from "@/components/BayarKhairatButton";
 import ButangHantar from "@/components/ButangHantar";
@@ -20,6 +21,12 @@ export default async function AhliPage() {
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
 
+  // Cuba auto-paut ke rekod ahli ikut e-mel (cth pembekal yang baru daftar kariah).
+  if (!profil.ahli_id) {
+    const aid = await pautkanAhli();
+    if (aid) profil.ahli_id = aid;
+  }
+
   // Akaun belum dipaut ke rekod ahli — beri cara paut sendiri guna No. KP
   if (!profil.ahli_id) {
     return (
@@ -30,6 +37,13 @@ export default async function AhliPage() {
         </p>
 
         <PautRekodForm />
+
+        {profil.pembekal_id && (
+          <div className="mt-4 rounded-lg border border-surau/30 bg-surau/5 p-3 text-center text-sm">
+            <p className="text-slate-600">Anda log masuk sebagai pembekal.</p>
+            <Link href="/pembekal/portal" className="mt-2 inline-block rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Ke Portal Pembekal →</Link>
+          </div>
+        )}
 
         {["admin", "bendahari", "ajk"].includes(profil.peranan) && (
           <div className="mt-5 border-t pt-4 text-center">

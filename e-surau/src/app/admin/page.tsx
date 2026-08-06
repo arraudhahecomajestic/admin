@@ -1,4 +1,5 @@
-import { getProfil, isPentadbir, isMaster } from "@/lib/sesi";
+import { redirect } from "next/navigation";
+import { getProfil, isPentadbir, isMaster, isAdmin } from "@/lib/sesi";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
@@ -12,7 +13,10 @@ export default async function AdminPage() {
 
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!isPentadbir(profil)) return <TiadaAkses />;
+  if (!isAdmin(profil)) {
+    if (profil.peranan === "ajk") redirect("/admin/program");
+    return <TiadaAkses />;
+  }
 
   // Papar IC & Telefon: Admin (peranan) atau Master (super admin) sahaja.
   const bolehPapar = profil.peranan === "admin" || isMaster(profil);

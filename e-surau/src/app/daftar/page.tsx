@@ -288,7 +288,10 @@ export default function DaftarPage() {
         },
       });
       if (eSignup) {
-        mesej = `Permohonan anda telah direkod, tetapi akaun portal tidak dapat dicipta — ${eSignup.message}. Sila pastikan e-mel anda betul, atau hubungi admin surau.`;
+        const dah = eSignup.message?.toLowerCase().includes("already");
+        mesej = dah
+          ? "Permohonan ahli anda telah direkod. Oleh kerana e-mel ini sudah mempunyai akaun (contohnya akaun pembekal), akaun sedia ada anda akan DIPAUTKAN secara automatik sebagai ahli kariah apabila anda log masuk semula. Sila log masuk seperti biasa."
+          : `Permohonan anda telah direkod, tetapi akaun portal tidak dapat dicipta — ${eSignup.message}. Sila pastikan e-mel anda betul, atau hubungi admin surau.`;
       }
     }
     setHantar(false);

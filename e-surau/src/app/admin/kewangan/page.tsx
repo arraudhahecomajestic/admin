@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, bolehKewangan, isPentadbir, isMaster } from "@/lib/sesi";
+import { getProfil, bolehKewangan, isPentadbir, isMaster, bolehKewanganModul } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -19,7 +19,7 @@ export default async function KewanganPage() {
     return <Perlu />;
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!bolehKewangan(profil)) return <TiadaAkses />;
+  if (!bolehKewanganModul(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
   const [katK, katB, kutipanRes, belanjaRes, tuntutanRes, ahliRes] = await Promise.all([

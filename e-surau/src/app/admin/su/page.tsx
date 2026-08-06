@@ -1,4 +1,4 @@
-import { getProfil, isPentadbir, isMaster } from "@/lib/sesi";
+import { getProfil, isPentadbir, isMaster, isAdmin } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import AdminNav from "@/components/AdminNav";
 import Link from "next/link";
@@ -19,7 +19,7 @@ const KAD = [
 export default async function PanelSetiausahaPage() {
   const profil = await getProfil();
   if (!profil) return <PerluMasuk />;
-  if (!(isPentadbir(profil) || isMaster(profil))) return <TiadaAkses />;
+  if (!isAdmin(profil)) return <TiadaAkses />;
 
   return (
     <div className="space-y-6">

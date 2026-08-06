@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir, isMaster, type Profil } from "@/lib/sesi";
+import { getProfil, isAdmin, type Profil } from "@/lib/sesi";
 import { NAMA_SURAU } from "@/lib/tetapan";
 import { panggilAI } from "@/lib/ai";
 
 function boleh(p: Profil | null): boolean {
-  return isPentadbir(p) || isMaster(p);
+  return isAdmin(p);
 }
 
 // Kemas nota kasar mesyuarat → minit yang tersusun & profesional (guna AI).

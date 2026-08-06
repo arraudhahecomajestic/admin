@@ -52,7 +52,37 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
     );
   }
 
-  // Admin / AJK / Master — berkumpul
+  // AJK (bukan master) — akses terhad: tiada ahli, kewangan, sewaan/aset, staf, panel SU
+  if (peranan === "ajk" && !master) {
+    const kumpAjk: Kump[] = [
+      { label: "Aktiviti", items: [
+        { href: "/admin/program", label: "Program" },
+        { href: "/admin/tahlil", label: "Tahlil" },
+        { href: "/admin/vendor", label: "Vendor" },
+      ] },
+      { label: "Khairat & Tuntutan", items: [
+        { href: "/admin/khairat", label: "Khairat" },
+        { href: "/admin/tuntutan", label: "Tuntutan (sah)" },
+      ] },
+      { label: "Kandungan", items: [
+        { href: "/admin/pengumuman", label: "Pengumuman" },
+        { href: "/admin/maklum-balas", label: "Maklum Balas" },
+        { href: "/admin/kandungan", label: "Kandungan Surau" },
+      ] },
+      { label: "Keahlian", items: [
+        { href: "/admin/kariah-kawasan", label: "Kawasan / Fasa" },
+      ] },
+    ];
+    return (
+      <Bar nama={nama}>
+        <nav className="flex flex-wrap items-center gap-1">
+          {kumpAjk.map((k) => <TabDropdown key={k.label} kump={k} aktif={aktif} />)}
+        </nav>
+      </Bar>
+    );
+  }
+
+  // Admin / Master — berkumpul (penuh)
   const kumpulan: Kump[] = [
     { label: "Keahlian", items: KEAHLIAN },
     { label: "Kewangan", items: KEWANGAN },

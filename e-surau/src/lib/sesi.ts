@@ -51,12 +51,23 @@ export function bolehLulusVendor(p: Profil | null): boolean {
   return !!p && (["admin", "bendahari"].includes(p.peranan) || p.master === true);
 }
 
-// SU / Pengerusi / AJK — pentadbir penuh (permohonan, jejak, cetak, dll).
+// SU / Pengerusi / AJK — pentadbir am (program, khairat, kandungan, dll).
 export function isPentadbir(p: Profil | null): boolean {
   return !!p && ["admin", "ajk"].includes(p.peranan);
 }
 
-// Boleh guna modul Kewangan (kutipan & belanja) — termasuk Bendahari.
+// Pentadbir PENUH — Admin / Master sahaja (TIDAK termasuk AJK).
+// Untuk modul terhad: pengurusan ahli, sewaan/aset, staf & gaji, panel SU.
+export function isAdmin(p: Profil | null): boolean {
+  return !!p && (p.peranan === "admin" || p.master === true);
+}
+
+// Modul Kewangan (kutipan/belanja/baucer) — Admin & Bendahari sahaja (bukan AJK).
+export function bolehKewanganModul(p: Profil | null): boolean {
+  return !!p && (["admin", "bendahari"].includes(p.peranan) || p.master === true);
+}
+
+// Semakan/sah tuntutan (langkah "Sah AJK") — masih termasuk AJK.
 export function bolehKewangan(p: Profil | null): boolean {
   return !!p && ["admin", "ajk", "bendahari"].includes(p.peranan);
 }
