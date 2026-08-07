@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { daftarProgramBerbayar } from "@/app/program/actions";
+import TermaProgram from "@/components/TermaProgram";
 
 export default function BorangDaftarProgram({ programId, yuran }: { programId: string; yuran: number }) {
   const [f, setF] = useState<any>({
@@ -63,10 +64,12 @@ export default function BorangDaftarProgram({ programId, yuran }: { programId: s
         <textarea rows={2} placeholder="Maklumat kesihatan / alahan / ubat (jika ada). Tulis 'Tiada' jika tiada." className="inp" value={f.maklumat_kesihatan} onChange={(e) => set("maklumat_kesihatan", e.target.value)} />
       </fieldset>
 
+      <TermaProgram />
+
       <div className="space-y-2 rounded-lg bg-white p-3">
         <label className="flex items-start gap-2 text-sm text-slate-700">
           <input type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          <span>Saya ibu bapa/penjaga <b>memberi kebenaran</b> anak saya menyertai program ini, dan mengesahkan maklumat di atas adalah benar. *</span>
+          <span>Saya ibu bapa/penjaga telah <b>membaca &amp; bersetuju</b> dengan Terma, Kebenaran &amp; Penepian Liabiliti di atas, <b>memberi kebenaran</b> anak saya menyertai program ini, dan mengesahkan maklumat yang diberi benar. *</span>
         </label>
         <label className="flex items-start gap-2 text-sm text-slate-700">
           <input type="checkbox" className="mt-1" checked={foto} onChange={(e) => setFoto(e.target.checked)} />

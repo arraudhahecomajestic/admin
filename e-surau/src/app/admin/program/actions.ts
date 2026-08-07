@@ -53,6 +53,7 @@ export async function tambahProgram(formData: FormData) {
     had_peserta: formData.get("had_peserta") ? Number(formData.get("had_peserta")) : null,
     berbayar: String(formData.get("berbayar") ?? "") === "on",
     yuran: formData.get("yuran") ? Number(formData.get("yuran")) : 0,
+    ruj_bayar: String(formData.get("ruj_bayar") ?? "").trim() || null,
     rsvp_dibuka: String(formData.get("rsvp_dibuka") ?? "") === "on",
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
   });
@@ -76,6 +77,7 @@ export async function kemasProgram(formData: FormData) {
     had_peserta: formData.get("had_peserta") ? Number(formData.get("had_peserta")) : null,
     berbayar: String(formData.get("berbayar") ?? "") === "on",
     yuran: formData.get("yuran") ? Number(formData.get("yuran")) : 0,
+    ruj_bayar: String(formData.get("ruj_bayar") ?? "").trim() || null,
     rsvp_dibuka: String(formData.get("rsvp_dibuka") ?? "") === "on",
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
   }).eq("id", id);

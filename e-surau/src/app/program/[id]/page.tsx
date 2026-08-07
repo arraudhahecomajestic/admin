@@ -5,7 +5,7 @@ import ButangHantar from "@/components/ButangHantar";
 import { rsvpProgram } from "../actions";
 import BorangDaftarProgram from "@/components/BorangDaftarProgram";
 import BorangDaftarProgramManual from "@/components/BorangDaftarProgramManual";
-import { chipConfigured } from "@/lib/chip";
+import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,9 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
     jumHadir = ((pd as any[]) ?? []).reduce((s, r) => s + Number(r.bilangan || 1), 0);
   }
   const penuh = p.had_peserta ? jumHadir >= Number(p.had_peserta) : false;
-  const bayaranOnline = chipConfigured();
+  // Suis 'bayaran_online' (tetapan sistem) — lalai OFF: guna borang bayar manual
+  // + upload resit. Tukar ON dalam Tetapan hanya bila CHIP betul-betul go live.
+  const bayaranOnline = await bayaranOnlineDibuka();
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -80,7 +82,7 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
             p.berbayar ? (
               bayaranOnline
                 ? <BorangDaftarProgram programId={p.id} yuran={Number(p.yuran || 0)} />
-                : <BorangDaftarProgramManual programId={p.id} yuran={Number(p.yuran || 0)} />
+                : <BorangDaftarProgramManual programId={p.id} yuran={Number(p.yuran || 0)} tajuk={p.tajuk} rujBayar={p.ruj_bayar} />
             ) : (
               <form action={rsvpProgram} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-4">
                 <div className="text-sm font-semibold text-slate-800">{searchParams.rsvp === "ok" ? "Kemas kini kehadiran anda" : "Sahkan Kehadiran (RSVP)"}</div>

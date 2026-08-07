@@ -75,6 +75,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
           <input name="masa" defaultValue={p.masa ?? ""} placeholder="Masa (cth: 8:30 malam)" className="inp" />
           <input name="had_peserta" type="number" min="1" defaultValue={p.had_peserta ?? ""} placeholder="Had peserta (kosong = tiada had)" className="inp" />
           <input name="yuran" type="number" min="0" step="0.01" defaultValue={p.yuran ?? ""} placeholder="Yuran RM (0 = percuma)" className="inp" />
+          <input name="ruj_bayar" defaultValue={p.ruj_bayar ?? ""} placeholder="Rujukan bayaran (cth: Program Memanah SAR2026)" className="inp sm:col-span-2" />
           <textarea name="keterangan" rows={3} defaultValue={p.keterangan ?? ""} placeholder="Keterangan / butiran program" className="inp sm:col-span-2" />
           <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="berbayar" defaultChecked={p.berbayar} /> Program berbayar (borang pendaftaran + bayar manual/upload resit; auto CHIP bila go live)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="rsvp_dibuka" defaultChecked={p.rsvp_dibuka} /> Buka pendaftaran (RSVP)</label>

@@ -4,8 +4,9 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { daftarProgramManual } from "@/app/program/actions";
 import { BANK_SURAU } from "@/lib/tetapan";
+import TermaProgram from "@/components/TermaProgram";
 
-export default function BorangDaftarProgramManual({ programId, yuran }: { programId: string; yuran: number }) {
+export default function BorangDaftarProgramManual({ programId, yuran, tajuk, rujBayar }: { programId: string; yuran: number; tajuk?: string; rujBayar?: string }) {
   const [f, setF] = useState<any>({ nama_penjaga: "", telefon_penjaga: "", emel: "", bilangan: 1, senarai_anak: "", maklumat_kesihatan: "" });
   const [urlResit, setUrlResit] = useState("");
   const [muat, setMuat] = useState(false);
@@ -102,7 +103,9 @@ export default function BorangDaftarProgramManual({ programId, yuran }: { progra
             <div className="mt-1 text-slate-700">{BANK_SURAU.bank}</div>
             <div className="font-mono text-base font-bold text-slate-900">{BANK_SURAU.no_akaun}</div>
             <div className="text-slate-600">{BANK_SURAU.nama_akaun}</div>
-            <div className="mt-1 text-[11px] text-slate-500">Rujukan pindahan: nama anak / no. telefon anda.</div>
+            <div className="mt-2 rounded-md bg-amber-50 p-2 text-[12px] text-amber-800">
+              <b>Penting:</b> Semasa pindahan, letak rujukan/keterangan: <b>{(rujBayar || tajuk || "Yuran Program").trim()}</b>
+            </div>
           </div>
         </div>
         <div>
@@ -116,10 +119,12 @@ export default function BorangDaftarProgramManual({ programId, yuran }: { progra
         </div>
       </fieldset>
 
+      <TermaProgram />
+
       <div className="space-y-2 rounded-lg bg-white p-3">
         <label className="flex items-start gap-2 text-sm text-slate-700">
           <input type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          <span>Saya ibu bapa/penjaga <b>memberi kebenaran</b> anak saya menyertai program ini, dan mengesahkan maklumat di atas benar. *</span>
+          <span>Saya ibu bapa/penjaga telah <b>membaca &amp; bersetuju</b> dengan Terma, Kebenaran &amp; Penepian Liabiliti di atas, <b>memberi kebenaran</b> anak saya menyertai program ini, dan mengesahkan maklumat yang diberi adalah benar. *</span>
         </label>
         <label className="flex items-start gap-2 text-sm text-slate-700">
           <input type="checkbox" className="mt-1" checked={foto} onChange={(e) => setFoto(e.target.checked)} />

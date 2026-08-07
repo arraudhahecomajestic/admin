@@ -37,6 +37,7 @@ export default async function ProgramAdminPage() {
           <input name="masa" placeholder="Masa (cth: 8:30 malam)" className="inp" />
           <input name="had_peserta" type="number" min="1" placeholder="Had peserta (kosong = tiada had)" className="inp" />
           <input name="yuran" type="number" min="0" step="0.01" placeholder="Yuran RM (0 = percuma)" className="inp" />
+          <input name="ruj_bayar" placeholder="Rujukan bayaran (cth: Program Memanah SAR2026)" className="inp sm:col-span-2" />
           <KeteranganProgramAI />
           <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="berbayar" /> Program berbayar (borang pendaftaran + bayar manual/upload resit; auto CHIP bila go live)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="rsvp_dibuka" defaultChecked /> Buka pendaftaran (RSVP)</label>
