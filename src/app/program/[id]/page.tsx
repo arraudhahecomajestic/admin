@@ -4,6 +4,8 @@ import { tarikhMs } from "@/lib/format";
 import ButangHantar from "@/components/ButangHantar";
 import { rsvpProgram } from "../actions";
 import BorangDaftarProgram from "@/components/BorangDaftarProgram";
+import BorangDaftarProgramManual from "@/components/BorangDaftarProgramManual";
+import { chipConfigured } from "@/lib/chip";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +26,11 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
   const p: any = data;
   let jumHadir = (p.rsvp ?? []).reduce((s: number, r: any) => s + Number(r.bil_orang || 0), 0);
   if (p.berbayar) {
-    const { data: pd } = await db.from("program_pendaftaran").select("id").eq("program_id", p.id).eq("status_bayar", "dibayar");
-    jumHadir = ((pd as any[]) ?? []).length;
+    const { data: pd } = await db.from("program_pendaftaran").select("bilangan").eq("program_id", p.id).in("status_bayar", ["dibayar", "menunggu_sah"]);
+    jumHadir = ((pd as any[]) ?? []).reduce((s, r) => s + Number(r.bilangan || 1), 0);
   }
   const penuh = p.had_peserta ? jumHadir >= Number(p.had_peserta) : false;
+  const bayaranOnline = chipConfigured();
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -75,7 +78,9 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
 
           {p.rsvp_dibuka && !penuh ? (
             p.berbayar ? (
-              <BorangDaftarProgram programId={p.id} yuran={Number(p.yuran || 0)} />
+              bayaranOnline
+                ? <BorangDaftarProgram programId={p.id} yuran={Number(p.yuran || 0)} />
+                : <BorangDaftarProgramManual programId={p.id} yuran={Number(p.yuran || 0)} />
             ) : (
               <form action={rsvpProgram} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-4">
                 <div className="text-sm font-semibold text-slate-800">{searchParams.rsvp === "ok" ? "Kemas kini kehadiran anda" : "Sahkan Kehadiran (RSVP)"}</div>

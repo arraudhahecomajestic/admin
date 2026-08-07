@@ -110,6 +110,82 @@ export async function daftarProgramBerbayar(data: {
   return { ok: true, checkout_url: purchase.checkout_url };
 }
 
+// Pendaftaran program BERBAYAR secara MANUAL (CHIP belum go live).
+// Parent bayar sendiri (pindahan bank) → isi borang ringkas + upload resit →
+// status 'menunggu_sah' untuk disahkan urus setia.
+export async function daftarProgramManual(data: {
+  program_id?: string;
+  nama_penjaga?: string;
+  telefon_penjaga?: string;
+  emel?: string;
+  bilangan?: string | number;
+  senarai_anak?: string;
+  maklumat_kesihatan?: string;
+  url_resit?: string;
+  kebenaran_ibubapa?: boolean;
+  kebenaran_foto?: boolean;
+}): Promise<{ ok: boolean; msg?: string }> {
+  const program_id = String(data.program_id ?? "");
+  const penjaga = (data.nama_penjaga ?? "").trim();
+  const telefon = (data.telefon_penjaga ?? "").trim();
+  const emel = (data.emel ?? "").trim().toLowerCase();
+  const bilangan = Math.max(1, Math.floor(Number(data.bilangan) || 1));
+  const senarai = (data.senarai_anak ?? "").trim();
+
+  if (!program_id) return { ok: false, msg: "Program tidak sah." };
+  if (!penjaga || !telefon) return { ok: false, msg: "Sila isi nama & no. telefon ibu bapa/penjaga." };
+  if (!emel || !emel.includes("@")) return { ok: false, msg: "Sila isi e-mel yang sah untuk pengesahan." };
+  if (!senarai) return { ok: false, msg: "Sila isi nama anak yang didaftarkan." };
+  if (!data.url_resit) return { ok: false, msg: "Sila muat naik resit/bukti bayaran." };
+  if (!data.kebenaran_ibubapa) return { ok: false, msg: "Kebenaran ibu bapa/penjaga diperlukan untuk menyertai." };
+
+  const db = createAdminClient();
+  const { data: pr } = await db.from("program").select("*").eq("id", program_id).single();
+  const p: any = pr;
+  if (!p) return { ok: false, msg: "Program tidak dijumpai." };
+  if (!p.berbayar) return { ok: false, msg: "Program ini bukan pendaftaran berbayar." };
+  if (!p.rsvp_dibuka) return { ok: false, msg: "Pendaftaran ditutup." };
+
+  // Had peserta — kira bilangan yang sudah dibayar + menunggu pengesahan.
+  if (p.had_peserta) {
+    const { data: sedia } = await db
+      .from("program_pendaftaran")
+      .select("bilangan, status_bayar")
+      .eq("program_id", program_id)
+      .in("status_bayar", ["dibayar", "menunggu_sah"]);
+    const terisi = ((sedia as any[]) ?? []).reduce((s, r) => s + Number(r.bilangan || 1), 0);
+    if (terisi + bilangan > Number(p.had_peserta)) {
+      const baki = Math.max(0, Number(p.had_peserta) - terisi);
+      return { ok: false, msg: baki > 0 ? `Maaf, tinggal ${baki} tempat sahaja.` : "Maaf, pendaftaran telah penuh." };
+    }
+  }
+
+  const yuran = Number(p.yuran || 0);
+  const jumlah = yuran * bilangan;
+  const namaPertama = senarai.split("\n").map((x) => x.trim()).filter(Boolean)[0] || penjaga;
+
+  const { error } = await db.from("program_pendaftaran").insert({
+    program_id,
+    nama_peserta: namaPertama,
+    senarai_anak: senarai,
+    bilangan,
+    nama_penjaga: penjaga,
+    telefon_penjaga: telefon,
+    emel,
+    maklumat_kesihatan: (data.maklumat_kesihatan ?? "").trim() || null,
+    kebenaran_ibubapa: !!data.kebenaran_ibubapa,
+    kebenaran_foto: !!data.kebenaran_foto,
+    url_resit: data.url_resit,
+    status_bayar: "menunggu_sah",
+    jumlah,
+  });
+  if (error) return { ok: false, msg: "Ralat menyimpan pendaftaran: " + error.message };
+
+  revalidatePath(`/program/${program_id}`);
+  revalidatePath("/admin/program");
+  return { ok: true };
+}
+
 export async function rsvpProgram(formData: FormData) {
   const program_id = String(formData.get("program_id") ?? "");
   const nama = String(formData.get("nama") ?? "").trim();

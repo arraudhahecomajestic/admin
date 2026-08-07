@@ -97,3 +97,28 @@ export async function padamProgram(formData: FormData) {
   revalidatePath("/program");
   revalidatePath("/");
 }
+
+// Urus setia sahkan bayaran manual (resit disemak) → status 'dibayar'.
+export async function sahkanPendaftaran(formData: FormData) {
+  if (!isPentadbir(await getProfil())) return;
+  const id = String(formData.get("id") ?? "");
+  const programId = String(formData.get("program_id") ?? "");
+  if (!id) return;
+  const db = createAdminClient();
+  await db.from("program_pendaftaran").update({ status_bayar: "dibayar", sebab_tolak: null }).eq("id", id);
+  revalidatePath(`/admin/program/${programId}`);
+  revalidatePath(`/program/${programId}`);
+}
+
+// Urus setia tolak bayaran (resit tak sah / tak diterima).
+export async function tolakPendaftaran(formData: FormData) {
+  if (!isPentadbir(await getProfil())) return;
+  const id = String(formData.get("id") ?? "");
+  const programId = String(formData.get("program_id") ?? "");
+  const sebab = String(formData.get("sebab") ?? "").trim() || "Bukti bayaran tidak sah / tidak diterima.";
+  if (!id) return;
+  const db = createAdminClient();
+  await db.from("program_pendaftaran").update({ status_bayar: "tolak", sebab_tolak: sebab }).eq("id", id);
+  revalidatePath(`/admin/program/${programId}`);
+  revalidatePath(`/program/${programId}`);
+}
