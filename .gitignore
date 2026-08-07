@@ -1,20 +1,12 @@
-# dependencies
-/node_modules
-
-# next
-/.next
-/out
-
-# opennext / cloudflare
-/.open-next
-/.wrangler
-
-# env / secrets
+node_modules
+.next
+out
 .env
 .env.local
-.dev.vars
-
-# misc
 .DS_Store
 *.log
-next-env.d.ts
+.netlify
+
+# Cloudflare / OpenNext
+.open-next
+.wrangler

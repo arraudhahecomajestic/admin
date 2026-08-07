@@ -1,18 +1,20 @@
-import type { Config } from 'tailwindcss';
+import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#E42D28', dark: '#C21F1C' },
-        ink: { DEFAULT: '#1A1614', 2: '#6E6660' },
-        line: '#EBE6E2',
-        soft: '#F7F5F3',
-      },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Fraunces', 'Georgia', 'serif'],
+        // Tema hitam & gold — padan logo surau
+        surau: {
+          DEFAULT: "#b8860b", // gold (butang & aksen)
+          dark: "#8c6608",    // gold gelap (hover)
+          light: "#d4af37",   // gold cerah
+        },
+        hitam: {
+          DEFAULT: "#111111",
+          soft: "#1c1c1c",
+        },
       },
     },
   },

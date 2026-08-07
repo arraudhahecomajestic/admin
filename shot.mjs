@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const pg = await b.newPage({ viewport: { width: 900, height: 1200 } });
+await pg.goto('http://localhost:3100/', { waitUntil: 'networkidle' }).catch(()=>{});
+await pg.waitForTimeout(1500);
+await pg.screenshot({ path: '/tmp/home.png' });
+await pg.goto('http://localhost:3100/daftar', { waitUntil: 'networkidle' }).catch(()=>{});
+await pg.waitForTimeout(800);
+await pg.screenshot({ path: '/tmp/daftar.png' });
+await b.close();
+console.log('done');
