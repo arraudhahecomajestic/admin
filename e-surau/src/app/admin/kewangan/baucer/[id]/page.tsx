@@ -24,6 +24,16 @@ export default async function BaucerPage({ params }: { params: { id: string } })
   if (!data) return <p className="text-slate-500">Baucer tidak dijumpai.</p>;
   const b: any = data;
 
+  // Jika baucer ini dijana dari tuntutan pembekal, ambil maklumat penerima
+  // (nama & No. KP dari pendaftaran) + status pengesahan terima untuk "Diterima Oleh".
+  const { data: tData } = await db
+    .from("tuntutan_bayaran")
+    .select("diterima_disah, tarikh_terima, pembekal:pembekal(nama, no_kp, syarikat)")
+    .eq("perbelanjaan_id", params.id)
+    .maybeSingle();
+  const tuntut: any = tData;
+  const penerima = tuntut?.pembekal ?? null;
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="no-print mb-4 flex items-center justify-between">
@@ -65,24 +75,51 @@ export default async function BaucerPage({ params }: { params: { id: string } })
         </div>
         <p className="mt-2 text-sm italic text-slate-600">{ringgitPerkataan(b.jumlah)}</p>
 
-        {/* Pengesahan — auto-isi nama & tarikh dari rekod */}
+        {/* Pengesahan — auto-isi nama, jawatan & tarikh dari rekod */}
         <div className="mt-6 grid grid-cols-3 gap-4 text-center text-xs">
-          <TTD tajuk="Disediakan Oleh" jawatan="Bendahari" nama={b.direkod_oleh} tarikh={b.tarikh} />
-          <TTD tajuk="Kelulusan Oleh" jawatan="Setiausaha / Pengerusi" nama={b.diluluskan_oleh} tarikh={b.tarikh_lulus} />
-          <TTD tajuk="Dibayar Oleh" jawatan="Bendahari" nama={b.dibayar_oleh} tarikh={b.tarikh_bayar} />
+          <TTD tajuk="Disediakan Oleh" jawatan={b.direkod_jawatan || "Bendahari"} nama={b.direkod_oleh} tarikh={b.tarikh} />
+          <TTD tajuk="Kelulusan Oleh" jawatan={b.diluluskan_jawatan || "Setiausaha / Pengerusi"} nama={b.diluluskan_oleh} tarikh={b.tarikh_lulus} />
+          <TTD tajuk="Dibayar Oleh" jawatan={b.dibayar_jawatan || "Bendahari"} nama={b.dibayar_oleh} tarikh={b.tarikh_bayar} />
         </div>
 
-        {/* Diterima oleh */}
-        <div className="mt-6 rounded-lg border border-slate-200 p-4 text-xs text-slate-600">
-          <div className="mb-3 font-semibold text-slate-700">Diterima Oleh</div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <div>Nama: ____________________</div>
-            <div>No. KP / Pasport: ____________________</div>
-            <div>Tandatangan: ____________________</div>
-            <div>Cop (jika ada): ____________________</div>
-            <div>Tarikh: ____________________</div>
+        {/* Diterima oleh — auto-isi dari pendaftaran penuntut jika baucer dari tuntutan pembekal */}
+        {penerima ? (
+          <div className="mt-6 rounded-lg border border-slate-200 p-4 text-xs text-slate-600">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-semibold text-slate-700">Diterima Oleh</span>
+              {tuntut?.diterima_disah
+                ? <span className="rounded bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">✓ Disahkan penerima</span>
+                : <span className="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Menunggu pengesahan penerima</span>}
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>Nama: <b className="text-slate-800">{penerima.nama || "-"}</b></div>
+              <div>No. KP: <b className="text-slate-800">{penerima.no_kp || "-"}</b></div>
+              {penerima.syarikat && <div>Syarikat: <b className="text-slate-800">{penerima.syarikat}</b></div>}
+              <div>
+                Tarikh terima:{" "}
+                <b className="text-slate-800">
+                  {tuntut?.tarikh_terima ? tarikhMs(tuntut.tarikh_terima) : "____________"}
+                </b>
+              </div>
+            </div>
+            {tuntut?.diterima_disah && (
+              <p className="mt-3 text-[11px] italic text-slate-400">
+                Penerimaan disahkan secara elektronik oleh penerima melalui portal pembekal — tandatangan tidak diperlukan.
+              </p>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="mt-6 rounded-lg border border-slate-200 p-4 text-xs text-slate-600">
+            <div className="mb-3 font-semibold text-slate-700">Diterima Oleh</div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+              <div>Nama: ____________________</div>
+              <div>No. KP / Pasport: ____________________</div>
+              <div>Tandatangan: ____________________</div>
+              <div>Cop (jika ada): ____________________</div>
+              <div>Tarikh: ____________________</div>
+            </div>
+          </div>
+        )}
 
         <p className="mt-6 text-center text-[11px] text-slate-400">
           Asal untuk Bendahari · Salinan pertama untuk fail · Salinan kedua untuk penerima

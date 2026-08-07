@@ -6,6 +6,7 @@ import { rm, tarikhMs } from "@/lib/format";
 import { STATUS_TUNTUTAN, STATUS_PEMBEKAL } from "@/lib/pembekal";
 import TuntutanPembekalForm from "@/components/TuntutanPembekalForm";
 import ProgresTuntutan from "@/components/ProgresTuntutan";
+import ButangTerima from "@/components/ButangTerima";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +108,7 @@ export default async function PembekalPortalPage() {
             { label: "Baucer disedia (Bendahari)", tarikh: t.tarikh_lulus, done: ["diluluskan", "dibayar"].includes(t.status) },
             { label: "Diluluskan Pengerusi", tarikh: pb?.tarikh_lulus, done: pb ? ["lulus", "dibayar"].includes(pb.status) : false },
             { label: "Bayaran selesai", tarikh: t.tarikh_bayar, done: t.status === "dibayar" },
+            { label: "Bayaran disahkan diterima", tarikh: t.tarikh_terima, done: !!t.diterima_disah },
           ];
           return (
             <div key={t.id} className="rounded-xl bg-white p-5 shadow-sm">
@@ -132,6 +134,13 @@ export default async function PembekalPortalPage() {
                     : <span className="text-slate-400">Slip belum dimuat naik</span>}
                   {t.rujukan_bayar && <span className="text-xs text-slate-400">· Ruj: {t.rujukan_bayar}</span>}
                 </div>
+              )}
+              {t.status === "dibayar" && (
+                t.diterima_disah
+                  ? <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                      ✓ Anda telah <b>sahkan bayaran diterima</b>{t.tarikh_terima ? ` pada ${tarikhMs(t.tarikh_terima)}` : ""}.
+                    </div>
+                  : <ButangTerima tuntutanId={t.id} />
               )}
             </div>
           );

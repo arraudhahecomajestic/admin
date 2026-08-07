@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, bolehKewanganModul, isAdmin, type Profil } from "@/lib/sesi";
+import { getProfil, bolehKewanganModul, isAdmin, jawatanProfil, type Profil } from "@/lib/sesi";
 
 // Kelulusan bayaran = Pengerusi/Setiausaha (pentadbir) atau master — bukan bendahari sahaja.
 function bolehLulusBayaran(p: Profil | null): boolean {
@@ -40,6 +40,7 @@ export async function tambahBelanja(formData: FormData) {
     tarikh: String(formData.get("tarikh") ?? "") || new Date().toISOString().slice(0, 10),
     status: "menunggu",
     direkod_oleh: namaProfil(p),
+    direkod_jawatan: jawatanProfil(p),
   });
   revalidatePath("/admin/kewangan");
 }
@@ -50,7 +51,7 @@ export async function luluskanBelanja(id: string): Promise<{ ok: boolean; msg?: 
   if (!bolehLulusBayaran(p)) return { ok: false, msg: "Hanya Pengerusi/Setiausaha boleh meluluskan." };
   const db = createAdminClient();
   const { error } = await db.from("perbelanjaan").update({
-    status: "lulus", diluluskan_oleh: namaProfil(p), tarikh_lulus: new Date().toISOString(), sebab_tolak: null,
+    status: "lulus", diluluskan_oleh: namaProfil(p), diluluskan_jawatan: jawatanProfil(p), tarikh_lulus: new Date().toISOString(), sebab_tolak: null,
   }).eq("id", id).eq("status", "menunggu");
   if (error) return { ok: false, msg: error.message };
   revalidatePath("/admin/kewangan");
@@ -82,6 +83,7 @@ export async function tandaBayarBelanja(id: string, input: { cara_bayar?: string
     tarikh_bayar: input.tarikh_bayar || new Date().toISOString().slice(0, 10),
     url_slip: input.url_slip || null,
     dibayar_oleh: namaProfil(p),
+    dibayar_jawatan: jawatanProfil(p),
   }).eq("id", id).eq("status", "lulus");
   if (error) return { ok: false, msg: error.message };
   // Selaras: jika baucer ini dijana dari tuntutan pembekal, tandakan tuntutan 'dibayar' + slip.

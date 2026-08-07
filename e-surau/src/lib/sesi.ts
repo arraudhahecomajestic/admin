@@ -8,7 +8,24 @@ export type Profil = {
   pembekal_id: string | null;
   peranan: "admin" | "bendahari" | "ajk" | "ahli" | "imam" | "kerani";
   master: boolean;
+  jawatan: string | null;
 };
+
+// Jawatan rasmi untuk dipapar (cth pada baucer). Guna jawatan yang ditetapkan
+// di panel Peranan jika ada; jika tiada, gunakan lalai ikut peranan.
+const JAWATAN_LALAI: Record<Profil["peranan"], string> = {
+  admin: "Setiausaha",
+  bendahari: "Bendahari",
+  ajk: "AJK",
+  imam: "Imam",
+  kerani: "Staf",
+  ahli: "Ahli Kariah",
+};
+export function jawatanProfil(p: Profil | null): string {
+  if (!p) return "—";
+  const j = (p.jawatan ?? "").trim();
+  return j || JAWATAN_LALAI[p.peranan] || "—";
+}
 
 // Dapatkan profil pengguna yang sedang log masuk (atau null).
 export async function getProfil(): Promise<Profil | null> {
@@ -22,7 +39,7 @@ export async function getProfil(): Promise<Profil | null> {
 
     const { data } = await supabase
       .from("profil")
-      .select("id, nama, emel, ahli_id, pembekal_id, peranan, master")
+      .select("id, nama, emel, ahli_id, pembekal_id, peranan, master, jawatan")
       .eq("id", user.id)
       .single();
 

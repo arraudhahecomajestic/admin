@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir, bolehKewangan, bolehKewanganModul, bolehLulusVendor } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehKewangan, bolehKewanganModul, bolehLulusVendor, jawatanProfil } from "@/lib/sesi";
 
 function segar() {
   revalidatePath("/admin/tuntutan");
@@ -76,6 +76,7 @@ export async function lulusBendahari(formData: FormData) {
     tarikh: new Date().toISOString().slice(0, 10),
     status: "menunggu",             // masuk aliran kelulusan Pengerusi
     direkod_oleh: p?.nama ?? "bendahari",
+    direkod_jawatan: jawatanProfil(p),
   }).select("id").single();
 
   await db.from("tuntutan_bayaran").update({

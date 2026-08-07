@@ -48,3 +48,24 @@ export async function hantarTuntutan(data: {
   revalidatePath("/admin/tuntutan");
   return { ok: true };
 }
+
+// Penuntut sahkan bahawa bayaran telah DITERIMA (bahagian "Diterima Oleh" baucer).
+// Nama & No. KP diambil automatik dari rekod pendaftaran pembekal.
+export async function sahkanTerima(tuntutanId: string): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!p?.pembekal_id) return { ok: false, msg: "Akaun anda bukan pembekal." };
+  if (!tuntutanId) return { ok: false, msg: "Data tidak lengkap." };
+  const db = createAdminClient();
+  // Hanya boleh sahkan tuntutan sendiri yang sudah 'dibayar'.
+  const { error } = await db
+    .from("tuntutan_bayaran")
+    .update({ diterima_disah: true, tarikh_terima: new Date().toISOString() })
+    .eq("id", tuntutanId)
+    .eq("pembekal_id", p.pembekal_id)
+    .eq("status", "dibayar");
+  if (error) return { ok: false, msg: error.message };
+  revalidatePath("/pembekal/portal");
+  revalidatePath("/admin/kewangan");
+  revalidatePath("/admin/tuntutan");
+  return { ok: true };
+}

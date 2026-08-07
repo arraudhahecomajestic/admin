@@ -107,6 +107,11 @@ export default async function AhliPage() {
           <p className="text-sm text-slate-500">{a?.no_ahli}</p>
         </div>
         <div className="flex items-center gap-4">
+          {profil.pembekal_id && (
+            <Link href="/pembekal/portal" className="rounded-lg border border-surau/40 px-3 py-1 text-sm font-medium text-surau hover:bg-surau/10">
+              Portal Pembekal →
+            </Link>
+          )}
           <Link href="/ahli/tukar-kata-laluan" className="text-sm text-slate-500 hover:underline">
             Tukar kata laluan
           </Link>
