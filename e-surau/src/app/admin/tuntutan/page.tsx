@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { getProfil, bolehKewangan, isPentadbir, bolehLulusVendor } from "@/lib/sesi";
+import { getProfil, bolehKewangan, isPentadbir, bolehLulusVendor, bolehKewanganModul } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import { rm, tarikhMs } from "@/lib/format";
 import { STATUS_TUNTUTAN, STATUS_PEMBEKAL } from "@/lib/pembekal";
-import { tetapkanStatusPembekal, sahAjk, lulusBendahari, tolakTuntutan } from "./actions";
+import { tetapkanStatusPembekal, sahAjk, lulusBendahari, tolakTuntutan, janaBaucerDalaman, tolakTuntutanDalaman } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,10 @@ export default async function AdminTuntutanPage() {
   const tuntutan = (tuRes.data as any[]) ?? [];
   const katBelanja = (katRes.data as any[]) ?? [];
 
+  // Tuntutan Dalaman (AJK/staf)
+  const { data: tdData } = await db.from("tuntutan_dalaman").select("*").order("dicipta", { ascending: false });
+  const tuntutanDalaman = (tdData as any[]) ?? [];
+
   async function signed(path: string | null) {
     if (!path) return null;
     const rel = path.replace(/^salinan-kp\//, "");
@@ -34,6 +38,8 @@ export default async function AdminTuntutanPage() {
   }
   const dokMap: Record<string, string | null> = {};
   await Promise.all(tuntutan.filter((t) => t.url_dokumen).map(async (t) => { dokMap[t.id] = await signed(t.url_dokumen); }));
+  const tdDokMap: Record<string, string | null> = {};
+  await Promise.all(tuntutanDalaman.filter((t) => t.url_dokumen).map(async (t) => { tdDokMap[t.id] = await signed(t.url_dokumen); }));
 
   // Signed URL dokumen pembekal (untuk semakan AJK)
   const pbDok: Record<string, { depan?: string | null; belakang?: string | null; profil?: string | null; katalog?: string | null }> = {};
@@ -49,11 +55,64 @@ export default async function AdminTuntutanPage() {
   const pembekalMenunggu = pembekal.filter((p) => p.status === "menunggu");
   const boleh$ = bolehKewangan(profil);
   const bolehVendor = bolehLulusVendor(profil); // lulus pendaftaran vendor — Admin & Bendahari
+  const bolehJanaDalaman = bolehKewanganModul(profil); // jana baucer tuntutan dalaman — Bendahari/Admin
+  const tdMenunggu = tuntutanDalaman.filter((t) => t.status === "baru");
 
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/tuntutan" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} master={profil.master} />
       <h1 className="text-2xl font-bold text-slate-900">Tuntutan Bayaran</h1>
+
+      {/* Tuntutan Dalaman (AJK / Staf) */}
+      <section className="rounded-xl bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-3">
+          <h2 className="font-semibold text-slate-900">Tuntutan Dalaman (AJK / Staf)</h2>
+          {tdMenunggu.length > 0 && <span className="rounded-lg bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">{tdMenunggu.length} menunggu</span>}
+        </div>
+        <div className="divide-y">
+          {tuntutanDalaman.length === 0 && <p className="px-5 py-6 text-center text-slate-400">Tiada tuntutan dalaman.</p>}
+          {tuntutanDalaman.map((t) => {
+            const warna = t.status === "dibayar" ? "bg-green-100 text-green-700" : t.status === "diproses" ? "bg-blue-100 text-blue-700" : t.status === "ditolak" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700";
+            const label = t.status === "dibayar" ? "Dibayar" : t.status === "diproses" ? "Baucer dijana" : t.status === "ditolak" ? "Ditolak" : "Menunggu Bendahari";
+            return (
+              <div key={t.id} className="px-5 py-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <span className="font-mono text-xs text-slate-400">{t.no_tuntutan}</span>
+                    <div className="font-semibold text-slate-900">{t.butiran}</div>
+                    <div className="text-xs text-slate-500">{t.nama_pemohon}{t.jawatan ? ` · ${t.jawatan}` : ""} · {tarikhMs(t.dicipta)}</div>
+                    {t.url_dokumen && (tdDokMap[t.id]
+                      ? <a href={tdDokMap[t.id]!} target="_blank" rel="noreferrer" className="text-xs font-semibold text-surau hover:underline">Lihat Resit</a>
+                      : <span className="text-xs text-slate-400">Resit</span>)}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-surau">{rm(t.jumlah)}</div>
+                    <span className={`rounded px-2 py-0.5 text-xs font-semibold ${warna}`}>{label}</span>
+                  </div>
+                </div>
+                {t.status === "baru" && bolehJanaDalaman && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+                    <form action={janaBaucerDalaman} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="id" value={t.id} />
+                      <select name="kategori_id" className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+                        <option value="">Kategori belanja…</option>
+                        {katBelanja.map((k) => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                      </select>
+                      <ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">Jana Baucer</ButangHantar>
+                    </form>
+                    <form action={tolakTuntutanDalaman}>
+                      <input type="hidden" name="id" value={t.id} />
+                      <ButangHantar className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50" pendingText="…">Tolak</ButangHantar>
+                    </form>
+                  </div>
+                )}
+                {t.status === "diproses" && <div className="mt-1 text-xs text-slate-500">Baucer dijana — tunggu kelulusan Pengerusi & bayaran di Kewangan.</div>}
+                {t.status === "ditolak" && t.catatan && <div className="mt-1 text-xs text-red-500">Sebab: {t.catatan}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Pembekal menunggu kelulusan */}
       {pembekalMenunggu.length > 0 && bolehVendor && (

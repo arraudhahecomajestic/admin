@@ -93,6 +93,12 @@ export function isBendahari(p: Profil | null): boolean {
   return !!p && p.peranan === "bendahari";
 }
 
+// Boleh hantar Tuntutan Dalaman (AJK/staf beli barang untuk surau).
+// Semua kakitangan/jawatankuasa — bukan ahli biasa.
+export function bolehTuntutanDalaman(p: Profil | null): boolean {
+  return !!p && (["admin", "ajk", "bendahari", "imam", "kerani"].includes(p.peranan) || p.master === true);
+}
+
 // Master admin — boleh urus peranan pengguna lain.
 export function isMaster(p: Profil | null): boolean {
   return !!p && p.master === true;

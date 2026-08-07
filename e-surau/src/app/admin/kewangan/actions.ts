@@ -93,6 +93,13 @@ export async function tandaBayarBelanja(id: string, input: { cara_bayar?: string
     url_slip: input.url_slip || null,
     tarikh_bayar: new Date().toISOString(),
   }).eq("perbelanjaan_id", id).eq("status", "diluluskan");
+  // Selaras juga untuk tuntutan dalaman (AJK/staf) yang dipautkan ke baucer ini.
+  await db.from("tuntutan_dalaman").update({
+    status: "dibayar",
+    rujukan_bayar: (input.no_rujukan_bayar || "").trim() || null,
+    url_slip: input.url_slip || null,
+    tarikh_bayar: new Date().toISOString(),
+  }).eq("perbelanjaan_id", id).eq("status", "diproses");
   revalidatePath("/admin/kewangan");
   revalidatePath("/admin/kewangan/laporan");
   revalidatePath("/admin/tuntutan");

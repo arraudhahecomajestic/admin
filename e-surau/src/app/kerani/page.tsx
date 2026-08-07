@@ -49,6 +49,7 @@ export default async function KeraniPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 text-sm text-slate-500">
+          <a href="/admin/tuntutan-saya" className="rounded-lg border border-surau/40 px-3 py-1 font-medium text-surau hover:bg-surau/10">Tuntutan Saya</a>
           {profil.nama && <span>{profil.nama}</span>}
           <form action="/masuk/logout" method="post">
             <button className="hover:underline">Log keluar</button>

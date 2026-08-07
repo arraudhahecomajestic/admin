@@ -104,6 +104,70 @@ export async function tandaDibayar(data: { id: string; url_slip?: string; rujuka
   return { ok: true };
 }
 
+// ---- Tuntutan Dalaman (AJK/Staf) ----
+
+// Bendahari: assign kategori + jana Baucer dari tuntutan dalaman (baru → diproses).
+export async function janaBaucerDalaman(formData: FormData) {
+  const p = await getProfil();
+  if (!bolehKewanganModul(p)) return;
+  const id = String(formData.get("id") ?? "");
+  const katPilih = Number(formData.get("kategori_id") ?? 0);
+  if (!id) return;
+  const db = createAdminClient();
+
+  const { data: t } = await db.from("tuntutan_dalaman").select("*").eq("id", id).single();
+  const tu: any = t;
+  if (!tu || tu.status !== "baru") return;
+  // COI: tidak boleh proses tuntutan sendiri.
+  if (tu.profil_id && tu.profil_id === p!.id) return;
+
+  let katId: number | null = katPilih || null;
+  if (!katId) {
+    const { data: kat } = await db.from("kategori_belanja").select("id").eq("nama", "Tuntutan Dalaman").maybeSingle();
+    katId = (kat as any)?.id ?? null;
+    if (!katId) {
+      const { data: baru } = await db.from("kategori_belanja").insert({ nama: "Tuntutan Dalaman" }).select("id").maybeSingle();
+      katId = (baru as any)?.id ?? null;
+    }
+  }
+  if (!katId) return;
+
+  const { data: belanja } = await db.from("perbelanjaan").insert({
+    kategori_id: katId,
+    jumlah: Number(tu.jumlah),
+    keterangan: `${tu.no_tuntutan} — ${tu.butiran}`,
+    bayar_kepada: tu.nama_pemohon ?? null,
+    dari_khairat: false,
+    tarikh: new Date().toISOString().slice(0, 10),
+    status: "menunggu",
+    direkod_oleh: p?.nama ?? "bendahari",
+    direkod_jawatan: jawatanProfil(p),
+  }).select("id").single();
+
+  await db.from("tuntutan_dalaman").update({
+    status: "diproses",
+    kategori_id: katId,
+    perbelanjaan_id: (belanja as any)?.id ?? null,
+  }).eq("id", id);
+  segar();
+  revalidatePath("/admin/tuntutan-saya");
+}
+
+// Tolak tuntutan dalaman.
+export async function tolakTuntutanDalaman(formData: FormData) {
+  const p = await getProfil();
+  if (!bolehKewanganModul(p) && !isPentadbir(p)) return;
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const db = createAdminClient();
+  await db.from("tuntutan_dalaman").update({
+    status: "ditolak",
+    catatan: String(formData.get("catatan") ?? "").trim() || "Tidak diluluskan",
+  }).eq("id", id).eq("status", "baru");
+  segar();
+  revalidatePath("/admin/tuntutan-saya");
+}
+
 // Tolak tuntutan
 export async function tolakTuntutan(formData: FormData) {
   if (!isPentadbir(await getProfil()) && !bolehKewangan(await getProfil())) return;
