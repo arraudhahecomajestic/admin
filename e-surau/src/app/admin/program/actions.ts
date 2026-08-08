@@ -112,6 +112,18 @@ export async function sahkanPendaftaran(formData: FormData) {
   revalidatePath(`/program/${programId}`);
 }
 
+// Padam satu pendaftaran peserta (cth data ujian / tersalah).
+export async function padamPendaftaran(formData: FormData) {
+  if (!isPentadbir(await getProfil())) return;
+  const id = String(formData.get("id") ?? "");
+  const programId = String(formData.get("program_id") ?? "");
+  if (!id) return;
+  const db = createAdminClient();
+  await db.from("program_pendaftaran").delete().eq("id", id);
+  revalidatePath(`/admin/program/${programId}`);
+  revalidatePath(`/program/${programId}`);
+}
+
 // Urus setia tolak bayaran (resit tak sah / tak diterima).
 export async function tolakPendaftaran(formData: FormData) {
   if (!isPentadbir(await getProfil())) return;

@@ -5,7 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import { tarikhMs } from "@/lib/format";
-import { kemasProgram, sahkanPendaftaran, tolakPendaftaran } from "../actions";
+import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran } from "../actions";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
 
 export const dynamic = "force-dynamic";
@@ -154,24 +154,29 @@ export default async function EditProgramPage({ params }: { params: { id: string
                         {r.status_bayar === "tolak" && r.sebab_tolak && <div className="mt-0.5 text-[11px] text-red-500">{r.sebab_tolak}</div>}
                       </td>
                       <td className="px-4 py-2.5 text-right">
-                        {r.status_bayar === "menunggu_sah" || r.status_bayar === "tolak" ? (
-                          <div className="flex flex-col items-end gap-1">
-                            <form action={sahkanPendaftaran}>
-                              <input type="hidden" name="id" value={r.id} />
-                              <input type="hidden" name="program_id" value={p.id} />
-                              <ButangHantar className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50" pendingText="…">Sahkan Bayaran</ButangHantar>
-                            </form>
-                            {r.status_bayar === "menunggu_sah" && (
-                              <form action={tolakPendaftaran}>
+                        <div className="flex flex-col items-end gap-1">
+                          {(r.status_bayar === "menunggu_sah" || r.status_bayar === "tolak") && (
+                            <>
+                              <form action={sahkanPendaftaran}>
                                 <input type="hidden" name="id" value={r.id} />
                                 <input type="hidden" name="program_id" value={p.id} />
-                                <ButangHantar className="rounded-lg bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50" pendingText="…">Tolak</ButangHantar>
+                                <ButangHantar className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50" pendingText="…">Sahkan Bayaran</ButangHantar>
                               </form>
-                            )}
-                          </div>
-                        ) : r.status_bayar === "dibayar" ? (
-                          <span className="text-xs text-slate-400">—</span>
-                        ) : null}
+                              {r.status_bayar === "menunggu_sah" && (
+                                <form action={tolakPendaftaran}>
+                                  <input type="hidden" name="id" value={r.id} />
+                                  <input type="hidden" name="program_id" value={p.id} />
+                                  <ButangHantar className="rounded-lg bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50" pendingText="…">Tolak</ButangHantar>
+                                </form>
+                              )}
+                            </>
+                          )}
+                          <form action={padamPendaftaran}>
+                            <input type="hidden" name="id" value={r.id} />
+                            <input type="hidden" name="program_id" value={p.id} />
+                            <ButangHantar className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-400 hover:text-red-600 disabled:opacity-50" pendingText="…">Padam</ButangHantar>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -25,11 +25,16 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
   }
   const p: any = data;
   let jumHadir = (p.rsvp ?? []).reduce((s: number, r: any) => s + Number(r.bil_orang || 0), 0);
+  let jumTempat = jumHadir; // untuk kiraan penuh (elak overbook)
   if (p.berbayar) {
-    const { data: pd } = await db.from("program_pendaftaran").select("bilangan").eq("program_id", p.id).in("status_bayar", ["dibayar", "menunggu_sah"]);
-    jumHadir = ((pd as any[]) ?? []).reduce((s, r) => s + Number(r.bilangan || 1), 0);
+    // "Hadir" = peserta yang bayaran DAH DISAHKAN (dibayar) sahaja.
+    // Tempat (penuh) = dibayar + menunggu sahkan (yang sudah bayar & tunggu semakan tetap pegang tempat).
+    const { data: pd } = await db.from("program_pendaftaran").select("bilangan, status_bayar").eq("program_id", p.id).in("status_bayar", ["dibayar", "menunggu_sah"]);
+    const rows = (pd as any[]) ?? [];
+    jumHadir = rows.filter((r) => r.status_bayar === "dibayar").reduce((s, r) => s + Number(r.bilangan || 1), 0);
+    jumTempat = rows.reduce((s, r) => s + Number(r.bilangan || 1), 0);
   }
-  const penuh = p.had_peserta ? jumHadir >= Number(p.had_peserta) : false;
+  const penuh = p.had_peserta ? jumTempat >= Number(p.had_peserta) : false;
   // Suis 'bayaran_online' (tetapan sistem) — lalai OFF: guna borang bayar manual
   // + upload resit. Tukar ON dalam Tetapan hanya bila CHIP betul-betul go live.
   const bayaranOnline = await bayaranOnlineDibuka();
