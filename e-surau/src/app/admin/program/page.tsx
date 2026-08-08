@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehUrusProgram } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -53,6 +53,7 @@ export default async function ProgramAdminPage() {
           {program.length === 0 && <p className="px-5 py-6 text-center text-slate-400">Tiada program lagi.</p>}
           {program.map((p) => {
             const jumRsvp = (p.rsvp ?? []).reduce((s: number, r: any) => s + Number(r.bil_orang || 0), 0);
+            const boleh = bolehUrusProgram(profil, p.dicipta_oleh);
             return (
               <div key={p.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-3">
                 <div>
@@ -63,16 +64,19 @@ export default async function ProgramAdminPage() {
                   </div>
                   <div className="text-xs text-slate-500">{tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}{p.lokasi ? ` · ${p.lokasi}` : ""}</div>
                   <div className="mt-1 text-xs text-slate-600">RSVP: <b>{jumRsvp}</b>{p.had_peserta ? ` / ${p.had_peserta}` : ""}</div>
+                  {p.dicipta_oleh_nama && <div className="text-[11px] text-slate-400">Dicipta oleh: {p.dicipta_oleh_nama}</div>}
                   <div className="mt-2">
                     <KongsiProgram id={p.id} tajuk={p.tajuk} tarikhLabel={tarikhMs(p.tarikh)} masa={p.masa} lokasi={p.lokasi} />
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Link href={`/admin/program/${p.id}`} className="text-xs font-semibold text-surau hover:underline">Butiran / RSVP</Link>
-                  <form action={padamProgram}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
-                  </form>
+                  {boleh && (
+                    <form action={padamProgram}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
+                    </form>
+                  )}
                 </div>
               </div>
             );

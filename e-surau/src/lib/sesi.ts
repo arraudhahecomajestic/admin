@@ -93,6 +93,13 @@ export function isBendahari(p: Profil | null): boolean {
   return !!p && p.peranan === "bendahari";
 }
 
+// Program: hanya pencipta boleh urus/edit (Admin/Master boleh override semua).
+export function bolehUrusProgram(p: Profil | null, diciptaOleh: string | null | undefined): boolean {
+  if (!p) return false;
+  if (isAdmin(p)) return true; // Admin / Master / SU — override
+  return !!diciptaOleh && diciptaOleh === p.id;
+}
+
 // Boleh hantar Tuntutan Dalaman (AJK/staf beli barang untuk surau).
 // Semua kakitangan/jawatankuasa — bukan ahli biasa.
 export function bolehTuntutanDalaman(p: Profil | null): boolean {

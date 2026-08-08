@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehUrusProgram } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -21,6 +21,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
   const { data } = await db.from("program").select("*").eq("id", params.id).single();
   if (!data) return <p className="text-slate-500">Program tidak dijumpai.</p>;
   const p: any = data;
+  const boleh = bolehUrusProgram(profil, p.dicipta_oleh); // pencipta atau Admin/Master
 
   const { data: rsvpData } = await db
     .from("rsvp")
@@ -66,6 +67,13 @@ export default async function EditProgramPage({ params }: { params: { id: string
         <h1 className="text-2xl font-bold text-slate-900">Edit Program</h1>
       </div>
 
+      {!boleh && (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+          Program ini dicipta oleh <b>{p.dicipta_oleh_nama ?? "AJK lain"}</b>. Hanya pencipta program (atau Admin/SU) boleh mengeditnya. Anda boleh lihat butiran sahaja.
+        </div>
+      )}
+
+      {boleh && (
       <section className="rounded-xl bg-white p-5 shadow-sm">
         <form action={kemasProgram} className="grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="id" value={p.id} />
@@ -89,6 +97,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
           tetapi masih boleh dibuka & RSVP melalui pautan jemputan yang Tuan/Puan kongsi.
         </p>
       </section>
+      )}
 
       {/* Senarai Pendaftaran Peserta (program berbayar) */}
       {p.berbayar && (
@@ -154,6 +163,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
                         {r.status_bayar === "tolak" && r.sebab_tolak && <div className="mt-0.5 text-[11px] text-red-500">{r.sebab_tolak}</div>}
                       </td>
                       <td className="px-4 py-2.5 text-right">
+                        {!boleh ? <span className="text-xs text-slate-300">—</span> : (
                         <div className="flex flex-col items-end gap-1">
                           {(r.status_bayar === "menunggu_sah" || r.status_bayar === "tolak") && (
                             <>
@@ -177,6 +187,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
                             <ButangHantar className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-400 hover:text-red-600 disabled:opacity-50" pendingText="…">Padam</ButangHantar>
                           </form>
                         </div>
+                        )}
                       </td>
                     </tr>
                   );

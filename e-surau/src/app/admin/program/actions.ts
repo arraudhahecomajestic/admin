@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabaseAdmin";
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isPentadbir, bolehUrusProgram } from "@/lib/sesi";
 import { panggilAI } from "@/lib/ai";
 
 // "Kemaskini dengan AI" — Setiausaha surau tolong taip semula & kemaskan
@@ -41,9 +41,12 @@ export async function kemasKeteranganProgramAI(input: {
 }
 
 export async function tambahProgram(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  const p = await getProfil();
+  if (!isPentadbir(p)) return;
   const db = createAdminClient();
   await db.from("program").insert({
+    dicipta_oleh: p!.id,
+    dicipta_oleh_nama: p!.nama ?? p!.emel ?? null,
     tajuk: String(formData.get("tajuk") ?? ""),
     keterangan: String(formData.get("keterangan") ?? "") || null,
     kategori: String(formData.get("kategori") ?? "") || null,
@@ -63,10 +66,14 @@ export async function tambahProgram(formData: FormData) {
 }
 
 export async function kemasProgram(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  const p = await getProfil();
+  if (!isPentadbir(p)) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();
+  // Hanya pencipta program (atau Admin/Master) boleh edit.
+  const { data: prog } = await db.from("program").select("dicipta_oleh").eq("id", id).single();
+  if (!bolehUrusProgram(p, (prog as any)?.dicipta_oleh)) return;
   await db.from("program").update({
     tajuk: String(formData.get("tajuk") ?? ""),
     keterangan: String(formData.get("keterangan") ?? "") || null,
@@ -90,22 +97,35 @@ export async function kemasProgram(formData: FormData) {
 }
 
 export async function padamProgram(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  const p = await getProfil();
+  if (!isPentadbir(p)) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const db = createAdminClient();
+  // Hanya pencipta program (atau Admin/Master) boleh padam.
+  const { data: prog } = await db.from("program").select("dicipta_oleh").eq("id", id).single();
+  if (!bolehUrusProgram(p, (prog as any)?.dicipta_oleh)) return;
   await db.from("program").delete().eq("id", id);
   revalidatePath("/admin/program");
   revalidatePath("/program");
   revalidatePath("/");
 }
 
+// Semak: pengguna ini pencipta program (atau Admin/Master)?
+async function bolehUrusProgramId(p: any, programId: string): Promise<boolean> {
+  if (!programId) return false;
+  const db = createAdminClient();
+  const { data } = await db.from("program").select("dicipta_oleh").eq("id", programId).single();
+  return bolehUrusProgram(p, (data as any)?.dicipta_oleh);
+}
+
 // Urus setia sahkan bayaran manual (resit disemak) → status 'dibayar'.
 export async function sahkanPendaftaran(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  const me = await getProfil();
+  if (!isPentadbir(me)) return;
   const id = String(formData.get("id") ?? "");
   const programId = String(formData.get("program_id") ?? "");
-  if (!id) return;
+  if (!id || !(await bolehUrusProgramId(me, programId))) return;
   const db = createAdminClient();
   await db.from("program_pendaftaran").update({ status_bayar: "dibayar", sebab_tolak: null }).eq("id", id);
   revalidatePath(`/admin/program/${programId}`);
@@ -114,10 +134,11 @@ export async function sahkanPendaftaran(formData: FormData) {
 
 // Padam satu pendaftaran peserta (cth data ujian / tersalah).
 export async function padamPendaftaran(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  const me = await getProfil();
+  if (!isPentadbir(me)) return;
   const id = String(formData.get("id") ?? "");
   const programId = String(formData.get("program_id") ?? "");
-  if (!id) return;
+  if (!id || !(await bolehUrusProgramId(me, programId))) return;
   const db = createAdminClient();
   await db.from("program_pendaftaran").delete().eq("id", id);
   revalidatePath(`/admin/program/${programId}`);
@@ -126,11 +147,12 @@ export async function padamPendaftaran(formData: FormData) {
 
 // Urus setia tolak bayaran (resit tak sah / tak diterima).
 export async function tolakPendaftaran(formData: FormData) {
-  if (!isPentadbir(await getProfil())) return;
+  const me = await getProfil();
+  if (!isPentadbir(me)) return;
   const id = String(formData.get("id") ?? "");
   const programId = String(formData.get("program_id") ?? "");
   const sebab = String(formData.get("sebab") ?? "").trim() || "Bukti bayaran tidak sah / tidak diterima.";
-  if (!id) return;
+  if (!id || !(await bolehUrusProgramId(me, programId))) return;
   const db = createAdminClient();
   await db.from("program_pendaftaran").update({ status_bayar: "tolak", sebab_tolak: sebab }).eq("id", id);
   revalidatePath(`/admin/program/${programId}`);
