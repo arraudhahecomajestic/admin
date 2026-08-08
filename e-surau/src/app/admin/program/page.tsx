@@ -6,6 +6,7 @@ import AdminNav from "@/components/AdminNav";
 import KongsiProgram from "@/components/KongsiProgram";
 import ButangHantar from "@/components/ButangHantar";
 import KeteranganProgramAI from "@/components/KeteranganProgramAI";
+import MedanBayarProgram from "@/components/MedanBayarProgram";
 import { tarikhMs } from "@/lib/format";
 import { tambahProgram, padamProgram } from "./actions";
 
@@ -35,12 +36,10 @@ export default async function ProgramAdminPage() {
           <input name="lokasi" placeholder="Lokasi" className="inp" />
           <input name="tarikh" type="date" required className="inp" />
           <input name="masa" placeholder="Masa (cth: 8:30 malam)" className="inp" />
-          <input name="had_peserta" type="number" min="1" placeholder="Had peserta (kosong = tiada had)" className="inp" />
-          <input name="yuran" type="number" min="0" step="0.01" placeholder="Yuran RM (0 = percuma)" className="inp" />
-          <input name="ruj_bayar" placeholder="Rujukan bayaran (cth: Program Memanah SAR2026)" className="inp sm:col-span-2" />
+          <input name="had_peserta" type="number" min="1" placeholder="Had peserta (kosong = tiada had)" className="inp sm:col-span-2" />
           <KeteranganProgramAI />
-          <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="berbayar" /> Program berbayar (borang pendaftaran + bayar manual/upload resit; auto CHIP bila go live)</label>
-          <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="rsvp_dibuka" defaultChecked /> Buka pendaftaran (RSVP)</label>
+          <MedanBayarProgram />
+          <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="rsvp_dibuka" defaultChecked /> Buka pendaftaran (RSVP)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="diterbitkan" defaultChecked /> Terbitkan di laman</label>
           <div className="sm:col-span-2">
             <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan Program</ButangHantar>
