@@ -58,7 +58,7 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
           </div>
           {p.keterangan && <p className="whitespace-pre-line border-t pt-3 text-sm text-slate-700">{p.keterangan}</p>}
 
-          {searchParams.rsvp === "ok" && (
+          {!p.berbayar && searchParams.rsvp === "ok" && (
             <div className="mt-2 rounded-xl border-2 border-green-500 bg-green-50 p-5 text-center">
               <div className="text-3xl">✓</div>
               <div className="mt-1 text-lg font-bold text-green-700">Kehadiran anda telah disahkan!</div>
