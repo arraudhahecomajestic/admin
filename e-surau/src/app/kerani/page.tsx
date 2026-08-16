@@ -5,6 +5,7 @@ import KeraniCarian from "@/components/KeraniCarian";
 import KeraniTambah from "@/components/KeraniTambah";
 import StafPortal from "@/components/StafPortal";
 import { hariIni } from "@/lib/staf";
+import { labelJenisDok, clsJenisDok } from "@/lib/dokumen";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,24 @@ export default async function KeraniPage() {
   const { data: jadualData } = await db
     .from("staf_jadual").select("id, tarikh, shift, catatan").gte("tarikh", tarikh).order("tarikh", { ascending: true }).limit(14);
   const jadual = (jadualData as any[]) ?? [];
+  const { data: wiData } = await db.from("staf_wi").select("tajuk, kandungan").eq("aktif", true).order("susunan", { ascending: true });
+  const wi = (wiData as any[]) ?? [];
+
+  // Dokumen Saya — surat tawaran, WI, penilaian, slip gaji dll milik staf ini.
+  const { data: dokData } = await db
+    .from("staf_dokumen")
+    .select("id, jenis, tajuk, nama_fail, tarikh_dokumen, catatan, url_fail")
+    .eq("profil_id", profil.id)
+    .order("dicipta", { ascending: false });
+  const dokumen = await Promise.all(((dokData as any[]) ?? []).map(async (d) => {
+    let signedUrl: string | null = null;
+    if (d.url_fail) {
+      const rel = String(d.url_fail).replace(/^salinan-kp\//, "");
+      const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
+      signedUrl = data?.signedUrl ?? null;
+    }
+    return { ...d, signedUrl };
+  }));
   const HARI = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
   const lblShift: Record<string, string> = { pagi: "Pagi (8:00–5:00)", petang: "Petang (2:00–10:00)", rehat: "Rehat", cuti: "Cuti" };
   const clsShift: Record<string, string> = { pagi: "bg-amber-100 text-amber-700", petang: "bg-indigo-100 text-indigo-700", rehat: "bg-slate-100 text-slate-600", cuti: "bg-red-100 text-red-700" };
@@ -73,6 +92,48 @@ export default async function KeraniPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {wi.length > 0 && (
+        <section className="rounded-xl bg-white p-5 shadow-sm">
+          <h2 className="mb-2 font-semibold text-slate-900">Arahan Kerja (WI)</h2>
+          <p className="mb-3 text-xs text-slate-500">Rujukan tugas & piawaian kerja anda. Ketik setiap tajuk untuk baca.</p>
+          <div className="space-y-2">
+            {wi.map((s, i) => (
+              <details key={i} className="rounded-lg border border-slate-200">
+                <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold text-slate-800">{s.tajuk}</summary>
+                <div className="whitespace-pre-line border-t px-4 py-3 text-sm text-slate-600">{s.kandungan}</div>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {dokumen.length > 0 && (
+        <section className="rounded-xl bg-white p-5 shadow-sm">
+          <h2 className="mb-2 font-semibold text-slate-900">Dokumen Saya</h2>
+          <p className="mb-3 text-xs text-slate-500">Surat tawaran, WI, penilaian prestasi, slip gaji &amp; dokumen rasmi anda.</p>
+          <div className="divide-y">
+            {dokumen.map((d) => (
+              <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded px-2 py-0.5 text-xs font-semibold ${clsJenisDok(d.jenis)}`}>{labelJenisDok(d.jenis)}</span>
+                    <span className="text-sm font-medium text-slate-800">{d.tajuk}</span>
+                  </div>
+                  {(d.tarikh_dokumen || d.catatan) && (
+                    <div className="mt-0.5 text-xs text-slate-500">
+                      {d.tarikh_dokumen ? `${d.tarikh_dokumen}` : ""}{d.tarikh_dokumen && d.catatan ? " · " : ""}{d.catatan ?? ""}
+                    </div>
+                  )}
+                </div>
+                {d.signedUrl && (
+                  <a href={d.signedUrl} target="_blank" rel="noreferrer" className="shrink-0 text-sm font-medium text-surau hover:underline">Lihat →</a>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       )}

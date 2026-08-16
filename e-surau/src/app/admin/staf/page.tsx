@@ -60,8 +60,10 @@ export default async function AdminStafPage() {
           <h1 className="text-2xl font-bold text-slate-900">Pengurusan Staf Surau</h1>
           <p className="mt-1 text-sm text-slate-600">Pantau kehadiran, beri tugasan, uruskan laporan &amp; templat tugas harian Penolong Pengurus Surau.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <a href="/admin/staf/wi" className="rounded-lg border border-surau/40 px-4 py-2 text-sm font-semibold text-surau hover:bg-surau/10">Arahan Kerja (WI)</a>
           <a href="/admin/staf/penilaian" className="rounded-lg border border-surau/40 px-4 py-2 text-sm font-semibold text-surau hover:bg-surau/10">Penilaian Prestasi</a>
+          <a href="/admin/staf/dokumen" className="rounded-lg border border-surau/40 px-4 py-2 text-sm font-semibold text-surau hover:bg-surau/10">Dokumen Staf</a>
           <a href="/admin/staf/gaji" className="rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">Gaji Staf</a>
         </div>
       </div>
