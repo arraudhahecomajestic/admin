@@ -80,7 +80,7 @@ export default async function ProgramPage() {
                 </div>
               </div>
 
-              {p.keterangan && <p className="mt-2 text-sm text-slate-600">{p.keterangan}</p>}
+              {p.keterangan && <p className="mt-2 whitespace-pre-line text-sm text-slate-600 line-clamp-4">{p.keterangan}</p>}
 
               {!p.rsvp_dibuka || penuh ? (
                 <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-500">
