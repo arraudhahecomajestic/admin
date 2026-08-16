@@ -27,10 +27,24 @@ export default async function AdminPage() {
     .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, sumber, tarikh_daftar, tarikh_kemaskini")
     .order("tarikh_daftar", { ascending: false });
 
-  // Susun ikut aktiviti terkini (mohon baru ATAU kemas kini baru) — yang terbaru di atas
-  const masaAktiviti = (a: any) =>
-    Math.max(new Date(a.tarikh_kemaskini || 0).getTime(), new Date(a.tarikh_daftar || 0).getTime());
-  const senarai = ((data as any[]) ?? []).sort((a, b) => masaAktiviti(b) - masaAktiviti(a));
+  // Susun ikut KEUTAMAAN TINDAKAN (bukan sekadar terkini):
+  //  0 = perlu perhatian SU (menunggu & belum disokong) → ATAS
+  //  1 = sudah disokong SU/Pengerusi (dalam proses) → tengah
+  //  2 = ditolak SU (perlu semakan)
+  //  3 = selesai (diluluskan/ditolak) → BAWAH
+  // Dalam kumpulan sama: first-come-first-serve (paling lama daftar dahulu).
+  const keutamaan = (a: any): number => {
+    if (a.status === "lulus" || a.status === "tolak") return 3;
+    if (a.peringkat === "disokong_su" || a.peringkat === "disokong_nazir") return 1;
+    if (a.peringkat === "ditolak_su") return 2;
+    return 0; // "Baru" / belum disokong — perlu perhatian
+  };
+  const masaDaftar = (a: any) => new Date(a.tarikh_daftar || 0).getTime();
+  const senarai = ((data as any[]) ?? []).sort((a, b) => {
+    const ka = keutamaan(a), kb = keutamaan(b);
+    if (ka !== kb) return ka - kb;
+    return masaDaftar(a) - masaDaftar(b); // FCFS: yang mula-mula daftar di atas
+  });
 
   return (
     <div className="space-y-6">
