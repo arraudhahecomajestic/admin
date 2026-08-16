@@ -27,17 +27,18 @@ export default async function AdminPage() {
     .select("id, no_ahli, nama, no_kp, telefon, status, peringkat, maklumat_disahkan, sumber, tarikh_daftar, tarikh_kemaskini")
     .order("tarikh_daftar", { ascending: false });
 
-  // Susun ikut KEUTAMAAN TINDAKAN (bukan sekadar terkini):
-  //  0 = perlu perhatian SU (menunggu & belum disokong) → ATAS
-  //  1 = sudah disokong SU/Pengerusi (dalam proses) → tengah
-  //  2 = ditolak SU (perlu semakan)
+  // Susun ikut KEUTAMAAN TINDAKAN — fokus perhatian SU di atas:
+  //  0 = BARU + LENGKAP (menunggu, belum disokong, maklumat lengkap) → ATAS, sedia disokong
+  //  1 = belum lengkap (menunggu, belum disokong, maklumat belum lengkap) → tunggu ahli lengkapkan
+  //  2 = dalam proses (sudah disokong SU/Pengerusi atau ditolak SU)
   //  3 = selesai (diluluskan/ditolak) → BAWAH
   // Dalam kumpulan sama: first-come-first-serve (paling lama daftar dahulu).
+  const disokongAtauProses = (a: any) =>
+    a.peringkat === "disokong_su" || a.peringkat === "disokong_nazir" || a.peringkat === "ditolak_su";
   const keutamaan = (a: any): number => {
     if (a.status === "lulus" || a.status === "tolak") return 3;
-    if (a.peringkat === "disokong_su" || a.peringkat === "disokong_nazir") return 1;
-    if (a.peringkat === "ditolak_su") return 2;
-    return 0; // "Baru" / belum disokong — perlu perhatian
+    if (disokongAtauProses(a)) return 2;
+    return a.maklumat_disahkan ? 0 : 1; // belum disokong: lengkap → atas, belum lengkap → bawah
   };
   const masaDaftar = (a: any) => new Date(a.tarikh_daftar || 0).getTime();
   const senarai = ((data as any[]) ?? []).sort((a, b) => {
