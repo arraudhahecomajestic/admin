@@ -41,7 +41,10 @@ export default async function AdminGajiPage({ searchParams }: { searchParams: { 
           <h1 className="text-2xl font-bold text-slate-900">Gaji Staf</h1>
           <p className="mt-1 text-sm text-slate-600">Dikira automatik dari kehadiran (punch-in). {labelBulan(bulan)}.</p>
         </div>
-        <Link href="/admin/staf" className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">← Portal Staf</Link>
+        <div className="flex gap-2">
+          <Link href="/admin/staf/gaji/kenaikan" className="rounded-lg border border-surau/40 px-3 py-1.5 text-sm font-semibold text-surau hover:bg-surau/10">Kenaikan Gaji</Link>
+          <Link href="/admin/staf" className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">← Portal Staf</Link>
+        </div>
       </div>
 
       {senarai.length === 0 ? (

@@ -131,3 +131,102 @@ export async function simpanConfig(input: Partial<GajiConfig> & { profil_id: str
   revalidatePath("/admin/staf/gaji");
   return { ok: true };
 }
+
+// ---- Fasa 52: Kenaikan gaji bersyarat penilaian + sejarah ----
+
+function anggaranPakej(c: any): number {
+  const perkhidmatan = c.elaun_perkhidmatan_aktif ? Number(c.elaun_perkhidmatan || 0) : 0;
+  return Number(c.gaji_pokok || 0) + Number(c.elaun_telefon || 0) + Number(c.elaun_perjalanan || 0)
+    + perkhidmatan + Number(c.maks_elaun_hadir || 0);
+}
+
+// Penilaian yang LAYAK jadi rujukan kenaikan: disahkan & lulus (markah >= 60 atau keputusan 'lulus').
+export async function penilaianLayak(profilId: string): Promise<any[]> {
+  if (!bolehGaji(await getProfil())) return [];
+  const db = createAdminClient();
+  const { data } = await db.from("staf_penilaian")
+    .select("id, tarikh_penilaian, tempoh, markah_akhir, gred, keputusan, status")
+    .eq("profil_id", profilId).eq("status", "disahkan")
+    .order("dicipta", { ascending: false });
+  return ((data as any[]) ?? []).filter((r) => Number(r.markah_akhir) >= 60 || r.keputusan === "lulus");
+}
+
+export async function sejarahGaji(profilId: string): Promise<any[]> {
+  if (!bolehGaji(await getProfil())) return [];
+  const db = createAdminClient();
+  const { data } = await db.from("staf_gaji_sejarah").select("*").eq("profil_id", profilId).order("dicipta", { ascending: false });
+  return (data as any[]) ?? [];
+}
+
+// Laksanakan kenaikan gaji — WAJIB rujuk penilaian yang lulus & disahkan.
+export async function naikkanGaji(input: {
+  profil_id: string;
+  penilaian_id: string;
+  gaji_pokok_baru: number | string;
+  elaun_perkhidmatan_baru?: number | string;
+  perkhidmatan_aktif_baru?: boolean;
+  berkuatkuasa?: string;
+  catatan?: string;
+}): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!bolehGaji(p)) return { ok: false, msg: "Tiada akses untuk meluluskan kenaikan gaji." };
+  if (!input.profil_id) return { ok: false, msg: "Staf tidak sah." };
+  if (!input.penilaian_id) return { ok: false, msg: "Kenaikan mesti merujuk penilaian yang lulus & disahkan." };
+
+  const db = createAdminClient();
+
+  // Sahkan penilaian rujukan: milik staf ini, disahkan, dan lulus.
+  const { data: pen } = await db.from("staf_penilaian")
+    .select("id, profil_id, status, markah_akhir, gred, keputusan").eq("id", input.penilaian_id).maybeSingle();
+  const pn: any = pen;
+  if (!pn || pn.profil_id !== input.profil_id) return { ok: false, msg: "Penilaian rujukan tidak sah." };
+  if (pn.status !== "disahkan") return { ok: false, msg: "Penilaian rujukan belum disahkan Pengerusi." };
+  if (!(Number(pn.markah_akhir) >= 60 || pn.keputusan === "lulus")) return { ok: false, msg: "Penilaian rujukan tidak mencapai tahap lulus (min 60%)." };
+
+  const { data: cfgData } = await db.from("staf_gaji_config").select("*").eq("profil_id", input.profil_id).maybeSingle();
+  const cfg: any = cfgData;
+  if (!cfg) return { ok: false, msg: "Config gaji staf tidak dijumpai." };
+
+  const pokokBaru = Number(input.gaji_pokok_baru);
+  if (!pokokBaru || pokokBaru <= 0) return { ok: false, msg: "Gaji pokok baru tidak sah." };
+  const perkhidmatanBaru = input.elaun_perkhidmatan_baru != null && input.elaun_perkhidmatan_baru !== ""
+    ? Number(input.elaun_perkhidmatan_baru) : Number(cfg.elaun_perkhidmatan || 0);
+  const aktifBaru = input.perkhidmatan_aktif_baru ?? cfg.elaun_perkhidmatan_aktif;
+
+  const jumlahLama = anggaranPakej(cfg);
+  const cfgBaru = { ...cfg, gaji_pokok: pokokBaru, elaun_perkhidmatan: perkhidmatanBaru, elaun_perkhidmatan_aktif: aktifBaru };
+  const jumlahBaru = anggaranPakej(cfgBaru);
+
+  // 1) Kemas kini config gaji semasa
+  const { error: e1 } = await db.from("staf_gaji_config").update({
+    gaji_pokok: pokokBaru,
+    elaun_perkhidmatan: perkhidmatanBaru,
+    elaun_perkhidmatan_aktif: aktifBaru,
+    dikemaskini: new Date().toISOString(),
+  }).eq("profil_id", input.profil_id);
+  if (e1) return { ok: false, msg: e1.message };
+
+  // 2) Rekod sejarah
+  await db.from("staf_gaji_sejarah").insert({
+    profil_id: input.profil_id,
+    nama: cfg.nama ?? null,
+    gaji_pokok_lama: Number(cfg.gaji_pokok || 0),
+    gaji_pokok_baru: pokokBaru,
+    elaun_perkhidmatan_lama: Number(cfg.elaun_perkhidmatan || 0),
+    elaun_perkhidmatan_baru: perkhidmatanBaru,
+    perkhidmatan_aktif_lama: cfg.elaun_perkhidmatan_aktif,
+    perkhidmatan_aktif_baru: aktifBaru,
+    jumlah_lama: jumlahLama,
+    jumlah_baru: jumlahBaru,
+    berkuatkuasa: input.berkuatkuasa || new Date().toISOString().slice(0, 10),
+    penilaian_id: input.penilaian_id,
+    penilaian_markah: Number(pn.markah_akhir) || null,
+    penilaian_gred: pn.gred ?? null,
+    diluluskan_oleh: p?.nama ?? p?.emel ?? "Pengerusi/SU",
+    catatan: (input.catatan ?? "").trim() || null,
+  });
+
+  revalidatePath("/admin/staf/gaji");
+  revalidatePath("/admin/staf/gaji/kenaikan");
+  return { ok: true };
+}

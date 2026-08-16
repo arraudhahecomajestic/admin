@@ -41,7 +41,7 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
   // Peranan terhad — kekal ringkas (flat)
   if (peranan === "bendahari" || peranan === "imam") {
     const pautan = peranan === "bendahari"
-      ? [{ href: "/admin/kewangan", label: "Kewangan" }, { href: "/admin/tuntutan", label: "Tuntutan" }]
+      ? [{ href: "/admin/kewangan", label: "Kewangan" }, { href: "/admin/tuntutan", label: "Tuntutan" }, { href: "/admin/staf/penilaian", label: "Penilaian Staf" }]
       : [{ href: "/admin/tahlil", label: "Tahlil" }];
     return (
       <Bar nama={nama}>
@@ -71,6 +71,9 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
       ] },
       { label: "Keahlian", items: [
         { href: "/admin/kariah-kawasan", label: "Kawasan / Fasa" },
+      ] },
+      { label: "Staf", items: [
+        { href: "/admin/staf/penilaian", label: "Penilaian Prestasi" },
       ] },
     ];
     return (

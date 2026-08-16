@@ -93,6 +93,12 @@ export function isBendahari(p: Profil | null): boolean {
   return !!p && p.peranan === "bendahari";
 }
 
+// Penilaian prestasi staf — AJK, Pengerusi, Timbalan Pengerusi, SU/Admin,
+// Bendahari & Timbalan Bendahari boleh nilai. Pengesahan akhir tetap Admin/SU (isAdmin).
+export function bolehNilaiStaf(p: Profil | null): boolean {
+  return !!p && (["admin", "ajk", "bendahari"].includes(p.peranan) || p.master === true);
+}
+
 // Program: hanya pencipta boleh urus/edit (Admin/Master boleh override semua).
 export function bolehUrusProgram(p: Profil | null, diciptaOleh: string | null | undefined): boolean {
   if (!p) return false;
