@@ -21,7 +21,7 @@ export default async function PanelSetiausahaPage() {
   const c = (q: any) => q.then((r: any) => r.count ?? 0);
 
   const [
-    jumlahAhli, permohonanBaru, programAkanDatang, maklumBaru, mesyuaratBelum, penilaianMenunggu, tugasanData,
+    jumlahAhli, permohonanBaru, programAkanDatang, maklumBaru, mesyuaratBelum, penilaianMenunggu, tenderAktif, tugasanData,
   ] = await Promise.all([
     c(db.from("ahli_kariah").select("id", { count: "exact", head: true }).eq("status", "lulus")),
     c(db.from("ahli_kariah").select("id", { count: "exact", head: true }).not("status", "in", "(lulus,tolak)")),
@@ -29,6 +29,7 @@ export default async function PanelSetiausahaPage() {
     c(db.from("maklum_balas").select("id", { count: "exact", head: true }).eq("status", "baru")),
     c(db.from("mesyuarat").select("id", { count: "exact", head: true }).neq("status", "selesai")),
     c(db.from("staf_penilaian").select("id", { count: "exact", head: true }).neq("status", "disahkan")),
+    c(db.from("tender").select("id", { count: "exact", head: true }).eq("status", "aktif")),
     db.from("su_tugasan").select("id, tajuk, catatan, tarikh_tamat, siap").order("siap", { ascending: true }).order("tarikh_tamat", { ascending: true, nullsFirst: false }).order("dicipta", { ascending: false }),
   ]);
   const tugasan = (tugasanData?.data as any[]) ?? [];
@@ -46,6 +47,7 @@ export default async function PanelSetiausahaPage() {
     { tajuk: "Pentadbiran", kad: [
       { href: "/admin/su/mesyuarat", tajuk: "Minit Mesyuarat", nota: "Agenda, minit & jejak tindakan AJK", lencana: mesyuaratBelum },
       { href: "/admin/su/surat", tajuk: "Surat Rasmi & Daftar", nota: "Karang surat keluar, rekod surat masuk" },
+      { href: "/admin/tender", tajuk: "Tender & Iklan", nota: "Hebahan tender — kariah tengok, kongsi & nyata minat", lencana: tenderAktif },
       { href: "/admin/pengumuman", tajuk: "Pengumuman", nota: "Tulis pengumuman untuk halaman utama" },
       { href: "/admin/maklum-balas", tajuk: "Maklum Balas", nota: "Komplen & cadangan dari kariah", lencana: maklumBaru },
       { href: "/admin/kandungan", tajuk: "Carta & Visi/Misi", nota: "Kemas kini AJK, visi, misi, buletin" },
