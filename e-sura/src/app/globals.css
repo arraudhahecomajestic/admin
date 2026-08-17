@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+}
+
+/* Sembunyikan chrome laman (header, nav, footer) semasa cetak — hanya borang keluar */
+@media print {
+  .print-hide { display: none !important; }
+  main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+  body { background: #fff !important; }
+}
