@@ -5,17 +5,29 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { naikkanGaji } from "@/app/admin/staf/gaji/actions";
 
+type Panel = {
+  tempoh: string;
+  label: string;
+  bilangan: number;
+  purata: number;
+  gred: string;
+  layak: boolean;
+  penilai: string[];
+};
+
 export default function BorangKenaikanGaji({
-  profilId, gajiPokokSemasa, elaunPerkhidmatanSemasa, aktifSemasa, layak,
+  profilId, gajiPokokSemasa, elaunPerkhidmatanSemasa, aktifSemasa, panel,
 }: {
   profilId: string;
   gajiPokokSemasa: number;
   elaunPerkhidmatanSemasa: number;
   aktifSemasa: boolean;
-  layak: { id: string; label: string }[];
+  panel: Panel[];
 }) {
   const router = useRouter();
-  const [penilaianId, setPenilaianId] = useState("");
+  const KOSONG = "__kosong__";
+  const layakPanel = panel.filter((p) => p.layak);
+  const [pilih, setPilih] = useState("");
   const [gajiPokok, setGajiPokok] = useState(String(gajiPokokSemasa || 2000));
   const [perkhidmatan, setPerkhidmatan] = useState(String(elaunPerkhidmatanSemasa || 270));
   const [aktif, setAktif] = useState(aktifSemasa);
@@ -24,11 +36,31 @@ export default function BorangKenaikanGaji({
   const [hantar, setHantar] = useState(false);
   const [ralat, setRalat] = useState("");
 
-  if (!layak.length) {
+  const dipilih = layakPanel.find((p) => (p.tempoh || KOSONG) === pilih);
+
+  // Tiada penilaian langsung
+  if (panel.length === 0) {
     return (
       <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-        <b>Tiada penilaian yang lulus &amp; disahkan.</b> Kenaikan gaji tidak boleh dibuat tanpa asas penilaian.
+        <b>Tiada penilaian yang disahkan.</b> Kenaikan gaji tidak boleh dibuat tanpa asas penilaian.
         Sila lengkapkan &amp; sahkan penilaian dahulu di <Link href="/admin/staf/penilaian" className="font-semibold underline">Penilaian Prestasi</Link>.
+      </div>
+    );
+  }
+
+  // Ada panel tapi tiada yang capai 60%
+  if (layakPanel.length === 0) {
+    return (
+      <div className="space-y-3 rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+        <b>Panel penilaian belum mencapai paras lulus (min 60%).</b> Kenaikan gaji tidak boleh diproses.
+        <div className="space-y-1">
+          {panel.map((p) => (
+            <div key={p.tempoh || KOSONG} className="rounded-lg bg-white/60 px-3 py-2">
+              <span className="font-semibold">{p.label}</span> — purata <b>{p.purata.toFixed(1)}%</b> ({p.gred}) · {p.bilangan} penilai
+            </div>
+          ))}
+        </div>
+        <p className="text-xs">Staf perlu tunjuk peningkatan &amp; dinilai semula, atau tambah penilai untuk purata panel yang lebih tepat.</p>
       </div>
     );
   }
@@ -36,12 +68,17 @@ export default function BorangKenaikanGaji({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setRalat("");
-    if (!penilaianId) { setRalat("Sila pilih penilaian rujukan."); return; }
+    if (!dipilih) { setRalat("Sila pilih panel penilaian rujukan."); return; }
     setHantar(true);
     const res = await naikkanGaji({
-      profil_id: profilId, penilaian_id: penilaianId,
-      gaji_pokok_baru: gajiPokok, elaun_perkhidmatan_baru: perkhidmatan,
-      perkhidmatan_aktif_baru: aktif, berkuatkuasa: tarikh, catatan,
+      profil_id: profilId,
+      tempoh: dipilih.tempoh,
+      ada_panel: true,
+      gaji_pokok_baru: gajiPokok,
+      elaun_perkhidmatan_baru: perkhidmatan,
+      perkhidmatan_aktif_baru: aktif,
+      berkuatkuasa: tarikh,
+      catatan,
     });
     setHantar(false);
     if (!res.ok) { setRalat(res.msg ?? "Ralat."); return; }
@@ -54,12 +91,23 @@ export default function BorangKenaikanGaji({
       {ralat && <div className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-700">{ralat}</div>}
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-600">Penilaian rujukan (lulus &amp; disahkan) *</span>
-        <select value={penilaianId} onChange={(e) => setPenilaianId(e.target.value)} className="inp">
-          <option value="">— Pilih penilaian —</option>
-          {layak.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+        <span className="mb-1 block text-xs font-medium text-slate-600">Panel penilaian rujukan (purata, lulus &amp; disahkan) *</span>
+        <select value={pilih} onChange={(e) => setPilih(e.target.value)} className="inp">
+          <option value="">— Pilih panel —</option>
+          {layakPanel.map((p) => (
+            <option key={p.tempoh || KOSONG} value={p.tempoh || KOSONG}>
+              {p.label} · purata {p.purata.toFixed(1)}% ({p.gred}) · {p.bilangan} penilai
+            </option>
+          ))}
         </select>
       </label>
+
+      {dipilih && (
+        <div className="rounded-lg border border-surau/20 bg-white p-3 text-xs text-slate-600">
+          <div className="font-semibold text-slate-800">Purata panel: {dipilih.purata.toFixed(1)}% · {dipilih.gred}</div>
+          <div className="mt-1">Dinilai oleh {dipilih.bilangan} orang: {dipilih.penilai.join(", ")}</div>
+        </div>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
@@ -86,7 +134,7 @@ export default function BorangKenaikanGaji({
 
       <label className="block">
         <span className="mb-1 block text-xs font-medium text-slate-600">Catatan (pilihan)</span>
-        <input value={catatan} onChange={(e) => setCatatan(e.target.value)} placeholder="cth: Kenaikan selepas percubaan, diluluskan AJK 16 Ogos 2026" className="inp" />
+        <input value={catatan} onChange={(e) => setCatatan(e.target.value)} placeholder="cth: Kenaikan selepas percubaan, purata panel biro" className="inp" />
       </label>
 
       <button type="submit" disabled={hantar} className="rounded-lg bg-surau px-6 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">

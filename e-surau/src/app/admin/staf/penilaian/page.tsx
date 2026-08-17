@@ -25,6 +25,22 @@ export default async function PenilaianStafPage() {
   const staf = (stafData as any[]) ?? [];
   const penilaian = (penData as any[]) ?? [];
 
+  // Ringkasan PANEL: purata markah penilaian DISAHKAN, dikumpul ikut staf + tempoh.
+  const panelMap = new Map<string, { nama: string; tempoh: string; markah: number[]; penilai: string[] }>();
+  for (const r of penilaian) {
+    if (r.status !== "disahkan") continue;
+    const tempoh = (r.tempoh ?? "").trim();
+    const key = `${r.profil_id}||${tempoh}`;
+    if (!panelMap.has(key)) panelMap.set(key, { nama: r.nama ?? "—", tempoh, markah: [], penilai: [] });
+    const grp = panelMap.get(key)!;
+    grp.markah.push(Number(r.markah_akhir) || 0);
+    grp.penilai.push(r.penyelia_nama ?? "—");
+  }
+  const panelRingkas = Array.from(panelMap.values()).map((grp) => {
+    const purata = grp.markah.reduce((s, m) => s + m, 0) / grp.markah.length;
+    return { nama: grp.nama, tempoh: grp.tempoh, penilai: grp.penilai, bilangan: grp.markah.length, purata };
+  });
+
   return (
     <div className="space-y-6">
       <AdminNav aktif="/admin/staf" nama={profil.nama ?? profil.emel ?? undefined} peranan={profil.peranan} master={profil.master} />
@@ -50,6 +66,29 @@ export default async function PenilaianStafPage() {
           </div>
         )}
       </section>
+
+      {/* Ringkasan panel (purata) */}
+      {panelRingkas.length > 0 && (
+        <section className="rounded-xl bg-white shadow-sm">
+          <h2 className="border-b px-5 py-3 font-semibold text-slate-900">Ringkasan Panel (Purata Disahkan)</h2>
+          <div className="divide-y">
+            {panelRingkas.map((g, i) => {
+              const gg = gredDari(g.purata);
+              return (
+                <div key={i} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
+                  <div>
+                    <span className="font-semibold text-slate-900">{g.nama}</span>
+                    <span className="ml-2 text-xs text-slate-500">{g.tempoh || "(Tanpa tempoh)"} · {g.bilangan} penilai</span>
+                    <div className="text-xs text-slate-400">{g.penilai.join(", ")}</div>
+                  </div>
+                  <span className={`rounded px-2 py-0.5 text-xs font-bold ${gg.cls}`}>Purata {g.purata.toFixed(1)}% · {gg.gred}</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="px-5 py-2 text-xs text-slate-400">Purata inilah asas kenaikan gaji (min 60%). Lagi ramai penilai, lagi tepat &amp; telus.</p>
+        </section>
+      )}
 
       {/* Rekod penilaian */}
       <section className="rounded-xl bg-white shadow-sm">

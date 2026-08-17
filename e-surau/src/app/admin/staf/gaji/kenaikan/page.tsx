@@ -4,7 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import { rm, tarikhMs } from "@/lib/format";
-import { penilaianLayak, sejarahGaji } from "../actions";
+import { panelPenilaian, sejarahGaji } from "../actions";
 import BorangKenaikanGaji from "@/components/BorangKenaikanGaji";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export default async function KenaikanGajiPage({ searchParams }: { searchParams:
 
   const { data: cfgData } = staf ? await db.from("staf_gaji_config").select("*").eq("profil_id", staf).maybeSingle() : { data: null } as any;
   const cfg: any = cfgData;
-  const layak = staf ? await penilaianLayak(staf) : [];
+  const panel = staf ? await panelPenilaian(staf) : [];
   const sejarah = staf ? await sejarahGaji(staf) : [];
 
   return (
@@ -37,7 +37,7 @@ export default async function KenaikanGajiPage({ searchParams }: { searchParams:
         <div>
           <Link href="/admin/staf/gaji" className="text-sm text-slate-500 hover:underline">← Gaji Staf</Link>
           <h1 className="text-2xl font-bold text-slate-900">Kenaikan Gaji</h1>
-          <p className="mt-1 text-sm text-slate-600">Kenaikan mesti merujuk penilaian yang <b>lulus &amp; disahkan</b>. Setiap kenaikan direkod.</p>
+          <p className="mt-1 text-sm text-slate-600">Kenaikan mesti merujuk <b>panel penilaian</b> (purata semua penilai) yang <b>lulus &amp; disahkan</b>. Setiap kenaikan direkod.</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export default async function KenaikanGajiPage({ searchParams }: { searchParams:
             gajiPokokSemasa={Number(cfg.gaji_pokok || 0)}
             elaunPerkhidmatanSemasa={Number(cfg.elaun_perkhidmatan || 0)}
             aktifSemasa={!!cfg.elaun_perkhidmatan_aktif}
-            layak={layak.map((r: any) => ({ id: r.id, label: `${r.tempoh ? r.tempoh + " · " : ""}${Number(r.markah_akhir).toFixed(1)}% · ${r.gred} · ${tarikhMs(r.tarikh_penilaian)}` }))}
+            panel={panel}
           />
 
           {/* Sejarah kenaikan */}
@@ -88,7 +88,7 @@ export default async function KenaikanGajiPage({ searchParams }: { searchParams:
                     {h.perkhidmatan_aktif_baru && !h.perkhidmatan_aktif_lama ? " · Elaun Perkhidmatan diaktifkan" : ""}
                   </div>
                   <div className="mt-0.5 text-xs text-slate-400">
-                    Rujukan penilaian: {h.penilaian_markah != null ? `${Number(h.penilaian_markah).toFixed(1)}% (${h.penilaian_gred})` : "—"} · Diluluskan: {h.diluluskan_oleh} · {tarikhMs(h.dicipta)}
+                    Rujukan panel: {h.penilaian_markah != null ? `purata ${Number(h.penilaian_markah).toFixed(1)}% (${h.penilaian_gred})` : "—"}{h.bilangan_penilai ? ` · ${h.bilangan_penilai} penilai` : ""}{h.penilaian_tempoh ? ` · ${h.penilaian_tempoh}` : ""} · Diluluskan: {h.diluluskan_oleh} · {tarikhMs(h.dicipta)}
                   </div>
                   {h.catatan && <div className="mt-0.5 text-xs text-slate-600">{h.catatan}</div>}
                 </div>

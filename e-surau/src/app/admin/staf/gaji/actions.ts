@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil, isPentadbir, isMaster, type Profil } from "@/lib/sesi";
 import { agregatKehadiran, kiraGaji, julatBulan, type GajiConfig, type KehadiranRow, type Agregat } from "@/lib/gaji";
+import { gredDari } from "@/lib/penilaian";
 
 function bolehGaji(p: Profil | null): boolean {
   // Gaji = hal sulit → SU/AJK (pentadbir) atau master sahaja. Bukan bendahari sahaja.
@@ -151,6 +152,51 @@ export async function penilaianLayak(profilId: string): Promise<any[]> {
   return ((data as any[]) ?? []).filter((r) => Number(r.markah_akhir) >= 60 || r.keputusan === "lulus");
 }
 
+export type PanelPenilaian = {
+  tempoh: string;      // kunci panel (tempoh penilaian); "" dibenarkan
+  label: string;       // paparan
+  bilangan: number;    // bilangan penilai
+  purata: number;      // purata markah_akhir (%)
+  gred: string;
+  layak: boolean;      // purata >= 60
+  penilai: string[];   // nama penilai
+  ids: string[];
+};
+
+// Kumpul penilaian DISAHKAN ikut tempoh -> satu markah PANEL (purata).
+// Ini asas kenaikan gaji apabila ramai penilai (AJK/Pengerusi/Bendahari) menilai.
+export async function panelPenilaian(profilId: string): Promise<PanelPenilaian[]> {
+  if (!bolehGaji(await getProfil())) return [];
+  const db = createAdminClient();
+  const { data } = await db.from("staf_penilaian")
+    .select("id, tempoh, markah_akhir, penyelia_nama, status, dicipta")
+    .eq("profil_id", profilId).eq("status", "disahkan")
+    .order("dicipta", { ascending: false });
+  const rows = (data as any[]) ?? [];
+  const grup = new Map<string, any[]>();
+  for (const r of rows) {
+    const key = (r.tempoh ?? "").trim();
+    if (!grup.has(key)) grup.set(key, []);
+    grup.get(key)!.push(r);
+  }
+  const panels: PanelPenilaian[] = [];
+  for (const [tempoh, list] of grup) {
+    const purata = list.reduce((s, r) => s + (Number(r.markah_akhir) || 0), 0) / list.length;
+    const g = gredDari(purata);
+    panels.push({
+      tempoh,
+      label: tempoh || "(Tanpa tempoh)",
+      bilangan: list.length,
+      purata: Math.round(purata * 10) / 10,
+      gred: g.gred,
+      layak: purata >= 60,
+      penilai: list.map((r) => r.penyelia_nama ?? "—"),
+      ids: list.map((r) => r.id),
+    });
+  }
+  return panels;
+}
+
 export async function sejarahGaji(profilId: string): Promise<any[]> {
   if (!bolehGaji(await getProfil())) return [];
   const db = createAdminClient();
@@ -158,10 +204,11 @@ export async function sejarahGaji(profilId: string): Promise<any[]> {
   return (data as any[]) ?? [];
 }
 
-// Laksanakan kenaikan gaji — WAJIB rujuk penilaian yang lulus & disahkan.
+// Laksanakan kenaikan gaji — WAJIB rujuk PANEL penilaian (purata) yang lulus & disahkan.
 export async function naikkanGaji(input: {
   profil_id: string;
-  penilaian_id: string;
+  tempoh?: string;            // kunci panel (tempoh penilaian); "" dibenarkan
+  ada_panel?: boolean;        // penanda panel telah dipilih
   gaji_pokok_baru: number | string;
   elaun_perkhidmatan_baru?: number | string;
   perkhidmatan_aktif_baru?: boolean;
@@ -171,17 +218,21 @@ export async function naikkanGaji(input: {
   const p = await getProfil();
   if (!bolehGaji(p)) return { ok: false, msg: "Tiada akses untuk meluluskan kenaikan gaji." };
   if (!input.profil_id) return { ok: false, msg: "Staf tidak sah." };
-  if (!input.penilaian_id) return { ok: false, msg: "Kenaikan mesti merujuk penilaian yang lulus & disahkan." };
+  if (!input.ada_panel) return { ok: false, msg: "Kenaikan mesti merujuk panel penilaian yang lulus & disahkan." };
 
   const db = createAdminClient();
+  const tempoh = (input.tempoh ?? "").trim();
 
-  // Sahkan penilaian rujukan: milik staf ini, disahkan, dan lulus.
-  const { data: pen } = await db.from("staf_penilaian")
-    .select("id, profil_id, status, markah_akhir, gred, keputusan").eq("id", input.penilaian_id).maybeSingle();
-  const pn: any = pen;
-  if (!pn || pn.profil_id !== input.profil_id) return { ok: false, msg: "Penilaian rujukan tidak sah." };
-  if (pn.status !== "disahkan") return { ok: false, msg: "Penilaian rujukan belum disahkan Pengerusi." };
-  if (!(Number(pn.markah_akhir) >= 60 || pn.keputusan === "lulus")) return { ok: false, msg: "Penilaian rujukan tidak mencapai tahap lulus (min 60%)." };
+  // Kumpul SEMUA penilaian disahkan untuk staf + tempoh ini -> purata PANEL.
+  const { data: penData } = await db.from("staf_penilaian")
+    .select("id, tempoh, markah_akhir, penyelia_nama, status")
+    .eq("profil_id", input.profil_id).eq("status", "disahkan");
+  const rows = ((penData as any[]) ?? []).filter((r) => (r.tempoh ?? "").trim() === tempoh);
+  if (rows.length === 0) return { ok: false, msg: "Tiada penilaian disahkan dalam panel ini." };
+  const purata = rows.reduce((s, r) => s + (Number(r.markah_akhir) || 0), 0) / rows.length;
+  if (purata < 60) return { ok: false, msg: `Purata panel ${purata.toFixed(1)}% belum capai paras lulus (min 60%).` };
+  const g = gredDari(purata);
+  const purataBulat = Math.round(purata * 10) / 10;
 
   const { data: cfgData } = await db.from("staf_gaji_config").select("*").eq("profil_id", input.profil_id).maybeSingle();
   const cfg: any = cfgData;
@@ -219,9 +270,11 @@ export async function naikkanGaji(input: {
     jumlah_lama: jumlahLama,
     jumlah_baru: jumlahBaru,
     berkuatkuasa: input.berkuatkuasa || new Date().toISOString().slice(0, 10),
-    penilaian_id: input.penilaian_id,
-    penilaian_markah: Number(pn.markah_akhir) || null,
-    penilaian_gred: pn.gred ?? null,
+    penilaian_id: rows[0].id,
+    penilaian_markah: purataBulat,
+    penilaian_gred: g.gred,
+    bilangan_penilai: rows.length,
+    penilaian_tempoh: tempoh || null,
     diluluskan_oleh: p?.nama ?? p?.emel ?? "Pengerusi/SU",
     catatan: (input.catatan ?? "").trim() || null,
   });
