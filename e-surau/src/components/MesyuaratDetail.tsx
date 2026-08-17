@@ -36,8 +36,8 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
   async function simpan() {
     setBusy(true); setMsg("");
     const res = await simpanMesyuarat(m0.id, {
-      tajuk: f.tajuk, jenis: f.jenis, tarikh: f.tarikh, masa: f.masa, tempat: f.tempat,
-      pengerusi: f.pengerusi, pencatat: f.pencatat, kehadiran: f.kehadiran, agenda: f.agenda, minit: f.minit,
+      tajuk: f.tajuk, jenis: f.jenis, bil: f.bil, tarikh: f.tarikh, masa: f.masa, tempat: f.tempat,
+      pengerusi: f.pengerusi, pencatat: f.pencatat, kehadiran: f.kehadiran, tidak_hadir: f.tidak_hadir, agenda: f.agenda, minit: f.minit,
     });
     setBusy(false);
     if (!res.ok) { setMsg(res.msg ?? "Ralat."); return; }
@@ -52,7 +52,12 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
     await padamMesyuarat(m0.id); router.push("/admin/su/mesyuarat");
   }
 
-  const kehadiranList = (f.kehadiran || "").split("\n").map((s: string) => s.trim()).filter(Boolean);
+  const pisah = (blok: string) => (blok || "").split("\n").map((s: string) => s.trim()).filter(Boolean).map((line: string) => {
+    const mm = line.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    return mm ? { nama: mm[1].trim(), jawatan: mm[2].trim() } : { nama: line, jawatan: "" };
+  });
+  const hadir = pisah(f.kehadiran);
+  const tidakHadir = pisah(f.tidak_hadir);
 
   return (
     <div className="space-y-5">
@@ -76,6 +81,7 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
             <label className="text-sm text-slate-600">Jenis
               <select value={f.jenis ?? "AJK"} onChange={(e) => set("jenis", e.target.value)} className="inp">{JENIS_MESYUARAT.map((j) => <option key={j} value={j}>{j}</option>)}</select>
             </label>
+            <label className="text-sm text-slate-600">Bilangan (cth 1/2025)<input value={f.bil ?? ""} onChange={(e) => set("bil", e.target.value)} className="inp" placeholder="1/2025" /></label>
             <label className="text-sm text-slate-600">Tarikh<input type="date" value={f.tarikh ?? ""} onChange={(e) => set("tarikh", e.target.value)} className="inp" /></label>
             <label className="text-sm text-slate-600">Masa<input value={f.masa ?? ""} onChange={(e) => set("masa", e.target.value)} className="inp" /></label>
             <label className="text-sm text-slate-600">Tempat<input value={f.tempat ?? ""} onChange={(e) => set("tempat", e.target.value)} className="inp" /></label>
@@ -88,6 +94,9 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
               </div>
               <textarea rows={4} value={f.kehadiran ?? ""} onChange={(e) => set("kehadiran", e.target.value)} className="inp" placeholder="Cth: Ahmad bin Ali (Pengerusi)&#10;— atau tekan 'Isi nama AJK'" />
             </div>
+            <label className="text-sm text-slate-600 sm:col-span-2">Tidak Hadir Bersebab (satu nama satu baris)
+              <textarea rows={3} value={f.tidak_hadir ?? ""} onChange={(e) => set("tidak_hadir", e.target.value)} className="inp" placeholder="Cth: Ali bin Abu (Bendahari)" />
+            </label>
             <label className="text-sm text-slate-600 sm:col-span-2">Agenda (satu perkara satu baris)<textarea rows={4} value={f.agenda ?? ""} onChange={(e) => set("agenda", e.target.value)} className="inp" /></label>
             <div className="sm:col-span-2">
               <div className="mb-1 flex items-center justify-between gap-2">
@@ -119,42 +128,67 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
             </div>
           </div>
 
-          <h1 className="mt-5 text-center text-lg font-bold uppercase text-slate-900">{f.tajuk}</h1>
-          <div className="mx-auto mt-1 text-center text-sm text-slate-500">Mesyuarat {f.jenis}</div>
-
-          <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-            <Info k="Tarikh" v={f.tarikh ? tarikhMs(f.tarikh) : "—"} />
-            <Info k="Masa" v={f.masa || "—"} />
-            <Info k="Tempat" v={f.tempat || "—"} />
-            <Info k="Pengerusi" v={f.pengerusi || "—"} />
+          <h1 className="mt-5 text-center text-base font-bold uppercase tracking-wide text-slate-900">Minit Mesyuarat</h1>
+          <div className="mx-auto mt-1 text-center text-base font-bold uppercase leading-snug text-slate-900">
+            {f.tajuk}{f.bil ? ` Bil. ${f.bil}` : ""}
           </div>
 
-          {kehadiranList.length > 0 && (
-            <div className="mt-5">
-              <h2 className="font-bold text-slate-900">Kehadiran</h2>
-              <ol className="mt-1 list-decimal pl-5 text-sm text-slate-700">{kehadiranList.map((n: string, i: number) => <li key={i}>{n}</li>)}</ol>
+          <div className="mx-auto mt-4 max-w-md space-y-0.5 text-sm">
+            <BarisMeta k="Tarikh" v={f.tarikh ? tarikhMs(f.tarikh) : "—"} />
+            <BarisMeta k="Masa" v={f.masa || "—"} />
+            <BarisMeta k="Tempat" v={f.tempat || "—"} />
+          </div>
+
+          <hr className="my-5 border-slate-300" />
+
+          {hadir.length > 0 && (
+            <div className="mt-2">
+              <h2 className="font-bold uppercase text-slate-900">Kehadiran</h2>
+              <ol className="mt-2 space-y-1 text-sm text-slate-800">
+                {hadir.map((o: any, i: number) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="w-6 shrink-0 text-right">{i + 1}.</span>
+                    <span className="flex-1">{o.nama}</span>
+                    <span className="w-52 shrink-0">{o.jawatan ? `—  ${o.jawatan}` : ""}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
 
-          {f.agenda && (
+          {tidakHadir.length > 0 && (
             <div className="mt-5">
+              <h2 className="font-bold uppercase text-slate-900">Tidak Hadir Bersebab</h2>
+              <ol className="mt-2 space-y-1 text-sm text-slate-800">
+                {tidakHadir.map((o: any, i: number) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="w-6 shrink-0 text-right">{i + 1}.</span>
+                    <span className="flex-1">{o.nama}</span>
+                    <span className="w-52 shrink-0">{o.jawatan ? `—  ${o.jawatan}` : ""}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          <hr className="my-5 border-slate-300" />
+
+          {f.minit ? (
+            <div className="mt-2 space-y-1 text-sm leading-relaxed text-slate-800">
+              {renderMinit(f.minit)}
+            </div>
+          ) : f.agenda ? (
+            <div className="mt-2">
               <h2 className="font-bold text-slate-900">Agenda</h2>
               <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-sm text-slate-700">
                 {(f.agenda || "").split("\n").map((s: string) => s.trim()).filter(Boolean).map((a: string, i: number) => <li key={i}>{a}</li>)}
               </ol>
             </div>
-          )}
-
-          {f.minit && (
-            <div className="mt-5">
-              <h2 className="font-bold text-slate-900">Minit / Perbincangan</h2>
-              <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{f.minit}</p>
-            </div>
-          )}
+          ) : null}
 
           {tindakan.length > 0 && (
-            <div className="mt-5">
-              <h2 className="font-bold text-slate-900">Senarai Tindakan</h2>
+            <div className="mt-6">
+              <h2 className="font-bold text-slate-900">Ringkasan Jejak Tindakan</h2>
               <table className="mt-1 w-full border-collapse text-sm">
                 <thead><tr className="border-y text-left text-xs uppercase text-slate-500"><th className="py-1 pr-2">Perkara</th><th className="py-1 pr-2">Tanggungjawab</th><th className="py-1 pr-2">Sasaran</th><th className="py-1">Status</th></tr></thead>
                 <tbody>
@@ -186,8 +220,27 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
   );
 }
 
-function Info({ k, v }: { k: string; v: string }) {
-  return (<div><span className="text-slate-500">{k}:</span> <span className="font-medium text-slate-900">{v}</span></div>);
+function BarisMeta({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex gap-1">
+      <span className="w-20 shrink-0 font-semibold text-slate-800">{k}</span>
+      <span>:</span>
+      <span className="flex-1 text-slate-900">{v}</span>
+    </div>
+  );
+}
+
+// Render badan minit ikut gaya SAR: perkara "N." tebal, baris "Tindakan:" kanan.
+function renderMinit(teks: string) {
+  return (teks || "").split("\n").map((raw, i) => {
+    const line = raw.replace(/\s+$/, "");
+    if (!line.trim()) return <div key={i} className="h-1.5" />;
+    if (/^\s*Tindakan\s*:/i.test(line)) {
+      return <p key={i} className="text-right text-xs font-semibold text-slate-600">{line.trim()}</p>;
+    }
+    const utama = /^\d+\.\s/.test(line.trim());
+    return <p key={i} className={`whitespace-pre-wrap ${utama ? "mt-2 font-bold text-slate-900" : ""}`}>{line}</p>;
+  });
 }
 
 function TindakanPanel({ mesyuaratId, tindakan, onDone }: { mesyuaratId: string; tindakan: any[]; onDone: () => void }) {

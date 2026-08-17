@@ -18,15 +18,16 @@ export async function kemasMinitAI(input: {
   const nota = (input.nota || "").trim();
   if (nota.length < 10) return { ok: false, msg: "Sila taip nota/perbincangan kasar dahulu (sekurang-kurangnya beberapa ayat)." };
 
-  const sistem = `Anda pembantu setiausaha untuk ${NAMA_SURAU}. Tugas anda menyusun nota mesyuarat yang kasar/berselerak menjadi MINIT MESYUARAT yang kemas, formal dan profesional dalam Bahasa Melayu.
+  const sistem = `Anda pembantu Setiausaha untuk ${NAMA_SURAU}. Tugas anda menyusun nota kasar/berselerak menjadi BADAN MINIT MESYUARAT yang kemas, formal & profesional dalam Bahasa Melayu, mengikut GAYA RASMI Surau Ar-Raudhah.
 
-GARIS PANDUAN:
-- Susun ikut agenda/perkara. Guna penomboran perkara (cth 1.0, 2.0) dan sub-perkara (1.1, 1.2) jika sesuai.
-- Setiap perkara: nyatakan perbincangan secara ringkas & padat, dan keputusan/ketetapan jika ada.
-- Gunakan ayat pasif formal minit (cth "Mesyuarat bersetuju…", "Dimaklumkan bahawa…", "AJK dicadangkan…").
-- JANGAN reka fakta, nama, angka atau keputusan yang tiada dalam nota. Kekalkan maklumat asal — cuma kemaskan bahasa & susunan.
-- Jika sesuatu tidak jelas, biarkan seperti adanya tanpa menambah andaian.
-- Keluarkan HANYA teks minit yang telah dikemas. Jangan tambah tajuk mesyuarat, senarai kehadiran, tandatangan, atau komen.`;
+FORMAT & GAYA (wajib ikut):
+- Susun sebagai PERKARA BERNOMBOR: "1.", "2.", "3." dan seterusnya. Setiap perkara mulakan dengan tajuk pendek (cth "Bacaan Surah Al-Fatihah dan Doa Selamat", "Ucapan Pengerusi", "Kewangan", "Hal-hal Lain").
+- Guna sub-perkara berangka bila ada beberapa isi: 2.1, 2.2, 2.3 (dan 3.2.1 jika sangat terperinci).
+- Tulis dalam ayat pasif formal minit: "Pengerusi memaklumkan…", "Mesyuarat bersetuju…", "Dimaklumkan bahawa…", "Jawatankuasa dicadangkan…".
+- Bagi perkara yang ada susulan, tambah SATU baris berasingan tepat di bawah perkara berkenaan: "Tindakan: <pihak>" — cth "Tindakan: Bendahari", "Tindakan: Ketua-ketua biro", "Tindakan: Untuk makluman semua ahli jawatankuasa".
+- Kekalkan SEMUA nama, angka, tarikh & keputusan SEPERTI dalam nota. JANGAN reka fakta, nama, angka, atau keputusan baharu. Jika sesuatu tidak jelas, biarkan tanpa menambah andaian.
+- Keluarkan HANYA badan minit (senarai perkara + baris Tindakan). JANGAN tambah tajuk "MINIT MESYUARAT", senarai kehadiran, tarikh/masa/tempat, atau ruang tandatangan — semua itu diuruskan berasingan.
+- Guna Bahasa Melayu baku sepenuhnya.`;
 
   const konteks = [
     input.tajuk ? `Tajuk: ${input.tajuk}` : "",
@@ -55,7 +56,7 @@ export async function senaraiAjkKehadiran(): Promise<{ ok: boolean; teks?: strin
 }
 
 export async function ciptaMesyuarat(input: {
-  tajuk: string; jenis: string; tarikh?: string; masa?: string; tempat?: string;
+  tajuk: string; jenis: string; bil?: string; tarikh?: string; masa?: string; tempat?: string;
 }): Promise<{ ok: boolean; msg?: string; id?: string }> {
   const p = await getProfil();
   if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
@@ -63,7 +64,7 @@ export async function ciptaMesyuarat(input: {
   if (tajuk.length < 3) return { ok: false, msg: "Sila isi tajuk mesyuarat." };
   const db = createAdminClient();
   const { data, error } = await db.from("mesyuarat").insert({
-    tajuk, jenis: input.jenis || "AJK",
+    tajuk, jenis: input.jenis || "AJK", bil: (input.bil || "").trim() || null,
     tarikh: input.tarikh || null, masa: (input.masa || "").trim() || null,
     tempat: (input.tempat || "").trim() || null,
     pencatat: p!.nama ?? p!.emel,
@@ -74,14 +75,14 @@ export async function ciptaMesyuarat(input: {
 }
 
 export async function simpanMesyuarat(id: string, patch: {
-  tajuk?: string; jenis?: string; tarikh?: string; masa?: string; tempat?: string;
-  pengerusi?: string; pencatat?: string; kehadiran?: string; agenda?: string; minit?: string; status?: string;
+  tajuk?: string; jenis?: string; bil?: string; tarikh?: string; masa?: string; tempat?: string;
+  pengerusi?: string; pencatat?: string; kehadiran?: string; tidak_hadir?: string; agenda?: string; minit?: string; status?: string;
 }): Promise<{ ok: boolean; msg?: string }> {
   const p = await getProfil();
   if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
   const db = createAdminClient();
   const bersih: any = {};
-  for (const k of ["tajuk","jenis","masa","tempat","pengerusi","pencatat","kehadiran","agenda","minit","status"] as const) {
+  for (const k of ["tajuk","jenis","bil","masa","tempat","pengerusi","pencatat","kehadiran","tidak_hadir","agenda","minit","status"] as const) {
     if (patch[k] !== undefined) bersih[k] = (patch[k] as string)?.trim?.() ?? patch[k] ?? null;
   }
   if (patch.tarikh !== undefined) bersih.tarikh = patch.tarikh || null;
