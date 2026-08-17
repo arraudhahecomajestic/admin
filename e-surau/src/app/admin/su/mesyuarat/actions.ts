@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil, isAdmin, type Profil } from "@/lib/sesi";
 import { NAMA_SURAU } from "@/lib/tetapan";
-import { panggilAI } from "@/lib/ai";
+import { panggilAI, panggilAIDokumenPDF } from "@/lib/ai";
+import { unzipSync, strFromU8 } from "fflate";
 
 function boleh(p: Profil | null): boolean {
   return isAdmin(p);
@@ -133,6 +134,107 @@ export async function padamTindakan(id: string, mesyuaratId: string): Promise<{ 
   if (!boleh(p)) return { ok: false };
   const db = createAdminClient();
   await db.from("mesyuarat_tindakan").delete().eq("id", id);
+  revalidatePath(`/admin/su/mesyuarat/${mesyuaratId}`);
+  return { ok: true };
+}
+
+// ---- Lampiran (slide, dokumen, gambar) ----
+export async function tambahLampiran(input: { mesyuaratId: string; tajuk: string; url_fail: string; nama_fail?: string }): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
+  const tajuk = (input.tajuk || "").trim();
+  if (!tajuk) return { ok: false, msg: "Sila isi tajuk lampiran." };
+  if (!input.url_fail) return { ok: false, msg: "Sila muat naik fail lampiran." };
+  const db = createAdminClient();
+  const { error } = await db.from("mesyuarat_lampiran").insert({
+    mesyuarat_id: input.mesyuaratId, tajuk, url_fail: input.url_fail,
+    nama_fail: (input.nama_fail || "").trim() || null,
+    dicipta_oleh: p?.nama ?? p?.emel ?? null,
+  });
+  if (error) return { ok: false, msg: error.message };
+  revalidatePath(`/admin/su/mesyuarat/${input.mesyuaratId}`);
+  return { ok: true };
+}
+
+export async function padamLampiran(id: string, mesyuaratId: string): Promise<{ ok: boolean }> {
+  const p = await getProfil();
+  if (!boleh(p)) return { ok: false };
+  const db = createAdminClient();
+  const { data: rec } = await db.from("mesyuarat_lampiran").select("url_fail").eq("id", id).maybeSingle();
+  const url = (rec as any)?.url_fail as string | undefined;
+  if (url) {
+    const rel = url.replace(/^salinan-kp\//, "");
+    await db.storage.from("salinan-kp").remove([rel]);
+  }
+  await db.from("mesyuarat_lampiran").delete().eq("id", id);
+  revalidatePath(`/admin/su/mesyuarat/${mesyuaratId}`);
+  return { ok: true };
+}
+
+// AI baca lampiran (PDF natif / PPTX ekstrak teks) → ekstrak poin penting jadi badan minit.
+export async function bacaLampiranAI(lampiranId: string): Promise<{ ok: boolean; teks?: string; msg?: string }> {
+  const p = await getProfil();
+  if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
+  const db = createAdminClient();
+  const { data: lam } = await db.from("mesyuarat_lampiran").select("tajuk, url_fail, nama_fail").eq("id", lampiranId).maybeSingle();
+  const l: any = lam;
+  if (!l?.url_fail) return { ok: false, msg: "Lampiran tidak dijumpai." };
+
+  const rel = String(l.url_fail).replace(/^salinan-kp\//, "");
+  const { data: blob, error } = await db.storage.from("salinan-kp").download(rel);
+  if (error || !blob) return { ok: false, msg: "Gagal muat turun fail lampiran." };
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  if (bytes.byteLength > 12 * 1024 * 1024) return { ok: false, msg: "Fail terlalu besar (>12MB). Sila ringkaskan atau muat naik versi PDF." };
+  const nama = String(l.nama_fail || l.tajuk || "").toLowerCase();
+
+  const sistem = `Anda pembantu Setiausaha untuk ${NAMA_SURAU}. Anda diberi kandungan sebuah slide/dokumen pembentangan mesyuarat. Ekstrak HANYA maklumat penting dan tuliskan sebagai BADAN MINIT MESYUARAT ringkas dalam Bahasa Melayu formal, mengikut gaya rasmi:
+- Susun sebagai perkara bernombor + sub-perkara (cth "1. Pembentangan Bajet 2026", "1.1 ...").
+- Padatkan poin penting: keputusan, angka, cadangan, tarikh & tindakan.
+- Bagi perkara yang ada susulan, tambah baris berasingan "Tindakan: <pihak>".
+- JANGAN reka fakta, nama atau angka yang tiada dalam dokumen. Jika tidak jelas, biarkan.
+- Tandakan sumber sebagai "(rujuk Lampiran)". Keluarkan HANYA badan minit.`;
+  const arahan = `Tajuk lampiran: ${l.tajuk}. Sila ekstrak maklumat penting daripada dokumen ini dan susun sebagai badan minit mesyuarat.`;
+
+  if (nama.endsWith(".pdf")) {
+    const b64 = Buffer.from(bytes).toString("base64");
+    return panggilAIDokumenPDF(sistem, b64, arahan, 2500);
+  }
+
+  if (nama.endsWith(".pptx")) {
+    let teksSlaid = "";
+    try {
+      const files = unzipSync(bytes);
+      const slaid = Object.keys(files)
+        .filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f))
+        .sort((a, b) => Number(a.match(/(\d+)/)![1]) - Number(b.match(/(\d+)/)![1]));
+      const bahagian: string[] = [];
+      slaid.forEach((f, i) => {
+        const xml = strFromU8(files[f]);
+        const teks = (xml.match(/<a:t>([\s\S]*?)<\/a:t>/g) || [])
+          .map((t) => t.replace(/<[^>]+>/g, "")).join(" ").replace(/\s+/g, " ").trim();
+        if (teks) bahagian.push(`Slaid ${i + 1}: ${teks}`);
+      });
+      teksSlaid = bahagian.join("\n");
+    } catch { return { ok: false, msg: "Gagal membaca fail PPTX. Cuba muat naik versi PDF." }; }
+    if (teksSlaid.trim().length < 15) return { ok: false, msg: "Tiada teks dikesan dalam slide (mungkin slide gambar sahaja). Sila muat naik versi PDF." };
+    return panggilAI(sistem, `${arahan}\n\nKandungan slide:\n${teksSlaid}`, 2500);
+  }
+
+  return { ok: false, msg: "Format tidak disokong untuk bacaan AI. Sila muat naik PDF atau PPTX." };
+}
+
+// Tambah teks (cth hasil AI dari lampiran) ke dalam badan minit sedia ada.
+export async function tambahKeMinit(mesyuaratId: string, teks: string): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
+  const t = (teks || "").trim();
+  if (!t) return { ok: false, msg: "Tiada teks untuk ditambah." };
+  const db = createAdminClient();
+  const { data: m } = await db.from("mesyuarat").select("minit").eq("id", mesyuaratId).maybeSingle();
+  const sedia = String((m as any)?.minit || "").trim();
+  const gabung = sedia ? `${sedia}\n\n${t}` : t;
+  const { error } = await db.from("mesyuarat").update({ minit: gabung }).eq("id", mesyuaratId);
+  if (error) return { ok: false, msg: error.message };
   revalidatePath(`/admin/su/mesyuarat/${mesyuaratId}`);
   return { ok: true };
 }

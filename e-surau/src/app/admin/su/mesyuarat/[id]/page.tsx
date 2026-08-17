@@ -13,11 +13,22 @@ export default async function MesyuaratDetailPage({ params }: { params: { id: st
   if (!isAdmin(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
-  const [{ data: m }, { data: tindakan }] = await Promise.all([
+  const [{ data: m }, { data: tindakan }, { data: lampiranData }] = await Promise.all([
     db.from("mesyuarat").select("*").eq("id", params.id).maybeSingle(),
     db.from("mesyuarat_tindakan").select("*").eq("mesyuarat_id", params.id).order("dicipta"),
+    db.from("mesyuarat_lampiran").select("id, tajuk, nama_fail, url_fail, dicipta").eq("mesyuarat_id", params.id).order("dicipta"),
   ]);
   if (!m) return <div className="rounded-lg border p-4 text-sm">Mesyuarat tidak dijumpai.</div>;
 
-  return <MesyuaratDetail mesyuarat={m} tindakan={(tindakan as any[]) ?? []} />;
+  const lampiran = await Promise.all(((lampiranData as any[]) ?? []).map(async (l) => {
+    let signedUrl: string | null = null;
+    if (l.url_fail) {
+      const rel = String(l.url_fail).replace(/^salinan-kp\//, "");
+      const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
+      signedUrl = data?.signedUrl ?? null;
+    }
+    return { id: l.id, tajuk: l.tajuk, nama_fail: l.nama_fail, signedUrl };
+  }));
+
+  return <MesyuaratDetail mesyuarat={m} tindakan={(tindakan as any[]) ?? []} lampiran={lampiran} />;
 }

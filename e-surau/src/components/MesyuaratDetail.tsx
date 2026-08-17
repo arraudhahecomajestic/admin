@@ -7,8 +7,11 @@ import { simpanMesyuarat, padamMesyuarat, tambahTindakan, ubahStatusTindakan, pa
 import { JENIS_MESYUARAT, STATUS_TINDAKAN, labelStatusTindakan } from "@/lib/su";
 import { NAMA_SURAU, ALAMAT_SURAU, EMEL_SURAU, LOGO_SURAU } from "@/lib/tetapan";
 import { tarikhMs } from "@/lib/format";
+import MesyuaratLampiran from "@/components/MesyuaratLampiran";
 
-export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat: any; tindakan: any[] }) {
+type Lampiran = { id: string; tajuk: string; nama_fail: string | null; signedUrl: string | null };
+
+export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = [] }: { mesyuarat: any; tindakan: any[]; lampiran?: Lampiran[] }) {
   const router = useRouter();
   const [edit, setEdit] = useState(false);
   const [f, setF] = useState<any>({ ...m0 });
@@ -205,6 +208,24 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
             </div>
           )}
 
+          {lampiran.length > 0 && (
+            <div className="mt-6">
+              <h2 className="font-bold text-slate-900">Lampiran</h2>
+              <ol className="mt-1 space-y-0.5 text-sm text-slate-700">
+                {lampiran.map((l, i) => (
+                  <li key={l.id} className="flex gap-2">
+                    <span className="shrink-0 font-semibold">Lampiran {String.fromCharCode(65 + i)}:</span>
+                    <span>
+                      {l.signedUrl
+                        ? <a href={l.signedUrl} target="_blank" rel="noreferrer" className="text-surau underline print:text-slate-700 print:no-underline">{l.tajuk}</a>
+                        : l.tajuk}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           <div className="mt-10 grid grid-cols-2 gap-8 text-sm">
             <div><div className="h-10 border-b border-slate-400" /><div className="mt-1 text-slate-600">Dicatat oleh</div><div className="text-xs text-slate-500">{f.pencatat || "Setiausaha"}</div></div>
             <div><div className="h-10 border-b border-slate-400" /><div className="mt-1 text-slate-600">Disahkan oleh</div><div className="text-xs text-slate-500">{f.pengerusi || "Pengerusi"}</div></div>
@@ -214,6 +235,9 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan }: { mesyuarat
 
       {/* Pengurusan tindakan (tidak dicetak) */}
       {!edit && <TindakanPanel mesyuaratId={m0.id} tindakan={tindakan} onDone={() => router.refresh()} />}
+
+      {/* Lampiran slide/dokumen (tidak dicetak) */}
+      {!edit && <MesyuaratLampiran mesyuaratId={m0.id} lampiran={lampiran} />}
 
       <style jsx global>{`.inp{width:100%;border-radius:.5rem;border:1px solid #cbd5e1;padding:.5rem .75rem;font-size:.875rem;outline:none;margin-top:.25rem}.inp:focus{border-color:#b8860b;box-shadow:0 0 0 2px rgba(184,134,11,.2)}`}</style>
     </div>
