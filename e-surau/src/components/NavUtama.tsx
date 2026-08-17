@@ -26,6 +26,7 @@ export default function NavUtama({ lang, paparKhairat, stafPreview, paparInfaq, 
     paparInfaq && { href: "/infaq", label: `${t("Infaq", "Infaq")}${infaqPratonton ? " ·pratonton" : ""}` },
     { href: "/sewaan", label: t("Sewaan", "Rental") },
     { href: "/pembekal/daftar", label: t("Vendor", "Vendors") },
+    { href: "/tender", label: t("Tender & Iklan", "Tenders") },
   ].filter(Boolean) as { href: string; label: string }[];
 
   const tentang = [

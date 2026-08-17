@@ -71,6 +71,7 @@ export default async function RootLayout({
           <div className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {paparInfaq && <Link href="/infaq" className="font-medium text-surau hover:underline">{t("Infaq", "Infaq")}{!infaqOn && master ? " ·pratonton" : ""}</Link>}
             {paparPenaja && <Link href="/rakan" className="font-medium text-surau hover:underline">{t("Rakan Surau", "Our Partners")}</Link>}
+            <Link href="/tender" className="font-medium text-surau hover:underline">{t("Tender & Iklan", "Tenders")}</Link>
             <Link href="/dasar-privasi" className="hover:text-surau hover:underline">{t("Dasar Privasi", "Privacy Policy")}</Link>
             <Link href="/terma" className="hover:text-surau hover:underline">{t("Terma & Penafian", "Terms & Disclaimer")}</Link>
             <Link href="/maklum-balas" className="font-medium text-surau hover:underline">{t("Maklum Balas", "Feedback")}</Link>

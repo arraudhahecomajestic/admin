@@ -62,6 +62,17 @@ async function ambilProgram(): Promise<any[]> {
   return (data as any[]) ?? [];
 }
 
+async function ambilTender(): Promise<any[]> {
+  if (!adminConfigured) return [];
+  try {
+    const db = createAdminClient();
+    const hariIni = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kuala_Lumpur" });
+    const { data } = await db.from("tender").select("id, tajuk, kategori, tarikh_tutup, no_ruj")
+      .eq("status", "aktif").order("tarikh_tutup", { ascending: true, nullsFirst: false }).limit(3);
+    return ((data as any[]) ?? []).filter((t) => !t.tarikh_tutup || String(t.tarikh_tutup) >= hariIni);
+  } catch { return []; }
+}
+
 async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[]; total: number; belumKelas: number }> {
   if (!adminConfigured) return { data: [], total: 0, belumKelas: 0 };
   try {
@@ -117,7 +128,7 @@ export default async function Home() {
   const tr = buatT(lang);
   const tahunPie = new Date().getFullYear();
   const bulanPie = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "ms-MY", { month: "long", timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
-  const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, pieTabung] = await Promise.all([
+  const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, pieTabung, tenderAktif] = await Promise.all([
     ambilPengumuman(),
     ambilTabung(),
     ambilProgram(),
@@ -127,6 +138,7 @@ export default async function Home() {
     kewanganAwamDibuka(),
     getProfil(),
     ambilPieTabung(),
+    ambilTender(),
   ]);
   const stafKewangan = isStaf(profil); // SU/Pengerusi/AJK + Bendahari
   const paparKewangan = kewanganAwam || stafKewangan; // awam nampak hanya bila diterbitkan
@@ -288,6 +300,28 @@ export default async function Home() {
                 <div className="mt-2 font-semibold text-slate-900">{p.tajuk}</div>
                 <div className="mt-1 text-xs text-slate-500">{tarikhMs(p.tarikh)}{p.masa ? ` · ${p.masa}` : ""}</div>
                 {p.lokasi && <div className="text-xs text-slate-500">{p.lokasi}</div>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Iklan Tender aktif */}
+      {tenderAktif.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900">{tr("Iklan Tender & Sebut Harga", "Tenders & Quotations")}</h2>
+            <Link href="/tender" className="text-sm font-medium text-surau hover:underline">{tr("Lihat semua →", "View all →")}</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {tenderAktif.map((t) => (
+              <Link key={t.id} href={`/tender/${t.id}`} className="rounded-xl bg-white p-4 shadow-sm hover:shadow">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t.kategori && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{t.kategori}</span>}
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">{tr("Aktif", "Open")}</span>
+                </div>
+                <div className="mt-2 font-semibold text-slate-900">{t.tajuk}</div>
+                <div className="mt-1 text-xs text-slate-500">{t.tarikh_tutup ? `${tr("Tutup", "Closes")}: ${tarikhMs(t.tarikh_tutup)}` : (t.no_ruj || "")}</div>
               </Link>
             ))}
           </div>

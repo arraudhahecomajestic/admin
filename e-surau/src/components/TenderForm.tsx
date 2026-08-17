@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ciptaTender, kemasTender } from "@/app/admin/tender/actions";
+import { ciptaTender, kemasTender, kemasSkopTenderAI } from "@/app/admin/tender/actions";
 import { KATEGORI_TENDER, STATUS_TENDER } from "@/lib/tender";
 
 export default function TenderForm({ awal }: { awal?: any }) {
@@ -19,8 +19,17 @@ export default function TenderForm({ awal }: { awal?: any }) {
   const [namaDok, setNamaDok] = useState(awal?.nama_dokumen ?? "");
   const [muat, setMuat] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [ai, setAi] = useState(false);
   const [msg, setMsg] = useState("");
   const set = (k: string, v: string) => setF((s: any) => ({ ...s, [k]: v }));
+
+  async function kemasAI() {
+    setMsg(""); setAi(true);
+    const res = await kemasSkopTenderAI({ tajuk: f.tajuk, kategori: f.kategori, nota: f.keterangan || "" });
+    setAi(false);
+    if (!res.ok) { setMsg(res.msg ?? "AI gagal."); return; }
+    set("keterangan", res.teks || "");
+  }
 
   async function naik(e: React.ChangeEvent<HTMLInputElement>) {
     const fail = e.target.files?.[0];
@@ -59,7 +68,16 @@ export default function TenderForm({ awal }: { awal?: any }) {
         <label className="text-sm text-slate-600">Tarikh iklan<input type="date" value={f.tarikh_iklan} onChange={(e) => set("tarikh_iklan", e.target.value)} className="inp" /></label>
         <label className="text-sm text-slate-600">Tarikh tutup<input type="date" value={f.tarikh_tutup} onChange={(e) => set("tarikh_tutup", e.target.value)} className="inp" /></label>
       </div>
-      <label className="text-sm text-slate-600">Keterangan / skop kerja<textarea rows={4} value={f.keterangan} onChange={(e) => set("keterangan", e.target.value)} className="inp" /></label>
+      <div>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="text-sm text-slate-600">Huraian / skop kerja</span>
+          <button type="button" onClick={kemasAI} disabled={ai || busy} className="rounded-lg border border-surau/40 bg-surau/5 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/10 disabled:opacity-60" title="Tukar nota kasar jadi skop kerja kemas">
+            {ai ? "AI sedang mengemas…" : "Kemas dengan AI"}
+          </button>
+        </div>
+        <textarea rows={5} value={f.keterangan} onChange={(e) => set("keterangan", e.target.value)} className="inp" placeholder="Taip poin kasar skop kerja, kemudian tekan 'Kemas dengan AI' untuk susun jadi huraian tender yang kemas." />
+        <p className="mt-1 text-xs text-slate-400">Tip: taip ringkas (cth: naik taraf bilik air lelaki, tukar paip, cat semula), tekan "Kemas dengan AI", kemudian semak & simpan.</p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="text-sm text-slate-600">Anggaran nilai (RM)<input type="number" min="0" step="0.01" value={f.anggaran_nilai} onChange={(e) => set("anggaran_nilai", e.target.value)} className="inp" /></label>
         <label className="text-sm text-slate-600">PIC / Pegawai<input value={f.pic_nama} onChange={(e) => set("pic_nama", e.target.value)} className="inp" /></label>

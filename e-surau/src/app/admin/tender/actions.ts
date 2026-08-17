@@ -3,6 +3,32 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil, isAdmin } from "@/lib/sesi";
+import { NAMA_SURAU } from "@/lib/tetapan";
+import { panggilAI } from "@/lib/ai";
+
+// Kemas nota kasar → huraian / skop kerja tender yang jelas & profesional (AI).
+export async function kemasSkopTenderAI(input: { tajuk?: string; kategori?: string; nota: string }): Promise<{ ok: boolean; teks?: string; msg?: string }> {
+  if (!isAdmin(await getProfil())) return { ok: false, msg: "Tiada akses." };
+  const nota = (input.nota || "").trim();
+  if (nota.length < 5) return { ok: false, msg: "Sila taip skop/nota kasar dahulu (beberapa perkataan)." };
+
+  const sistem = `Anda Setiausaha ${NAMA_SURAU}. Tugas anda menyusun nota kasar menjadi HURAIAN / SKOP KERJA tender yang jelas, kemas & profesional dalam Bahasa Melayu formal.
+
+GARIS PANDUAN:
+- Mulakan dengan satu perenggan ringkas "Tujuan / Latar Belakang".
+- Kemudian senaraikan "Skop Kerja" sebagai poin bernombor yang jelas & boleh diukur.
+- Jika sesuai, tambah "Spesifikasi / Keperluan" dan "Syarat Penyertaan" secara ringkas.
+- Guna ayat formal & padat. JANGAN reka harga, tarikh, nama syarikat, ukuran atau kuantiti yang TIDAK dinyatakan dalam nota. Jika tidak dinyatakan, biar umum (cth "mengikut keperluan tapak").
+- Keluarkan HANYA teks huraian (tanpa tajuk dokumen, tanda tangan atau komen).`;
+
+  const konteks = [
+    input.tajuk ? `Tajuk tender: ${input.tajuk}` : "",
+    input.kategori ? `Kategori: ${input.kategori}` : "",
+    `\nNota kasar / skop untuk dikemas:\n${nota}`,
+  ].filter(Boolean).join("\n");
+
+  return panggilAI(sistem, konteks, 1500);
+}
 
 type TenderInput = {
   no_ruj?: string; tajuk?: string; keterangan?: string; kategori?: string;
