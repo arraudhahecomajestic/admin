@@ -7,6 +7,7 @@ import ButangHantar from "@/components/ButangHantar";
 import { tarikhMs } from "@/lib/format";
 import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran } from "../actions";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
+import EksportPeserta from "@/components/EksportPeserta";
 
 export const dynamic = "force-dynamic";
 
@@ -104,10 +105,12 @@ export default async function EditProgramPage({ params }: { params: { id: string
         <section className="rounded-xl bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-3">
             <h2 className="font-semibold text-slate-900">Pendaftaran Peserta</h2>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="rounded-lg bg-surau/10 px-3 py-1 font-semibold text-surau">{pend.length} borang</span>
               {bilMenunggu > 0 && <span className="rounded-lg bg-amber-100 px-3 py-1 font-semibold text-amber-700">{bilMenunggu} tunggu sahkan</span>}
               <span className="rounded-lg bg-green-100 px-3 py-1 font-semibold text-green-700">{bilBayar} peserta disahkan{p.had_peserta ? ` / ${p.had_peserta}` : ""}</span>
+              <EksportPeserta rows={pend} jenis="berbayar" namaFail={`peserta-${(p.tajuk || "program").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`} />
+              <Link href={`/admin/program/${p.id}/senarai`} className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50">🖨 Cetak Senarai</Link>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -203,9 +206,11 @@ export default async function EditProgramPage({ params }: { params: { id: string
       <section className="rounded-xl bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-3">
           <h2 className="font-semibold text-slate-900">Senarai RSVP / Akan Hadir</h2>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="rounded-lg bg-surau/10 px-3 py-1 font-semibold text-surau">{rsvp.length} pendaftaran</span>
             <span className="rounded-lg bg-green-100 px-3 py-1 font-semibold text-green-700">{jumlahHadir} orang{p.had_peserta ? ` / ${p.had_peserta}` : ""}</span>
+            <EksportPeserta rows={rsvp} jenis="rsvp" namaFail={`rsvp-${(p.tajuk || "program").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`} />
+            <Link href={`/admin/program/${p.id}/senarai`} className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50">🖨 Cetak Senarai</Link>
           </div>
         </div>
         <div className="overflow-x-auto">

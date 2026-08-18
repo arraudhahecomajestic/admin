@@ -1,12 +1,9 @@
 "use client";
 
-export default function ButangCetak() {
+export default function ButangCetak({ label = "Cetak" }: { label?: string }) {
   return (
-    <button
-      onClick={() => window.print()}
-      className="no-print rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark"
-    >
-      Cetak Semua
+    <button onClick={() => window.print()} className="print-hide rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">
+      🖨 {label}
     </button>
   );
 }
