@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { hantarMinat } from "@/app/tender/actions";
 
 export default function BorangMinatTender({ tenderId }: { tenderId: string }) {
-  const [f, setF] = useState({ nama: "", syarikat: "", telefon: "", emel: "", harga_tawaran: "", catatan: "" });
+  const [f, setF] = useState({ nama: "", syarikat: "", telefon: "", emel: "", catatan: "" });
   const [urlDok, setUrlDok] = useState("");
   const [namaDok, setNamaDok] = useState("");
   const [muat, setMuat] = useState(false);
@@ -55,8 +55,7 @@ export default function BorangMinatTender({ tenderId }: { tenderId: string }) {
         <input placeholder="No. telefon *" className="inp" value={f.telefon} onChange={(e) => set("telefon", e.target.value)} />
         <input type="email" placeholder="E-mel" className="inp" value={f.emel} onChange={(e) => set("emel", e.target.value)} />
       </div>
-      <input type="number" min="0" step="0.01" placeholder="Anggaran sebut harga (RM) — pilihan" className="inp" value={f.harga_tawaran} onChange={(e) => set("harga_tawaran", e.target.value)} />
-      <textarea rows={3} placeholder="Catatan / cadangan ringkas (pilihan)" className="inp" value={f.catatan} onChange={(e) => set("catatan", e.target.value)} />
+      <textarea rows={4} placeholder="Terangkan kepakaran syarikat anda (produk/perkhidmatan, pengalaman, projek terdahulu)" className="inp" value={f.catatan} onChange={(e) => set("catatan", e.target.value)} />
       <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-white p-2.5 text-sm hover:border-surau">
         <input type="file" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx" className="hidden" onChange={naik} />
         {urlDok ? <span className="font-medium text-green-600">✓ {namaDok}</span> : muat ? <span className="text-amber-600">Memuat naik…</span> : <span className="text-slate-600">Lampir sebut harga / profil (pilihan)</span>}
