@@ -90,11 +90,10 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
 
 function Sidebar({ aktif, nama, atas, kumpulan }: { aktif: string; nama?: string; atas: Item[]; kumpulan: Kump[] }) {
   const [buka, setBuka] = useState(false);
-  const isAktif = (href: string) => aktif === href;
   const tutup = () => setBuka(false);
 
   const pautanCls = (href: string) =>
-    `block rounded-lg px-3 py-2 text-sm ${isAktif(href) ? "bg-surau font-semibold text-white" : "text-slate-600 hover:bg-slate-100"}`;
+    `block rounded-lg px-3 py-2 text-sm ${aktif === href ? "bg-surau font-semibold text-white" : "text-slate-600 hover:bg-slate-100"}`;
 
   return (
     <>
@@ -134,12 +133,7 @@ function Sidebar({ aktif, nama, atas, kumpulan }: { aktif: string; nama?: string
             <Link key={it.href} href={it.href} onClick={tutup} className={pautanCls(it.href)}>{it.label}</Link>
           ))}
           {kumpulan.map((k) => (
-            <div key={k.label} className="pt-3">
-              <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{k.label}</div>
-              {k.items.map((it) => (
-                <Link key={it.href} href={it.href} onClick={tutup} className={pautanCls(it.href)}>{it.label}</Link>
-              ))}
-            </div>
+            <KumpulanNav key={k.label} kump={k} aktif={aktif} onNav={tutup} />
           ))}
         </nav>
 
@@ -151,5 +145,36 @@ function Sidebar({ aktif, nama, atas, kumpulan }: { aktif: string; nama?: string
         </div>
       </aside>
     </>
+  );
+}
+
+// Kumpulan boleh buka/tutup (dropdown). Auto-buka jika kumpulan mengandungi halaman aktif.
+function KumpulanNav({ kump, aktif, onNav }: { kump: Kump; aktif: string; onNav: () => void }) {
+  const adaAktif = kump.items.some((i) => aktif === i.href || aktif.startsWith(i.href + "/"));
+  const [buka, setBuka] = useState(adaAktif);
+  return (
+    <div className="pt-1">
+      <button
+        onClick={() => setBuka((v) => !v)}
+        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium ${adaAktif ? "text-surau" : "text-slate-700"} hover:bg-slate-100`}
+      >
+        <span>{kump.label}</span>
+        <span className={`text-[10px] transition-transform ${buka ? "rotate-180" : ""}`}>▾</span>
+      </button>
+      {buka && (
+        <div className="mt-0.5 space-y-0.5 border-l border-slate-100 pl-2">
+          {kump.items.map((it) => (
+            <Link
+              key={it.href}
+              href={it.href}
+              onClick={onNav}
+              className={`block rounded-lg px-3 py-2 text-sm ${aktif === it.href ? "bg-surau font-semibold text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            >
+              {it.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
