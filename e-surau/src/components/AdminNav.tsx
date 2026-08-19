@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useState } from "react";
 
@@ -39,23 +38,17 @@ const SISTEM: Item[] = [
 ];
 
 export default function AdminNav({ aktif, nama, peranan, master }: { aktif: string; nama?: string; peranan?: string; master?: boolean }) {
-  // Peranan terhad — kekal ringkas (flat)
+  let atas: Item[] = [];
+  let kumpulan: Kump[] = [];
+
   if (peranan === "bendahari" || peranan === "imam") {
-    const pautan = peranan === "bendahari"
+    // Peranan terhad — kekal ringkas (flat)
+    atas = peranan === "bendahari"
       ? [{ href: "/admin/kewangan", label: "Kewangan" }, { href: "/admin/tuntutan", label: "Tuntutan" }, { href: "/admin/staf/penilaian", label: "Penilaian Staf" }]
       : [{ href: "/admin/tahlil", label: "Tahlil" }];
-    return (
-      <Bar nama={nama}>
-        <nav className="flex flex-wrap gap-1">
-          {pautan.map((p) => <TabLink key={p.href} item={p} aktif={aktif} />)}
-        </nav>
-      </Bar>
-    );
-  }
-
-  // AJK (bukan master) — akses terhad: tiada ahli, kewangan, sewaan/aset, staf, panel SU
-  if (peranan === "ajk" && !master) {
-    const kumpAjk: Kump[] = [
+  } else if (peranan === "ajk" && !master) {
+    // AJK (bukan master) — akses terhad
+    kumpulan = [
       { label: "Aktiviti", items: [
         { href: "/admin/program", label: "Program" },
         { href: "/admin/tahlil", label: "Tahlil" },
@@ -77,78 +70,86 @@ export default function AdminNav({ aktif, nama, peranan, master }: { aktif: stri
         { href: "/admin/staf/penilaian", label: "Penilaian Prestasi" },
       ] },
     ];
-    return (
-      <Bar nama={nama}>
-        <nav className="flex flex-wrap items-center gap-1">
-          {kumpAjk.map((k) => <TabDropdown key={k.label} kump={k} aktif={aktif} />)}
-        </nav>
-      </Bar>
-    );
+  } else {
+    // Admin / Master — penuh
+    atas = [
+      { href: "/admin", label: "Permohonan" },
+      { href: "/admin/staf", label: "Staf" },
+    ];
+    kumpulan = [
+      { label: "Keahlian", items: KEAHLIAN },
+      { label: "Kewangan", items: KEWANGAN },
+      { label: "Aktiviti", items: AKTIVITI },
+      { label: "Setiausaha", items: SETIAUSAHA },
+    ];
+    if (master) kumpulan.push({ label: "Sistem", items: SISTEM });
   }
 
-  // Admin / Master — berkumpul (penuh)
-  const kumpulan: Kump[] = [
-    { label: "Keahlian", items: KEAHLIAN },
-    { label: "Kewangan", items: KEWANGAN },
-    { label: "Aktiviti", items: AKTIVITI },
-    { label: "Setiausaha", items: SETIAUSAHA },
-  ];
-  if (master) kumpulan.push({ label: "Sistem", items: SISTEM });
-
-  return (
-    <Bar nama={nama}>
-      <nav className="flex flex-wrap items-center gap-1">
-        <TabLink item={{ href: "/admin", label: "Permohonan" }} aktif={aktif} />
-        <TabLink item={{ href: "/admin/staf", label: "Staf" }} aktif={aktif} />
-        {kumpulan.map((k) => <TabDropdown key={k.label} kump={k} aktif={aktif} />)}
-      </nav>
-    </Bar>
-  );
+  return <Sidebar aktif={aktif} nama={nama} atas={atas} kumpulan={kumpulan} />;
 }
 
-function Bar({ nama, children }: { nama?: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
-      {children}
-      <div className="flex items-center gap-3 text-sm text-slate-500">
-        <Link href="/admin/tuntutan-saya" className="rounded-lg border border-surau/40 px-3 py-1 font-medium text-surau hover:bg-surau/10">Tuntutan Saya</Link>
-        <Link href="/ahli" className="rounded-lg border border-surau/40 px-3 py-1 font-medium text-surau hover:bg-surau/10">Portal Saya</Link>
-        {nama && <span className="hidden sm:inline">{nama}</span>}
-        <form action="/masuk/logout" method="post"><button className="hover:underline">Log keluar</button></form>
-      </div>
-    </div>
-  );
-}
-
-function TabLink({ item, aktif }: { item: Item; aktif: string }) {
-  return (
-    <Link href={item.href} className={`rounded-lg px-3 py-1.5 text-sm font-medium ${aktif === item.href ? "bg-surau text-white" : "text-slate-600 hover:bg-slate-100"}`}>
-      {item.label}
-    </Link>
-  );
-}
-
-function TabDropdown({ kump, aktif }: { kump: Kump; aktif: string }) {
+function Sidebar({ aktif, nama, atas, kumpulan }: { aktif: string; nama?: string; atas: Item[]; kumpulan: Kump[] }) {
   const [buka, setBuka] = useState(false);
-  const aktifDlm = kump.items.some((i) => aktif === i.href || aktif.startsWith(i.href + "/"));
+  const isAktif = (href: string) => aktif === href;
+  const tutup = () => setBuka(false);
+
+  const pautanCls = (href: string) =>
+    `block rounded-lg px-3 py-2 text-sm ${isAktif(href) ? "bg-surau font-semibold text-white" : "text-slate-600 hover:bg-slate-100"}`;
+
   return (
-    <div className="relative">
-      <button
-        onClick={() => setBuka((v) => !v)}
-        onBlur={() => setTimeout(() => setBuka(false), 150)}
-        className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium ${aktifDlm ? "bg-surau text-white" : "text-slate-600 hover:bg-slate-100"}`}
-      >
-        {kump.label} <span className={`text-[10px] transition-transform ${buka ? "rotate-180" : ""}`}>▾</span>
-      </button>
-      {buka && (
-        <div className="absolute left-0 top-full z-40 mt-1 min-w-[190px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-          {kump.items.map((i) => (
-            <Link key={i.href} href={i.href} className={`block px-4 py-2 text-sm ${aktif === i.href ? "bg-surau/10 font-semibold text-surau" : "text-slate-700 hover:bg-surau/10 hover:text-surau"}`}>
-              {i.label}
-            </Link>
-          ))}
+    <>
+      {/* Anjak kandungan ke kanan di desktop supaya sidebar tetap ada ruang */}
+      <style jsx global>{`
+        @media (min-width: 1024px) {
+          body { padding-left: 14rem; }
+        }
+      `}</style>
+
+      {/* Bar atas (mobile sahaja) */}
+      <div className="mb-5 flex items-center justify-between border-b pb-3 lg:hidden">
+        <button onClick={() => setBuka(true)} className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700">
+          <span className="text-lg leading-none">☰</span> Menu
+        </button>
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          {nama && <span className="hidden sm:inline">{nama}</span>}
+          <form action="/masuk/logout" method="post"><button className="hover:underline">Log keluar</button></form>
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* Backdrop bila drawer buka (mobile) */}
+      {buka && <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={tutup} />}
+
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-56 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-transform lg:translate-x-0 ${buka ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="flex items-center justify-between border-b px-4 py-4">
+          <Link href="/admin" onClick={tutup} className="block">
+            <div className="text-sm font-bold text-surau">Panel Pentadbir</div>
+            <div className="mt-0.5 text-xs text-slate-400">Surau Ar-Raudhah</div>
+          </Link>
+          <button onClick={tutup} className="text-slate-400 hover:text-slate-700 lg:hidden" aria-label="Tutup">✕</button>
+        </div>
+
+        <nav className="flex-1 space-y-1 px-2 py-3">
+          {atas.map((it) => (
+            <Link key={it.href} href={it.href} onClick={tutup} className={pautanCls(it.href)}>{it.label}</Link>
+          ))}
+          {kumpulan.map((k) => (
+            <div key={k.label} className="pt-3">
+              <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{k.label}</div>
+              {k.items.map((it) => (
+                <Link key={it.href} href={it.href} onClick={tutup} className={pautanCls(it.href)}>{it.label}</Link>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="space-y-1 border-t px-2 py-3">
+          <Link href="/admin/tuntutan-saya" onClick={tutup} className="block rounded-lg px-3 py-2 text-sm font-medium text-surau hover:bg-surau/10">Tuntutan Saya</Link>
+          <Link href="/ahli" onClick={tutup} className="block rounded-lg px-3 py-2 text-sm font-medium text-surau hover:bg-surau/10">Portal Saya</Link>
+          {nama && <div className="px-3 pt-1 text-xs text-slate-400">{nama}</div>}
+          <form action="/masuk/logout" method="post"><button className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-100">Log keluar</button></form>
+        </div>
+      </aside>
+    </>
   );
 }
