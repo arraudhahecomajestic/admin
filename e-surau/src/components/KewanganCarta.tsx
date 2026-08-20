@@ -60,12 +60,13 @@ function Legend({ rows }: { rows: Baris[] }) {
   );
 }
 
-function Bar({ masuk, keluar, hingga }: { masuk: number[]; keluar: number[]; hingga: number }) {
-  const W = 860, H = 340, padL = 54, padR = 16, padT = 16, padB = 40;
+function Bar({ masuk, keluar, hingga, pilih, onPick }: { masuk: number[]; keluar: number[]; hingga: number; pilih: number; onPick: (m: number) => void }) {
+  const W = 860, H = 356, padL = 54, padR = 16, padT = 30, padB = 40;
   const bulan = Array.from({ length: hingga + 1 }, (_, i) => i);
-  const maxVal = Math.max(1, ...bulan.map((m) => Math.max(masuk[m], keluar[m]))) * 1.15;
+  const maxVal = Math.max(1, ...bulan.map((m) => Math.max(masuk[m], keluar[m]))) * 1.18;
   const iw = W - padL - padR, ih = H - padT - padB, gw = iw / bulan.length;
-  const rmk = (v: number) => (v >= 1000 ? (v / 1000).toFixed(0) + "k" : String(Math.round(v)));
+  const rmk = (v: number) => (v >= 1000 ? "RM" + (v / 1000).toFixed(1) + "k" : "RM" + Math.round(v));
+  const yPaksi = (v: number) => (v >= 1000 ? (v / 1000).toFixed(0) + "k" : String(Math.round(v)));
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }}>
       <text x={padL - 40} y={padT - 2} fontSize={10} fill="#aaa">RM</text>
@@ -74,18 +75,22 @@ function Bar({ masuk, keluar, hingga }: { masuk: number[]; keluar: number[]; hin
         return (
           <g key={t}>
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eee" />
-            <text x={padL - 8} y={y + 3} textAnchor="end" fontSize={10} fill="#aaa">{rmk(maxVal * t / 4)}</text>
+            <text x={padL - 8} y={y + 3} textAnchor="end" fontSize={10} fill="#aaa">{yPaksi(maxVal * t / 4)}</text>
           </g>
         );
       })}
       {bulan.map((m) => {
         const bw = gw * 0.3, x = padL + m * gw + gw * 0.5;
         const hm = ih * (masuk[m] / maxVal), hk = ih * (keluar[m] / maxVal);
+        const dipilih = pilih === m;
         return (
-          <g key={m}>
-            <rect x={x - bw - 2} y={padT + ih - hm} width={bw} height={hm} rx={3} fill={HIJAU} />
-            <rect x={x + 2} y={padT + ih - hk} width={bw} height={hk} rx={3} fill={OREN} />
-            <text x={x} y={H - padB + 16} textAnchor="middle" fontSize={10.5} fill="#777">{BULAN_PENDEK[m]}</text>
+          <g key={m} onClick={() => onPick(m)} style={{ cursor: "pointer" }}>
+            {dipilih && <rect x={padL + m * gw + 1} y={padT} width={gw - 2} height={ih} rx={6} fill="#b8860b" opacity={0.08} />}
+            <rect x={x - bw - 2} y={padT + ih - hm} width={bw} height={hm} rx={3} fill={HIJAU} opacity={dipilih ? 1 : 0.85} />
+            <rect x={x + 2} y={padT + ih - hk} width={bw} height={hk} rx={3} fill={OREN} opacity={dipilih ? 1 : 0.85} />
+            {dipilih && masuk[m] > 0 && <text x={x - bw / 2 - 2} y={padT + ih - hm - 6} textAnchor="middle" fontSize={10} fontWeight={700} fill="#146c4e">{rmk(masuk[m])}</text>}
+            {dipilih && keluar[m] > 0 && <text x={x + bw / 2 + 2} y={padT + ih - hk - 6} textAnchor="middle" fontSize={10} fontWeight={700} fill="#b04117">{rmk(keluar[m])}</text>}
+            <text x={x} y={H - padB + 16} textAnchor="middle" fontSize={10.5} fontWeight={dipilih ? 700 : 400} fill={dipilih ? "#333" : "#777"}>{BULAN_PENDEK[m]}</text>
           </g>
         );
       })}
@@ -105,7 +110,9 @@ function Tile({ label, value, jenis }: { label: string; value: string; jenis: "m
 }
 
 export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunMasuk, tahunKeluar, pratonton }: Props) {
-  const [sel, setSel] = useState<string>("tahun");
+  const hingga = Math.max(...bulanAda, 0);
+  const [sel, setSel] = useState<string>(bulanAda.length ? String(hingga) : "tahun");
+  const [barPilih, setBarPilih] = useState<number>(hingga);
 
   const jum = (a: number[]) => a.reduce((s, v) => s + v, 0);
   const isTahun = sel === "tahun";
@@ -113,7 +120,6 @@ export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunM
   const d = dataBulan[idx];
   const totalM = d ? d.masuk.reduce((s, r) => s + r.jumlah, 0) : 0;
   const totalK = d ? d.keluar.reduce((s, r) => s + r.jumlah, 0) : 0;
-  const hingga = Math.max(...bulanAda, 0);
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
@@ -130,10 +136,10 @@ export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunM
             onChange={(e) => setSel(e.target.value)}
             className="min-w-[190px] rounded-lg border-[1.5px] border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-amber-900 focus:border-surau focus:outline-none"
           >
-            <option value="tahun">Keseluruhan {tahun}</option>
             {bulanAda.map((m) => (
               <option key={m} value={String(m)}>{BULAN_PENUH[m]} {tahun}</option>
             ))}
+            <option value="tahun">Keseluruhan {tahun}</option>
           </select>
         </label>
       </div>
@@ -153,8 +159,14 @@ export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunM
           </div>
           <div className="mt-4 rounded-xl border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-900">Pendapatan vs Perbelanjaan ikut Bulan</h3>
-            <p className="mb-1 text-[11.5px] text-slate-500">Januari hingga {BULAN_PENUH[hingga]} {tahun}</p>
-            <Bar masuk={tahunMasuk} keluar={tahunKeluar} hingga={hingga} />
+            <p className="text-[11.5px] text-slate-500">Januari hingga {BULAN_PENUH[hingga]} {tahun} &middot; klik bar untuk lihat nilai bulan.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+              <span className="font-bold text-slate-900">{BULAN_PENUH[barPilih]} {tahun}</span>
+              <span className="text-emerald-700">Pendapatan <b>{rm(tahunMasuk[barPilih] || 0)}</b></span>
+              <span className="text-orange-700">Perbelanjaan <b>{rm(tahunKeluar[barPilih] || 0)}</b></span>
+              <span className="text-slate-600">Baki <b>{rm((tahunMasuk[barPilih] || 0) - (tahunKeluar[barPilih] || 0))}</b></span>
+            </div>
+            <Bar masuk={tahunMasuk} keluar={tahunKeluar} hingga={hingga} pilih={barPilih} onPick={setBarPilih} />
             <div className="mt-2 flex justify-center gap-5 text-xs text-slate-600">
               <span className="flex items-center gap-1.5"><i style={{ width: 11, height: 11, borderRadius: 3, background: HIJAU, display: "inline-block" }} /> Pendapatan</span>
               <span className="flex items-center gap-1.5"><i style={{ width: 11, height: 11, borderRadius: 3, background: OREN, display: "inline-block" }} /> Perbelanjaan</span>

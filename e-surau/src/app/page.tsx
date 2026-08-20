@@ -10,7 +10,7 @@ import { buatT } from "@/lib/i18n";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { KAWASAN, kenalKawasan } from "@/lib/kawasan";
 import StatFasaChart from "@/components/StatFasaChart";
-import PieTabung, { PieSlice } from "@/components/PieTabung";
+import KewanganRingkasHome from "@/components/KewanganRingkasHome";
 
 export const dynamic = "force-dynamic";
 
@@ -20,17 +20,6 @@ type Pengumuman = {
   kandungan: string;
   penting: boolean;
   tarikh: string;
-};
-
-type Tabung = {
-  kategori_id: number;
-  nama: string;
-  jenis_khairat: boolean;
-  jumlah_terkumpul: number | string;
-  jumlah_bulan_ini: number | string;
-  terkini_jumlah: number | string | null;
-  terkini_tarikh: string | null;
-  ditutup?: boolean;
 };
 
 async function ambilPengumuman(): Promise<Pengumuman[]> {
@@ -43,16 +32,6 @@ async function ambilPengumuman(): Promise<Pengumuman[]> {
     .limit(10);
   if (error) return [];
   return data ?? [];
-}
-
-async function ambilTabung(): Promise<Tabung[]> {
-  if (!supabaseConfigured) return [];
-  const { data, error } = await supabase
-    .from("v_kutipan_ringkasan")
-    .select("kategori_id, nama, jenis_khairat, jumlah_terkumpul, jumlah_bulan_ini, terkini_jumlah, terkini_tarikh, ditutup")
-    .order("urutan", { ascending: true });
-  if (error) return [];
-  return (data as Tabung[]) ?? [];
 }
 
 async function ambilProgram(): Promise<any[]> {
@@ -98,26 +77,41 @@ async function ambilStatFasa(): Promise<{ data: { nama: string; bil: number }[];
   }
 }
 
-async function ambilPieTabung(): Promise<PieSlice[]> {
-  if (!adminConfigured) return [];
+type Baris = { nama: string; jumlah: number };
+async function ambilKewanganBulanTerkini(): Promise<{ bulan: number; masuk: Baris[]; keluar: Baris[] } | null> {
+  if (!adminConfigured) return null;
   try {
     const db = createAdminClient();
     const tahun = new Date().getFullYear();
-    const { data } = await db
-      .from("kutipan")
-      .select("jumlah, kategori:kategori_kutipan(nama, papar_awam)")
-      .gte("tarikh", `${tahun}-01-01`)
-      .lte("tarikh", `${tahun}-12-31`);
-    const rows = (data as any[]) ?? [];
-    const kira: Record<string, number> = {};
-    for (const k of rows) {
-      const kat = k.kategori;
+    const [{ data: kut }, { data: bel }] = await Promise.all([
+      db.from("kutipan").select("jumlah, tarikh, kategori:kategori_kutipan(nama, papar_awam)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
+      db.from("perbelanjaan").select("jumlah, tarikh, kategori:kategori_belanja(nama)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
+    ]);
+    const bM: Record<number, Record<string, number>> = {};
+    const bK: Record<number, Record<string, number>> = {};
+    const ada = new Set<number>();
+    for (const r of (kut as any[]) ?? []) {
+      const kat = r.kategori;
       if (!kat || kat.papar_awam === false) continue;
-      kira[kat.nama] = (kira[kat.nama] ?? 0) + Number(k.jumlah || 0);
+      const m = Number(String(r.tarikh).slice(5, 7)) - 1;
+      if (m < 0 || m > 11) continue;
+      (bM[m] ??= {})[kat.nama] = (bM[m][kat.nama] || 0) + Number(r.jumlah || 0);
+      ada.add(m);
     }
-    return Object.entries(kira).map(([nama, jumlah]) => ({ nama, jumlah }));
+    for (const r of (bel as any[]) ?? []) {
+      const nama = r.kategori?.nama || "Lain-lain";
+      const m = Number(String(r.tarikh).slice(5, 7)) - 1;
+      if (m < 0 || m > 11) continue;
+      (bK[m] ??= {})[nama] = (bK[m][nama] || 0) + Number(r.jumlah || 0);
+      ada.add(m);
+    }
+    if (!ada.size) return null;
+    const bulan = Math.max(...ada);
+    const toArr = (o?: Record<string, number>): Baris[] =>
+      Object.entries(o || {}).map(([nama, jumlah]) => ({ nama, jumlah: Number(jumlah) })).sort((a, b) => b.jumlah - a.jumlah);
+    return { bulan, masuk: toArr(bM[bulan]), keluar: toArr(bK[bulan]) };
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -127,37 +121,20 @@ export default async function Home() {
   const lang = bahasaSemasa();
   const tr = buatT(lang);
   const tahunPie = new Date().getFullYear();
-  const bulanPie = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "ms-MY", { month: "long", timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
-  const [pengumuman, tabung, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, pieTabung, tenderAktif] = await Promise.all([
+  const [pengumuman, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, tenderAktif, kewBulan] = await Promise.all([
     ambilPengumuman(),
-    ambilTabung(),
     ambilProgram(),
     ambilStatFasa(),
     khairatDibuka(),
     pampasanKhairat(),
     kewanganAwamDibuka(),
     getProfil(),
-    ambilPieTabung(),
     ambilTender(),
+    ambilKewanganBulanTerkini(),
   ]);
   const stafKewangan = isStaf(profil); // SU/Pengerusi/AJK + Bendahari
   const paparKewangan = kewanganAwam || stafKewangan; // awam nampak hanya bila diterbitkan
 
-  // Gabung detail tabung (v_kutipan_ringkasan) ke dalam data pai ikut nama
-  const detailTabung = new Map(tabung.map((tt) => [tt.nama, tt]));
-  const pieData: PieSlice[] = pieTabung.map((p) => {
-    const d = detailTabung.get(p.nama);
-    return {
-      nama: p.nama,
-      jumlah: p.jumlah,
-      jenisKhairat: d?.jenis_khairat,
-      ditutup: d?.ditutup,
-      bulanIni: d?.jumlah_bulan_ini,
-      terkumpul: d?.jumlah_terkumpul,
-      terkiniJumlah: d?.terkini_jumlah,
-      terkiniTarikh: d?.terkini_tarikh,
-    };
-  });
 
   return (
     <div className="space-y-8">
@@ -249,27 +226,15 @@ export default async function Home() {
 
       <PrayerTimes zon={zon} />
 
-      {/* Carta pai kutipan Jan–Jun 2026 — pecahan ikut tabung; ikut suis kewangan awam */}
-      {paparKewangan && pieData.some((p) => p.jumlah > 0) && (
-        <div>
-          {stafKewangan && !kewanganAwam && (
-            <div className="mb-2 rounded-lg bg-amber-400/90 px-4 py-2 text-sm font-semibold text-amber-950">
-              PRATONTON STAF — penyata kewangan belum diterbitkan kepada orang ramai. Flip suis di /admin/tetapan bila sedia.
-            </div>
-          )}
-          <PieTabung
-            data={pieData}
-            lang={lang}
-            tajuk={tr(`Kutipan Tabung ${tahunPie}`, `Fund Collections ${tahunPie}`)}
-            tempoh={tr(`Tempoh: Januari – ${bulanPie} ${tahunPie}`, `Period: January – ${bulanPie} ${tahunPie}`)}
-            labelJumlah={tr("Jumlah Kutipan", "Total Collected")}
-            labelKlik={tr("Klik mana-mana bahagian untuk buka detail tabung.", "Click any segment to expand the fund details.")}
-            nota={tr(
-              `Jumlah kutipan masuk (derma, wakaf, infaq & lain-lain) bagi tahun ${tahunPie}. Dikemas kini automatik apabila bendahari merekod kutipan.`,
-              `Total incoming collections (donations, waqf, infaq & others) for ${tahunPie}. Updated automatically when the treasurer records a collection.`,
-            )}
-          />
-        </div>
+      {/* Ringkasan kewangan bulan terkini — klik untuk ke halaman kewangan penuh */}
+      {paparKewangan && kewBulan && (kewBulan.masuk.length > 0 || kewBulan.keluar.length > 0) && (
+        <KewanganRingkasHome
+          tahun={tahunPie}
+          bulan={kewBulan.bulan}
+          masuk={kewBulan.masuk}
+          keluar={kewBulan.keluar}
+          pratonton={stafKewangan && !kewanganAwam}
+        />
       )}
 
       {/* Yaasin & Tahlil malam Jumaat */}
