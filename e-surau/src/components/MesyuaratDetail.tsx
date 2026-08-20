@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { simpanMesyuarat, padamMesyuarat, tambahTindakan, ubahStatusTindakan, padamTindakan, kemasMinitAI, senaraiAjkKehadiran } from "@/app/admin/su/mesyuarat/actions";
-import { JENIS_MESYUARAT, STATUS_TINDAKAN, labelStatusTindakan } from "@/lib/su";
+import { JENIS_MESYUARAT, STATUS_TINDAKAN } from "@/lib/su";
 import { NAMA_SURAU, ALAMAT_SURAU, EMEL_SURAU, LOGO_SURAU } from "@/lib/tetapan";
 import { tarikhMs } from "@/lib/format";
 import MesyuaratLampiran from "@/components/MesyuaratLampiran";
+import MuatTurunWord from "@/components/MuatTurunWord";
 
 type Lampiran = { id: string; tajuk: string; nama_fail: string | null; signedUrl: string | null };
 
@@ -40,7 +41,7 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
     setBusy(true); setMsg("");
     const res = await simpanMesyuarat(m0.id, {
       tajuk: f.tajuk, jenis: f.jenis, bil: f.bil, tarikh: f.tarikh, masa: f.masa, tempat: f.tempat,
-      pengerusi: f.pengerusi, pencatat: f.pencatat, kehadiran: f.kehadiran, tidak_hadir: f.tidak_hadir, agenda: f.agenda, minit: f.minit,
+      pengerusi: f.pengerusi, pencatat: f.pencatat, kehadiran: f.kehadiran, kehadiran_online: f.kehadiran_online, tidak_hadir: f.tidak_hadir, agenda: f.agenda, minit: f.minit,
     });
     setBusy(false);
     if (!res.ok) { setMsg(res.msg ?? "Ralat."); return; }
@@ -60,6 +61,7 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
     return mm ? { nama: mm[1].trim(), jawatan: mm[2].trim() } : { nama: line, jawatan: "" };
   });
   const hadir = pisah(f.kehadiran);
+  const hadirOnline = pisah(f.kehadiran_online);
   const tidakHadir = pisah(f.tidak_hadir);
 
   return (
@@ -71,6 +73,7 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${m0.status === "selesai" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{m0.status === "selesai" ? "Selesai" : "Draf"}</span>
           {!edit && <button onClick={() => setEdit(true)} className="rounded-lg bg-surau px-4 py-1.5 text-sm font-semibold text-white hover:bg-surau-dark">Edit</button>}
           {!edit && <button onClick={() => window.print()} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cetak Minit</button>}
+          {!edit && <MuatTurunWord m={f} nama={NAMA_SURAU} />}
           {!edit && <button onClick={tukarStatus} className="rounded-lg border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">{m0.status === "selesai" ? "Tanda Draf" : "Tanda Selesai"}</button>}
           {!edit && <button onClick={padam} className="rounded-lg border border-red-300 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50">Padam</button>}
         </div>
@@ -96,7 +99,11 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
                 <button type="button" onClick={isiAjk} className="rounded-lg border border-surau/40 bg-surau/5 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/10">Isi nama AJK</button>
               </div>
               <textarea rows={4} value={f.kehadiran ?? ""} onChange={(e) => set("kehadiran", e.target.value)} className="inp" placeholder="Cth: Ahmad bin Ali (Pengerusi)&#10;— atau tekan 'Isi nama AJK'" />
+              <p className="mt-1 text-xs text-slate-400">Ini kehadiran <b>bersemuka</b>. Nama online diisi di bawah.</p>
             </div>
+            <label className="text-sm text-slate-600 sm:col-span-2">Kehadiran Dalam Talian / Online (satu nama satu baris)
+              <textarea rows={3} value={f.kehadiran_online ?? ""} onChange={(e) => set("kehadiran_online", e.target.value)} className="inp" placeholder="Cth: Ali bin Abu (AJK 1) — yang hadir secara online" />
+            </label>
             <label className="text-sm text-slate-600 sm:col-span-2">Tidak Hadir Bersebab (satu nama satu baris)
               <textarea rows={3} value={f.tidak_hadir ?? ""} onChange={(e) => set("tidak_hadir", e.target.value)} className="inp" placeholder="Cth: Ali bin Abu (Bendahari)" />
             </label>
@@ -131,9 +138,11 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
             </div>
           </div>
 
-          <h1 className="mt-5 text-center text-base font-bold uppercase tracking-wide text-slate-900">Minit Mesyuarat</h1>
-          <div className="mx-auto mt-1 text-center text-base font-bold uppercase leading-snug text-slate-900">
-            {f.tajuk}{f.bil ? ` Bil. ${f.bil}` : ""}
+          <h1 className="mt-5 text-center text-base font-bold uppercase tracking-wide text-slate-900">
+            {f.jenis && f.jenis !== "AJK" ? `Minit Mesyuarat ${f.jenis}` : "Minit Mesyuarat"}
+          </h1>
+          <div className="mx-auto mt-1 text-center text-sm font-bold uppercase leading-snug text-slate-900">
+            Jawatankuasa Kariah {NAMA_SURAU}{f.bil ? ` Bil. ${f.bil}` : ""}
           </div>
 
           <div className="mx-auto mt-4 max-w-md space-y-0.5 text-sm">
@@ -144,35 +153,9 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
 
           <hr className="my-5 border-slate-300" />
 
-          {hadir.length > 0 && (
-            <div className="mt-2">
-              <h2 className="font-bold uppercase text-slate-900">Kehadiran</h2>
-              <ol className="mt-2 space-y-1 text-sm text-slate-800">
-                {hadir.map((o: any, i: number) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="w-6 shrink-0 text-right">{i + 1}.</span>
-                    <span className="flex-1">{o.nama}</span>
-                    <span className="w-52 shrink-0">{o.jawatan ? `—  ${o.jawatan}` : ""}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-
-          {tidakHadir.length > 0 && (
-            <div className="mt-5">
-              <h2 className="font-bold uppercase text-slate-900">Tidak Hadir Bersebab</h2>
-              <ol className="mt-2 space-y-1 text-sm text-slate-800">
-                {tidakHadir.map((o: any, i: number) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="w-6 shrink-0 text-right">{i + 1}.</span>
-                    <span className="flex-1">{o.nama}</span>
-                    <span className="w-52 shrink-0">{o.jawatan ? `—  ${o.jawatan}` : ""}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
+          <SenaraiHadir tajuk="Kehadiran Bersemuka" orang={hadir} />
+          <SenaraiHadir tajuk="Kehadiran Dalam Talian" orang={hadirOnline} />
+          <SenaraiHadir tajuk="Tidak Hadir Bersebab" orang={tidakHadir} />
 
           <hr className="my-5 border-slate-300" />
 
@@ -188,25 +171,6 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
               </ol>
             </div>
           ) : null}
-
-          {tindakan.length > 0 && (
-            <div className="mt-6">
-              <h2 className="font-bold text-slate-900">Ringkasan Jejak Tindakan</h2>
-              <table className="mt-1 w-full border-collapse text-sm">
-                <thead><tr className="border-y text-left text-xs uppercase text-slate-500"><th className="py-1 pr-2">Perkara</th><th className="py-1 pr-2">Tanggungjawab</th><th className="py-1 pr-2">Sasaran</th><th className="py-1">Status</th></tr></thead>
-                <tbody>
-                  {tindakan.map((t) => (
-                    <tr key={t.id} className="border-b border-slate-100 align-top">
-                      <td className="py-1.5 pr-2 text-slate-700">{t.perkara}</td>
-                      <td className="py-1.5 pr-2 text-slate-600">{t.tanggungjawab || "—"}</td>
-                      <td className="py-1.5 pr-2 text-slate-600">{t.tarikh_sasar ? tarikhMs(t.tarikh_sasar) : "—"}</td>
-                      <td className="py-1.5 text-slate-600">{labelStatusTindakan(t.status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
 
           {lampiran.length > 0 && (
             <div className="mt-6">
@@ -227,8 +191,22 @@ export default function MesyuaratDetail({ mesyuarat: m0, tindakan, lampiran = []
           )}
 
           <div className="mt-10 grid grid-cols-2 gap-8 text-sm">
-            <div><div className="h-10 border-b border-slate-400" /><div className="mt-1 text-slate-600">Dicatat oleh</div><div className="text-xs text-slate-500">{f.pencatat || "Setiausaha"}</div></div>
-            <div><div className="h-10 border-b border-slate-400" /><div className="mt-1 text-slate-600">Disahkan oleh</div><div className="text-xs text-slate-500">{f.pengerusi || "Pengerusi"}</div></div>
+            <div>
+              <div className="text-slate-700">Disediakan oleh;</div>
+              <div className="mt-8 text-slate-400">....................................................</div>
+              <div className="mt-1 font-bold uppercase text-slate-900">{f.pencatat || "Setiausaha"}</div>
+              <div className="text-slate-600">Setiausaha</div>
+              <div className="text-slate-600">{NAMA_SURAU}</div>
+              <div className="mt-2 text-slate-600">Tarikh:</div>
+            </div>
+            <div>
+              <div className="text-slate-700">Disahkan oleh;</div>
+              <div className="mt-8 text-slate-400">....................................................</div>
+              <div className="mt-1 font-bold uppercase text-slate-900">{f.pengerusi || "Pengerusi"}</div>
+              <div className="text-slate-600">Pengerusi</div>
+              <div className="text-slate-600">{NAMA_SURAU}</div>
+              <div className="mt-2 text-slate-600">Tarikh:</div>
+            </div>
           </div>
         </div>
       )}
@@ -254,17 +232,40 @@ function BarisMeta({ k, v }: { k: string; v: string }) {
   );
 }
 
-// Render badan minit ikut gaya SAR: perkara "N." tebal, baris "Tindakan:" kanan.
+// Render badan minit ikut format Pengerusi: perkara "N.0" tebal (tajuk),
+// sub-perkara "N.M" berinden, baris "Tindakan:" berinden dengan label tebal.
 function renderMinit(teks: string) {
   return (teks || "").split("\n").map((raw, i) => {
     const line = raw.replace(/\s+$/, "");
-    if (!line.trim()) return <div key={i} className="h-1.5" />;
-    if (/^\s*Tindakan\s*:/i.test(line)) {
-      return <p key={i} className="text-right text-xs font-semibold text-slate-600">{line.trim()}</p>;
+    const t = line.trim();
+    if (!t) return <div key={i} className="h-2" />;
+    if (/^tindakan\s*:/i.test(t)) {
+      const rest = t.replace(/^tindakan\s*:\s*/i, "");
+      return <p key={i} className="pl-6 text-slate-700"><span className="font-semibold">Tindakan:</span> {rest}</p>;
     }
-    const utama = /^\d+\.\s/.test(line.trim());
-    return <p key={i} className={`whitespace-pre-wrap ${utama ? "mt-2 font-bold text-slate-900" : ""}`}>{line}</p>;
+    if (/^\d+\.0\b/.test(t)) return <p key={i} className="mt-3 font-bold text-slate-900">{t}</p>;
+    if (/^\d+\.\d+/.test(t)) return <p key={i} className="whitespace-pre-wrap pl-6 text-slate-800">{t}</p>;
+    return <p key={i} className="whitespace-pre-wrap pl-6 text-slate-800">{t}</p>;
   });
+}
+
+// Satu kategori kehadiran (bersemuka / online / tidak hadir).
+function SenaraiHadir({ tajuk, orang }: { tajuk: string; orang: { nama: string; jawatan: string }[] }) {
+  if (!orang.length) return null;
+  return (
+    <div className="mt-4">
+      <h2 className="font-bold uppercase text-slate-900">{tajuk}</h2>
+      <ol className="mt-2 space-y-1 text-sm text-slate-800">
+        {orang.map((o, i) => (
+          <li key={i} className="flex gap-2">
+            <span className="w-6 shrink-0 text-right">{i + 1}.</span>
+            <span className="flex-1">{o.nama}</span>
+            <span className="w-52 shrink-0">{o.jawatan ? `—  ${o.jawatan}` : ""}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 function TindakanPanel({ mesyuaratId, tindakan, onDone }: { mesyuaratId: string; tindakan: any[]; onDone: () => void }) {

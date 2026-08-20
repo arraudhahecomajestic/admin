@@ -19,15 +19,19 @@ export async function kemasMinitAI(input: {
   const nota = (input.nota || "").trim();
   if (nota.length < 10) return { ok: false, msg: "Sila taip nota/perbincangan kasar dahulu (sekurang-kurangnya beberapa ayat)." };
 
-  const sistem = `Anda pembantu Setiausaha untuk ${NAMA_SURAU}. Tugas anda menyusun nota kasar/berselerak menjadi BADAN MINIT MESYUARAT yang kemas, formal & profesional dalam Bahasa Melayu, mengikut GAYA RASMI Surau Ar-Raudhah.
+  const sistem = `Anda pembantu Setiausaha untuk ${NAMA_SURAU}. Tugas anda menyusun nota kasar/berselerak menjadi BADAN MINIT MESYUARAT yang kemas, formal & profesional dalam Bahasa Melayu, mengikut GAYA RASMI Surau Ar-Raudhah (format Pengerusi).
 
-FORMAT & GAYA (wajib ikut):
-- Susun sebagai PERKARA BERNOMBOR: "1.", "2.", "3." dan seterusnya. Setiap perkara mulakan dengan tajuk pendek (cth "Bacaan Surah Al-Fatihah dan Doa Selamat", "Ucapan Pengerusi", "Kewangan", "Hal-hal Lain").
-- Guna sub-perkara berangka bila ada beberapa isi: 2.1, 2.2, 2.3 (dan 3.2.1 jika sangat terperinci).
-- Tulis dalam ayat pasif formal minit: "Pengerusi memaklumkan…", "Mesyuarat bersetuju…", "Dimaklumkan bahawa…", "Jawatankuasa dicadangkan…".
-- Bagi perkara yang ada susulan, tambah SATU baris berasingan tepat di bawah perkara berkenaan: "Tindakan: <pihak>" — cth "Tindakan: Bendahari", "Tindakan: Ketua-ketua biro", "Tindakan: Untuk makluman semua ahli jawatankuasa".
+FORMAT & GAYA (WAJIB ikut dengan tepat):
+- Guna PENOMBORAN PERPULUHAN. Setiap perkara utama = nombor ".0" diikuti tajuk pendek pada baris tersendiri, cth:
+  "1.0 Ucapan Pengerusi"
+  "2.0 Program Kem Memanah Recurve & Robotik 2026"
+  "3.0 Portal Sistem Pengurusan Surau Digital (e-Surau)"
+- Di bawah setiap perkara utama, tulis isi kandungan sebagai sub-perkara berangka: "1.1", "1.2", "2.1", "2.2" dan seterusnya. Setiap sub-perkara satu perenggan.
+- Untuk senarai butiran (tarikh, masa, tempat, pakej harga, dsb.), boleh guma sub-perkara berangka berturutan (cth 2.3, 2.4, 2.5) — satu butiran satu baris.
+- Tulis dalam ayat pasif formal minit: "Pengerusi memaklumkan…", "Mesyuarat bersetuju…", "Dimaklumkan bahawa…", "Beliau membentangkan…", "Keputusan sebulat suara meluluskan…".
+- Bagi perkara yang ada susulan, tambah SATU baris berasingan tepat selepas sub-perkara berkenaan bermula dengan perkataan "Tindakan:" — cth "Tindakan: Bendahari", "Tindakan: Encik … dan Bendahari", "Tindakan: Untuk makluman semua ahli jawatankuasa", "Tindakan: Semua ahli jawatankuasa".
 - Kekalkan SEMUA nama, angka, tarikh & keputusan SEPERTI dalam nota. JANGAN reka fakta, nama, angka, atau keputusan baharu. Jika sesuatu tidak jelas, biarkan tanpa menambah andaian.
-- Keluarkan HANYA badan minit (senarai perkara + baris Tindakan). JANGAN tambah tajuk "MINIT MESYUARAT", senarai kehadiran, tarikh/masa/tempat, atau ruang tandatangan — semua itu diuruskan berasingan.
+- Keluarkan HANYA badan minit (perkara berpenomboran + baris Tindakan). JANGAN tambah tajuk "MINIT MESYUARAT", senarai kehadiran, tarikh/masa/tempat, atau ruang tandatangan — semua itu diuruskan berasingan oleh sistem.
 - Guna Bahasa Melayu baku sepenuhnya.`;
 
   const konteks = [
@@ -77,13 +81,13 @@ export async function ciptaMesyuarat(input: {
 
 export async function simpanMesyuarat(id: string, patch: {
   tajuk?: string; jenis?: string; bil?: string; tarikh?: string; masa?: string; tempat?: string;
-  pengerusi?: string; pencatat?: string; kehadiran?: string; tidak_hadir?: string; agenda?: string; minit?: string; status?: string;
+  pengerusi?: string; pencatat?: string; kehadiran?: string; kehadiran_online?: string; tidak_hadir?: string; agenda?: string; minit?: string; status?: string;
 }): Promise<{ ok: boolean; msg?: string }> {
   const p = await getProfil();
   if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
   const db = createAdminClient();
   const bersih: any = {};
-  for (const k of ["tajuk","jenis","bil","masa","tempat","pengerusi","pencatat","kehadiran","tidak_hadir","agenda","minit","status"] as const) {
+  for (const k of ["tajuk","jenis","bil","masa","tempat","pengerusi","pencatat","kehadiran","kehadiran_online","tidak_hadir","agenda","minit","status"] as const) {
     if (patch[k] !== undefined) bersih[k] = (patch[k] as string)?.trim?.() ?? patch[k] ?? null;
   }
   if (patch.tarikh !== undefined) bersih.tarikh = patch.tarikh || null;
@@ -188,7 +192,7 @@ export async function bacaLampiranAI(lampiranId: string): Promise<{ ok: boolean;
   const nama = String(l.nama_fail || l.tajuk || "").toLowerCase();
 
   const sistem = `Anda pembantu Setiausaha untuk ${NAMA_SURAU}. Anda diberi kandungan sebuah slide/dokumen pembentangan mesyuarat. Ekstrak HANYA maklumat penting dan tuliskan sebagai BADAN MINIT MESYUARAT ringkas dalam Bahasa Melayu formal, mengikut gaya rasmi:
-- Susun sebagai perkara bernombor + sub-perkara (cth "1. Pembentangan Bajet 2026", "1.1 ...").
+- Susun guna penomboran perpuluhan: perkara utama ".0" (cth "1.0 Pembentangan Bajet 2026") dan sub-perkara "1.1", "1.2".
 - Padatkan poin penting: keputusan, angka, cadangan, tarikh & tindakan.
 - Bagi perkara yang ada susulan, tambah baris berasingan "Tindakan: <pihak>".
 - JANGAN reka fakta, nama atau angka yang tiada dalam dokumen. Jika tidak jelas, biarkan.
