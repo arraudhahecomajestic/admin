@@ -36,6 +36,32 @@ function parseTarikhBank(s: string): string | null {
 }
 const duit = (s: string) => Number(String(s || "").replace(/[^0-9.]/g, "")) || 0;
 
+// Muat SheetJS (xlsx) dari cdnjs sekali sahaja — hanya bila fail Excel dipilih.
+let xlsxJanji: Promise<any> | null = null;
+function muatXLSX(): Promise<any> {
+  if (typeof window !== "undefined" && (window as any).XLSX) return Promise.resolve((window as any).XLSX);
+  if (xlsxJanji) return xlsxJanji;
+  xlsxJanji = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.async = true;
+    s.onload = () => resolve((window as any).XLSX);
+    s.onerror = () => { xlsxJanji = null; reject(new Error("Gagal memuat pembaca Excel.")); };
+    document.head.appendChild(s);
+  });
+  return xlsxJanji;
+}
+
+// Fail Excel → grid string[][] (guna helaian pertama).
+async function bacaExcel(fail: File): Promise<string[][]> {
+  const XLSX = await muatXLSX();
+  const buf = await fail.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const grid: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
+  return grid.map((r) => (r || []).map((c: any) => (c == null ? "" : String(c))));
+}
+
 function kategoriMasuk(teks: string): string {
   const t = teks.toLowerCase();
   if (t.includes("khairat")) return "Yuran Khairat";
@@ -117,22 +143,10 @@ export default function ImportCsvKewangan() {
 
   const rows = useMemo(() => (format === "maybank" && ringkas ? ringkaskan(rawRows) : rawRows), [rawRows, ringkas, format]);
 
-  function muatTemplat() {
-    const T = `Jenis,Tarikh,Kategori,Jumlah,Keterangan,Kaedah
-Masuk,2026-07-05,Infaq / Derma,150.00,Tabung Jumaat,tunai
-Keluar,2026-07-15,Utiliti (air/elektrik),220.50,Bil elektrik,`;
-    const blob = new Blob(["﻿" + T], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "templat-kewangan.csv";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  }
-
-  async function pilihFail(e: React.ChangeEvent<HTMLInputElement>) {
-    setHasil(null); setRalat(""); setRawRows([]);
-    const fail = e.target.files?.[0];
-    if (!fail) return;
-    setNamaFail(fail.name);
-    const grid = parseCsv(await fail.text()).filter((r) => r.some((x) => (x ?? "").trim() !== ""));
-    if (grid.length < 2) { setRalat("Fail kosong."); return; }
+  // Proses grid (dari CSV atau Excel) → kesan format & isi jadual pratonton.
+  function prosesGrid(gridMentah: string[][]) {
+    const grid = gridMentah.filter((r) => r.some((x) => (x ?? "").trim() !== ""));
+    if (grid.length < 2) { setRalat("Fail kosong atau tiada data."); return; }
 
     // Cuba format Maybank dahulu
     const mb = parseMaybank(grid);
@@ -142,9 +156,25 @@ Keluar,2026-07-15,Utiliti (air/elektrik),220.50,Bil elektrik,`;
     const header = grid[0].map((h) => h.trim().toLowerCase());
     const idx = (n: string[]) => header.findIndex((h) => n.includes(h));
     const iJenis = idx(["jenis", "type"]), iTarikh = idx(["tarikh", "date"]), iKat = idx(["kategori", "category"]), iJum = idx(["jumlah", "amount", "rm"]), iKet = idx(["keterangan", "catatan", "description", "butiran"]), iKae = idx(["kaedah", "method", "cara"]);
-    if (iJenis < 0 || iTarikh < 0 || iKat < 0 || iJum < 0) { setFormat(""); setRalat("Format tidak dikenali. Guna templat kami, atau muat naik penyata Maybank (CSV)."); return; }
+    if (iJenis < 0 || iTarikh < 0 || iKat < 0 || iJum < 0) { setFormat(""); setRalat("Format tidak dikenali. Guna templat kami (Jenis, Tarikh, Kategori, Jumlah, Keterangan, Kaedah), atau muat naik penyata Maybank."); return; }
     setFormat("templat");
     setRawRows(grid.slice(1).map((c) => ({ jenis: c[iJenis] ?? "", tarikh: c[iTarikh] ?? "", kategori: c[iKat] ?? "", jumlah: c[iJum] ?? "", keterangan: iKet >= 0 ? c[iKet] ?? "" : "", kaedah: iKae >= 0 ? c[iKae] ?? "" : "" })));
+  }
+
+  async function pilihFail(e: React.ChangeEvent<HTMLInputElement>) {
+    setHasil(null); setRalat(""); setRawRows([]); setFormat("");
+    const fail = e.target.files?.[0];
+    if (!fail) return;
+    setNamaFail(fail.name);
+    const excel = /\.(xlsx|xls)$/i.test(fail.name);
+    try {
+      const grid = excel ? await bacaExcel(fail) : parseCsv(await fail.text());
+      prosesGrid(grid);
+    } catch (err: any) {
+      setRalat(err?.message || "Gagal membaca fail. Pastikan ia fail Excel (.xlsx) atau CSV yang sah.");
+    } finally {
+      e.target.value = "";
+    }
   }
 
   const isMasukRow = (r: BarisCsv) => ["masuk", "income", "in", "kutipan"].includes(String(r.jenis).trim().toLowerCase());
@@ -162,21 +192,20 @@ Keluar,2026-07-15,Utiliti (air/elektrik),220.50,Bil elektrik,`;
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
       <button onClick={() => setBuka((v) => !v)} className="flex w-full items-center justify-between text-left">
-        <h2 className="font-semibold text-slate-900">Import Kewangan Bulanan (CSV / Penyata Bank)</h2>
+        <h2 className="font-semibold text-slate-900">Muat Naik Laporan Kewangan Bulanan</h2>
         <span className="text-sm text-surau">{buka ? "Tutup ▲" : "Buka ▼"}</span>
       </button>
 
       {buka && (
         <div className="mt-4 space-y-4">
           <p className="text-sm text-slate-600">
-            Muat naik <b>penyata bank Maybank (CSV)</b> terus — sistem auto-kesan Cash-in (Masuk) & Cash-out (Keluar), auto-kategori, dan kemas kini kewangan. Atau guna templat mudah kami.
+            Muat naik fail <b>laporan kewangan bulanan</b> (Excel .xlsx). Sistem akan baca fail dan kemas kini carta kewangan secara automatik.
           </p>
           <div className="flex flex-wrap gap-2">
-            <label className="cursor-pointer rounded-lg bg-surau px-3 py-2 text-sm font-semibold text-white hover:bg-surau-dark">
-              Pilih Fail CSV
-              <input type="file" accept=".csv,text/csv" className="hidden" onChange={pilihFail} />
+            <label className="cursor-pointer rounded-lg bg-surau px-4 py-2 text-sm font-semibold text-white hover:bg-surau-dark">
+              Upload Laporan
+              <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="hidden" onChange={pilihFail} />
             </label>
-            <button onClick={muatTemplat} className="rounded-lg border border-surau/40 px-3 py-2 text-sm font-semibold text-surau hover:bg-surau/5">Templat Mudah</button>
             {namaFail && <span className="self-center text-sm text-slate-500">{namaFail}{format === "maybank" ? " · Penyata Maybank dikesan" : ""}</span>}
           </div>
 

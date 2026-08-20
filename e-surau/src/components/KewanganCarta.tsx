@@ -147,31 +147,31 @@ export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunM
       {isTahun ? (
         <>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Tile label={`Jumlah Masuk ${tahun}`} value={rm(jum(tahunMasuk))} jenis="masuk" />
-            <Tile label={`Jumlah Keluar ${tahun}`} value={rm(jum(tahunKeluar))} jenis="keluar" />
+            <Tile label={`Jumlah Pendapatan ${tahun}`} value={rm(jum(tahunMasuk))} jenis="masuk" />
+            <Tile label={`Jumlah Perbelanjaan ${tahun}`} value={rm(jum(tahunKeluar))} jenis="keluar" />
             <Tile label={`Baki Bersih ${tahun}`} value={rm(jum(tahunMasuk) - jum(tahunKeluar))} jenis="baki" />
           </div>
           <div className="mt-4 rounded-xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Masuk vs Keluar ikut Bulan</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Pendapatan vs Perbelanjaan ikut Bulan</h3>
             <p className="mb-1 text-[11.5px] text-slate-500">Januari hingga {BULAN_PENUH[hingga]} {tahun}</p>
             <Bar masuk={tahunMasuk} keluar={tahunKeluar} hingga={hingga} />
             <div className="mt-2 flex justify-center gap-5 text-xs text-slate-600">
-              <span className="flex items-center gap-1.5"><i style={{ width: 11, height: 11, borderRadius: 3, background: HIJAU, display: "inline-block" }} /> Masuk</span>
-              <span className="flex items-center gap-1.5"><i style={{ width: 11, height: 11, borderRadius: 3, background: OREN, display: "inline-block" }} /> Keluar</span>
+              <span className="flex items-center gap-1.5"><i style={{ width: 11, height: 11, borderRadius: 3, background: HIJAU, display: "inline-block" }} /> Pendapatan</span>
+              <span className="flex items-center gap-1.5"><i style={{ width: 11, height: 11, borderRadius: 3, background: OREN, display: "inline-block" }} /> Perbelanjaan</span>
             </div>
           </div>
         </>
       ) : (
         <>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Tile label="Duit Masuk" value={rm(totalM)} jenis="masuk" />
-            <Tile label="Duit Keluar" value={rm(totalK)} jenis="keluar" />
+            <Tile label="Pendapatan" value={rm(totalM)} jenis="masuk" />
+            <Tile label="Perbelanjaan" value={rm(totalK)} jenis="keluar" />
             <Tile label="Baki Bulan" value={rm(totalM - totalK)} jenis="baki" />
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-slate-200 p-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Duit Masuk</h3>
+                <h3 className="text-sm font-semibold text-slate-900">Pendapatan</h3>
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">ikut Tabung</span>
               </div>
               <p className="mb-1 text-[11.5px] text-slate-500">Kutipan {BULAN_PENUH[idx]} {tahun}</p>
@@ -180,7 +180,7 @@ export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunM
             </div>
             <div className="rounded-xl border border-slate-200 p-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Duit Keluar</h3>
+                <h3 className="text-sm font-semibold text-slate-900">Perbelanjaan</h3>
                 <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-700">ikut Kategori</span>
               </div>
               <p className="mb-1 text-[11.5px] text-slate-500">Perbelanjaan {BULAN_PENUH[idx]} {tahun}</p>
