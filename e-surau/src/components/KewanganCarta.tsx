@@ -170,19 +170,13 @@ export default function KewanganCarta({ tahun, nama, bulanAda, dataBulan, tahunM
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-slate-200 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Pendapatan</h3>
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">ikut Tabung</span>
-              </div>
+              <h3 className="text-sm font-semibold text-slate-900">Pendapatan</h3>
               <p className="mb-1 text-[11.5px] text-slate-500">Kutipan {BULAN_PENUH[idx]} {tahun}</p>
               <Donut rows={d ? d.masuk : []} />
               <Legend rows={d ? d.masuk : []} />
             </div>
             <div className="rounded-xl border border-slate-200 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Perbelanjaan</h3>
-                <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-700">ikut Kategori</span>
-              </div>
+              <h3 className="text-sm font-semibold text-slate-900">Perbelanjaan</h3>
               <p className="mb-1 text-[11.5px] text-slate-500">Perbelanjaan {BULAN_PENUH[idx]} {tahun}</p>
               <Donut rows={d ? d.keluar : []} />
               <Legend rows={d ? d.keluar : []} />
