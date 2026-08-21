@@ -232,21 +232,61 @@ function BarisMeta({ k, v }: { k: string; v: string }) {
   );
 }
 
-// Render badan minit ikut format Pengerusi: perkara "N.0" tebal (tajuk),
-// sub-perkara "N.M" berinden, baris "Tindakan:" berinden dengan label tebal.
+// Render badan minit ikut format Pengerusi:
+//  "1. Tajuk"   → tajuk perkara (tebal)
+//  "1.1 ..."    → sub-perkara (inden)
+//  "2.2.1 ..."  → sub-sub perkara (inden lebih)
+//  "Tindakan: " → baris tindakan (rata kanan, label tebal)
+//  Baris "| a | b |" berturutan → jadual.
 function renderMinit(teks: string) {
-  return (teks || "").split("\n").map((raw, i) => {
-    const line = raw.replace(/\s+$/, "");
-    const t = line.trim();
-    if (!t) return <div key={i} className="h-2" />;
+  const lines = (teks || "").split("\n");
+  const out: any[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const t = lines[i].trim();
+    // Blok jadual (baris bermula dengan |)
+    if (t.startsWith("|")) {
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        const cells = lines[i].trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+        if (!cells.every((c) => /^:?-+:?$/.test(c) || c === "")) rows.push(cells);
+        i++;
+      }
+      if (rows.length) {
+        out.push(
+          <table key={`t${i}`} className="my-3 ml-6 border-collapse text-sm">
+            <tbody>
+              {rows.map((r, ri) => {
+                const head = ri === 0;
+                const total = !head && /jumlah/i.test(r[0] || "");
+                return (
+                  <tr key={ri}>
+                    {r.map((c, ci) => {
+                      const kanan = ci === r.length - 1 && ci !== 0;
+                      const cls = `border border-slate-300 px-2.5 py-1 ${head ? "bg-slate-100 font-semibold" : ""} ${total ? "font-bold" : ""} ${kanan ? "text-right" : "text-left"}`;
+                      return head ? <th key={ci} className={cls}>{c}</th> : <td key={ci} className={cls}>{c}</td>;
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>,
+        );
+      }
+      continue;
+    }
+    if (!t) { out.push(<div key={i} className="h-2" />); i++; continue; }
     if (/^tindakan\s*:/i.test(t)) {
       const rest = t.replace(/^tindakan\s*:\s*/i, "");
-      return <p key={i} className="pl-6 text-slate-700"><span className="font-semibold">Tindakan:</span> {rest}</p>;
+      out.push(<p key={i} className="mt-1 text-right text-slate-700"><span className="font-semibold">Tindakan:</span> {rest}</p>);
+      i++; continue;
     }
-    if (/^\d+\.0\b/.test(t)) return <p key={i} className="mt-3 font-bold text-slate-900">{t}</p>;
-    if (/^\d+\.\d+/.test(t)) return <p key={i} className="whitespace-pre-wrap pl-6 text-slate-800">{t}</p>;
-    return <p key={i} className="whitespace-pre-wrap pl-6 text-slate-800">{t}</p>;
-  });
+    if (/^\d+\.\d+\.\d+/.test(t)) { out.push(<p key={i} className="whitespace-pre-wrap pl-12 text-slate-800">{t}</p>); i++; continue; }
+    if (/^\d+\.\d+/.test(t)) { out.push(<p key={i} className="whitespace-pre-wrap pl-6 text-slate-800">{t}</p>); i++; continue; }
+    if (/^\d+\.(\s|$)/.test(t)) { out.push(<p key={i} className="mt-3 font-bold text-slate-900">{t}</p>); i++; continue; }
+    out.push(<p key={i} className="whitespace-pre-wrap pl-6 text-slate-800">{t}</p>); i++;
+  }
+  return out;
 }
 
 // Satu kategori kehadiran (bersemuka / online / tidak hadir).

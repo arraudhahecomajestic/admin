@@ -49,23 +49,54 @@ function senaraiKehadiran(tajuk: string, orang: Orang[]): string {
   return head + tableNoBorder(rows, [600, 5200, 400, 3200]) + spacer();
 }
 
+function tableBordered(rows: string[][]): string {
+  const bd = `<w:tblBorders><w:top w:val="single" w:sz="4" w:color="999999"/><w:left w:val="single" w:sz="4" w:color="999999"/><w:bottom w:val="single" w:sz="4" w:color="999999"/><w:right w:val="single" w:sz="4" w:color="999999"/><w:insideH w:val="single" w:sz="4" w:color="999999"/><w:insideV w:val="single" w:sz="4" w:color="999999"/></w:tblBorders>`;
+  const trs = rows.map((r, ri) => {
+    const head = ri === 0;
+    const total = !head && /jumlah/i.test(r[0] || "");
+    const cells = r.map((c, ci) => {
+      const kanan = ci === r.length - 1 && ci !== 0;
+      const shd = head ? `<w:shd w:val="clear" w:color="auto" w:fill="EEEEEE"/>` : "";
+      return `<w:tc><w:tcPr>${shd}</w:tcPr>${para(run(c, { b: head || total }), { align: kanan ? "right" : "left", after: 0 })}</w:tc>`;
+    });
+    return `<w:tr>${cells.join("")}</w:tr>`;
+  });
+  const n = Math.max(1, rows[0]?.length || 1);
+  const cols = n === 2 ? [5600, 2800] : Array.from({ length: n }, () => Math.round(8400 / n));
+  const grid = `<w:tblGrid>${cols.map((w) => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`;
+  return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="540" w:type="dxa"/>${bd}</w:tblPr>${grid}${trs.join("")}</w:tbl>`;
+}
+
 function badanMinit(minit: string): string {
-  const baris = (minit || "").split("\n");
+  const lines = (minit || "").split("\n");
   const keluar: string[] = [];
-  for (const raw of baris) {
-    const line = raw.replace(/\s+$/, "");
-    if (!line.trim()) { keluar.push(para("", { after: 60 })); continue; }
-    const t = line.trim();
+  let i = 0;
+  while (i < lines.length) {
+    const t = lines[i].trim();
+    if (t.startsWith("|")) {
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        const cells = lines[i].trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+        if (!cells.every((c) => /^:?-+:?$/.test(c) || c === "")) rows.push(cells);
+        i++;
+      }
+      if (rows.length) keluar.push(tableBordered(rows) + spacer());
+      continue;
+    }
+    if (!t) { keluar.push(para("", { after: 60 })); i++; continue; }
     if (/^tindakan\s*:/i.test(t)) {
       const rest = t.replace(/^tindakan\s*:\s*/i, "");
-      keluar.push(para(run("Tindakan: ", { b: true }) + run(rest), { left: 360, after: 160 }));
-    } else if (/^\d+\.0\b/.test(t)) {
-      keluar.push(para(t, { b: true, after: 60 }));
+      keluar.push(para(run("Tindakan: ", { b: true }) + run(rest), { align: "right", after: 160 }));
+    } else if (/^\d+\.\d+\.\d+/.test(t)) {
+      keluar.push(para(t, { left: 1080, after: 80 }));
     } else if (/^\d+\.\d+/.test(t)) {
-      keluar.push(para(t, { left: 360, after: 120 }));
+      keluar.push(para(t, { left: 540, after: 100 }));
+    } else if (/^\d+\.(\s|$)/.test(t)) {
+      keluar.push(para(t, { b: true, after: 60 }));
     } else {
-      keluar.push(para(t, { left: 360, after: 120 }));
+      keluar.push(para(t, { left: 540, after: 100 }));
     }
+    i++;
   }
   return keluar.join("");
 }
@@ -88,10 +119,7 @@ export default function MuatTurunWord({ m, nama }: { m: any; nama: string }) {
       [1600, 300, 7400],
     );
 
-    const garis = para(
-      "___________________________________________________________________________",
-      { align: "center", after: 120 },
-    );
+    const garis = `<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="999999"/></w:pBdr><w:spacing w:before="60" w:after="180"/></w:pPr></w:p>`;
 
     // Blok tandatangan
     const tt = (label: string, orang: string, jawatan: string) =>

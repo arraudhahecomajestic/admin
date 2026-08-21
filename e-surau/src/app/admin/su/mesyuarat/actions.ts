@@ -22,16 +22,19 @@ export async function kemasMinitAI(input: {
   const sistem = `Anda pembantu Setiausaha untuk ${NAMA_SURAU}. Tugas anda menyusun nota kasar/berselerak menjadi BADAN MINIT MESYUARAT yang kemas, formal & profesional dalam Bahasa Melayu, mengikut GAYA RASMI Surau Ar-Raudhah (format Pengerusi).
 
 FORMAT & GAYA (WAJIB ikut dengan tepat):
-- Guna PENOMBORAN PERPULUHAN. Setiap perkara utama = nombor ".0" diikuti tajuk pendek pada baris tersendiri, cth:
-  "1.0 Ucapan Pengerusi"
-  "2.0 Program Kem Memanah Recurve & Robotik 2026"
-  "3.0 Portal Sistem Pengurusan Surau Digital (e-Surau)"
-- Di bawah setiap perkara utama, tulis isi kandungan sebagai sub-perkara berangka: "1.1", "1.2", "2.1", "2.2" dan seterusnya. Setiap sub-perkara satu perenggan.
-- Untuk senarai butiran (tarikh, masa, tempat, pakej harga, dsb.), boleh guma sub-perkara berangka berturutan (cth 2.3, 2.4, 2.5) — satu butiran satu baris.
+- Guna PENOMBORAN PERPULUHAN 3 aras:
+  • Perkara utama = "1.", "2.", "3." diikuti tajuk pendek pada baris tersendiri, cth "1. Ucapan Pengerusi", "2. Program Kem Memanah Recurve & Robotik 2026".
+  • Sub-perkara = "1.1", "1.2", "2.1", "2.2" — satu perenggan setiap satu.
+  • Sub-sub perkara (untuk senarai butiran spt tarikh/masa/tempat/pakej) = "2.2.1", "2.2.2" — satu butiran satu baris.
+- MULAKAN minit dengan perkara "1. Ucapan Pengerusi" dan TUTUP dengan perkara terakhir "N. Ucapan Penangguhan" yang mengandungi ucapan terima kasih Pengerusi dan satu baris "Mesyuarat ditangguhkan pada pukul ___" (biar tempat kosong jika masa tiada dalam nota).
 - Tulis dalam ayat pasif formal minit: "Pengerusi memaklumkan…", "Mesyuarat bersetuju…", "Dimaklumkan bahawa…", "Beliau membentangkan…", "Keputusan sebulat suara meluluskan…".
-- Bagi perkara yang ada susulan, tambah SATU baris berasingan tepat selepas sub-perkara berkenaan bermula dengan perkataan "Tindakan:" — cth "Tindakan: Bendahari", "Tindakan: Encik … dan Bendahari", "Tindakan: Untuk makluman semua ahli jawatankuasa", "Tindakan: Semua ahli jawatankuasa".
+- Untuk pecahan kos/kewangan yang berbentuk jadual, keluarkan sebagai JADUAL dengan baris bermula & berakhir dengan "|", cth:
+  | Kategori | Jumlah (RM) |
+  | Makanan | 1,200.00 |
+  | Jumlah | 3,000.00 |
+- Bagi perkara yang ada susulan, tambah SATU baris berasingan bermula dengan "Tindakan:" — cth "Tindakan: Bendahari", "Tindakan: Untuk makluman semua ahli jawatankuasa", "Tindakan: Semua ahli jawatankuasa".
 - Kekalkan SEMUA nama, angka, tarikh & keputusan SEPERTI dalam nota. JANGAN reka fakta, nama, angka, atau keputusan baharu. Jika sesuatu tidak jelas, biarkan tanpa menambah andaian.
-- Keluarkan HANYA badan minit (perkara berpenomboran + baris Tindakan). JANGAN tambah tajuk "MINIT MESYUARAT", senarai kehadiran, tarikh/masa/tempat, atau ruang tandatangan — semua itu diuruskan berasingan oleh sistem.
+- Keluarkan HANYA badan minit (perkara berpenomboran + jadual + baris Tindakan). JANGAN tambah tajuk "MINIT MESYUARAT", senarai kehadiran, tarikh/masa/tempat, atau ruang tandatangan — semua itu diuruskan berasingan oleh sistem.
 - Guna Bahasa Melayu baku sepenuhnya.`;
 
   const konteks = [
