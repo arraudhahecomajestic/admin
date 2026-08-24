@@ -52,6 +52,17 @@ export const PAKEJ_KHAIRAT = [
   { tahun: 10, label: "10 Tahun" },
 ];
 
+// Pakej Penajaan / Rakan Surau — bayar upfront via CHIP, logo auto-papar ikut tempoh.
+// jenis "bulanan": harga = harga_bulan × tempoh (pilih 3/6/9/12 bulan)
+// jenis "tahunan": harga tetap setahun (tempoh dikunci 12 bulan)
+export const PAKEJ_PENAJA = [
+  { kod: "emas",      nama: "Emas",                  jenis: "bulanan", harga_bulan: 1500, huraian: "Logo besar di laman utama + direktori + keutamaan susunan." },
+  { kod: "perak",     nama: "Perak",                 jenis: "bulanan", harga_bulan: 800,  huraian: "Logo sederhana di laman utama + direktori." },
+  { kod: "gangsa",    nama: "Gangsa",                jenis: "bulanan", harga_bulan: 500,  huraian: "Logo di direktori Rakan Surau." },
+  { kod: "direktori", nama: "Direktori Rakan Surau", jenis: "tahunan", harga_tahun: 250,  huraian: "Tersenarai dalam direktori Rakan Surau (setahun)." },
+] as const;
+export const TEMPOH_PENAJA = [3, 6, 9, 12] as const; // pilihan bulan untuk pakej bulanan
+
 // Pakej Infaq (langganan/satu-tap) — halaman /infaq
 export const PAKEJ_INFAQ_SUBUH = [2, 5, 7, 10, 15, 20, 50]; // RM tiap infaq subuh
 export const INFAQ_JAMUAN_SELOT = 10;   // RM satu lot jamuan Yassin & Tahlil

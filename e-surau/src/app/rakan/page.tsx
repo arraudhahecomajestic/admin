@@ -55,6 +55,9 @@ export default async function RakanPage() {
         <p className="mt-2 max-w-2xl text-sm text-amber-50 sm:text-base">
           Perniagaan yang menyokong surau kita. Sokong mereka kembali — dan nikmati tawaran eksklusif untuk ahli kariah. Semoga rezeki semua diberkati.
         </p>
+        <Link href="/rakan/sertai" className="mt-4 inline-block rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-surau-dark shadow hover:bg-amber-50">
+          Jadi Penaja →
+        </Link>
       </section>
 
       {senarai.length === 0 && (

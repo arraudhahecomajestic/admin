@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { statusPurchase, type Akaun } from "@/lib/chip";
+import { tambahBulan } from "@/lib/penaja";
 
 const tahunSemasa = () => new Date().getFullYear();
 
@@ -77,8 +78,8 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
     }
   } else if (b.jenis === "sewaan" && b.rujukan_id) {
     await db.from("sewaan").update({ kaedah_bayar: "Online (CHIP)" }).eq("id", b.rujukan_id);
-    // Rekod income sewaan ke dalam Kewangan (kategori Sewaan Ruang — auto-cipta jika belum ada)
-    const katId = await pastiKategori(db, "Sewaan Ruang", false);
+    // Rekod income sewaan ke dalam Kewangan (ikut kategori Bendahari: Sewaan Dewan)
+    const katId = await pastiKategori(db, "Sewaan Dewan", false);
     if (katId) {
       await db.from("kutipan").insert({
         kategori_id: katId,
@@ -92,8 +93,8 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
   } else if (b.jenis === "infaq") {
     // Infaq Subuh / Infaq Jamuan — rekod dalam kategori masing-masing (tak papar awam).
     const nama = String(b.no_rujukan || "").includes("JAMUAN")
-      ? "Infaq Jamuan Yassin & Tahlil"
-      : "Infaq Subuh";
+      ? "Dana Jamuan Makanan"
+      : "Tabung Online";
     const katId = await pastiKategori(db, nama, false);
     if (katId) {
       await db.from("kutipan").insert({
@@ -120,8 +121,8 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
       });
     }
   } else if (b.jenis === "jamuan") {
-    // Sumbangan jamuan tahlil / doa selamat → rekod dalam Tabung Khas (auto-cipta jika belum ada)
-    const katId = await pastiKategori(db, "Tabung Khas", false);
+    // Sumbangan jamuan tahlil / doa selamat → rekod ikut kategori Bendahari: Dana Jamuan Makanan
+    const katId = await pastiKategori(db, "Dana Jamuan Makanan", false);
     if (katId) {
       await db.from("kutipan").insert({
         kategori_id: katId,
@@ -129,6 +130,29 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
         kaedah: "online",
         catatan: `Sumbangan jamuan/doa selamat${b.nama ? " — " + b.nama : ""} (CHIP)`,
         tarikh: new Date().toISOString().slice(0, 10),
+        direkod_oleh: "CHIP",
+      });
+    }
+  } else if (b.jenis === "penaja" && b.rujukan_id) {
+    // Tajaan penaja → aktifkan penyenaraian + tetapkan tempoh papar (auto-luput bila tamat)
+    const { data: pen } = await db.from("penaja").select("tempoh_bulan").eq("id", b.rujukan_id).maybeSingle();
+    const bulan = Number((pen as any)?.tempoh_bulan || 0) || 12;
+    const mula = new Date();
+    const tarikhMula = mula.toISOString().slice(0, 10);
+    await db.from("penaja").update({
+      aktif: true,
+      tarikh_mula: tarikhMula,
+      tarikh_tamat: tambahBulan(mula, bulan),
+    }).eq("id", b.rujukan_id);
+    // Rekod income tajaan ke tabung khas (telus dalam Kewangan)
+    const katId = await pastiKategori(db, "Penajaan e-Surau", true);
+    if (katId) {
+      await db.from("kutipan").insert({
+        kategori_id: katId,
+        jumlah: Number(b.jumlah || 0),
+        kaedah: "online",
+        catatan: `Tajaan penaja${b.nama ? " — " + b.nama : ""} (CHIP)`,
+        tarikh: tarikhMula,
         direkod_oleh: "CHIP",
       });
     }
