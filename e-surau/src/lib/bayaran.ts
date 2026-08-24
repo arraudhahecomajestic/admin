@@ -120,11 +120,11 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
       });
     }
   } else if (b.jenis === "jamuan") {
-    // Sumbangan jamuan tahlil / doa selamat → rekod dalam Tabung Khas
-    const { data: kat } = await db.from("kategori_kutipan").select("id").eq("nama", "Tabung Khas").maybeSingle();
-    if (kat) {
+    // Sumbangan jamuan tahlil / doa selamat → rekod dalam Tabung Khas (auto-cipta jika belum ada)
+    const katId = await pastiKategori(db, "Tabung Khas", false);
+    if (katId) {
       await db.from("kutipan").insert({
-        kategori_id: (kat as any).id,
+        kategori_id: katId,
         jumlah: Number(b.jumlah || 0),
         kaedah: "online",
         catatan: `Sumbangan jamuan/doa selamat${b.nama ? " — " + b.nama : ""} (CHIP)`,

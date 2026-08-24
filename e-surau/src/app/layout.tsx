@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU } from "@/lib/tetapan";
+import { NAMA_SURAU, LOGO_JAIS, LOGO_SELANGOR, LOGO_SURAU, NO_PENDAFTARAN } from "@/lib/tetapan";
 import { khairatDibuka, penajaDipapar, infaqDipapar } from "@/lib/tetapanSistem";
 import { getProfil, isMaster } from "@/lib/sesi";
 import PenajaStrip from "@/components/PenajaStrip";
@@ -79,7 +79,8 @@ export default async function RootLayout({
             <Link href="/keselamatan" className="hover:text-surau hover:underline">{t("Keselamatan", "Security")}</Link>
             <Link href="/polisi-bayaran-balik" className="hover:text-surau hover:underline">{t("Bayaran Balik", "Refunds")}</Link>
           </div>
-          {t("Jawatankuasa Surau Ar Raudhah, Eco Majestic", "Surau Ar Raudhah Committee, Eco Majestic")}
+          <div>{t("Jawatankuasa Surau Ar Raudhah, Eco Majestic", "Surau Ar Raudhah Committee, Eco Majestic")}</div>
+          <div className="mt-1 text-slate-400">No. Pendaftaran JAIS: {NO_PENDAFTARAN}</div>
         </footer>
         {/* Pembantu Maya AI — ahli berdaftar (log masuk) sahaja */}
         {profil && <ChatbotWidget lang={lang} nama={profil.nama ?? ""} />}
