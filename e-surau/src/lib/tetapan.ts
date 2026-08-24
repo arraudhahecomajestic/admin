@@ -53,15 +53,14 @@ export const PAKEJ_KHAIRAT = [
 ];
 
 // Pakej Penajaan / Rakan Surau — bayar upfront via CHIP, logo auto-papar ikut tempoh.
-// jenis "bulanan": harga = harga_bulan × tempoh (pilih 3/6/9/12 bulan)
-// jenis "tahunan": harga tetap setahun (tempoh dikunci 12 bulan)
+// Semua pakej dikira bulanan: harga = harga_bulan × tempoh (pilih 3/6/9/12 bulan).
 export const PAKEJ_PENAJA = [
-  { kod: "emas",      nama: "Emas",                  jenis: "bulanan", harga_bulan: 1000, huraian: "Logo besar di laman utama + direktori + keutamaan susunan." },
-  { kod: "perak",     nama: "Perak",                 jenis: "bulanan", harga_bulan: 500,  huraian: "Logo sederhana di laman utama + direktori." },
-  { kod: "gangsa",    nama: "Gangsa",                jenis: "bulanan", harga_bulan: 200,  huraian: "Logo di direktori Rakan Surau." },
-  { kod: "direktori", nama: "Direktori Rakan Surau", jenis: "bulanan", harga_bulan: 20,   huraian: "Tersenarai dalam direktori Rakan Surau." },
+  { kod: "emas",      nama: "Emas",                  harga_bulan: 1000, huraian: "Logo besar di laman utama + direktori + keutamaan susunan." },
+  { kod: "perak",     nama: "Perak",                 harga_bulan: 500,  huraian: "Logo sederhana di laman utama + direktori." },
+  { kod: "gangsa",    nama: "Gangsa",                harga_bulan: 200,  huraian: "Logo di direktori Rakan Surau." },
+  { kod: "direktori", nama: "Direktori Rakan Surau", harga_bulan: 20,   huraian: "Tersenarai dalam direktori Rakan Surau." },
 ] as const;
-export const TEMPOH_PENAJA = [3, 6, 9, 12] as const; // pilihan bulan untuk pakej bulanan
+export const TEMPOH_PENAJA = [3, 6, 9, 12] as const; // pilihan bulan tajaan
 
 // Pakej Infaq (langganan/satu-tap) — halaman /infaq
 export const PAKEJ_INFAQ_SUBUH = [2, 5, 7, 10, 15, 20, 50]; // RM tiap infaq subuh

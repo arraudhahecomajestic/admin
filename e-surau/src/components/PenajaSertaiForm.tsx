@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { PAKEJ_PENAJA, TEMPOH_PENAJA } from "@/lib/tetapan";
-import { hargaPenaja, cariPakej } from "@/lib/penaja";
+import { hargaPenaja } from "@/lib/penaja";
 import { mulaTajaanPenaja } from "@/app/rakan/sertai/actions";
 import { rm } from "@/lib/format";
 
@@ -18,8 +18,6 @@ export default function PenajaSertaiForm() {
   const [sedang, setSedang] = useState(false);
   const [ralat, setRalat] = useState("");
 
-  const pakej = cariPakej(kod);
-  const tahunan = pakej?.jenis === "tahunan";
   const harga = hargaPenaja(kod, bulan);
 
   async function hantar() {
@@ -29,7 +27,7 @@ export default function PenajaSertaiForm() {
     setSedang(true);
     const fd = new FormData();
     fd.set("pakej", kod);
-    fd.set("bulan", String(tahunan ? 12 : bulan));
+    fd.set("bulan", String(bulan));
     fd.set("nama", nama);
     fd.set("emel", emel);
     fd.set("telefon", telefon);
@@ -50,7 +48,7 @@ export default function PenajaSertaiForm() {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {PAKEJ_PENAJA.map((p) => {
             const dipilih = kod === p.kod;
-            const label = p.jenis === "tahunan" ? `${rm((p as any).harga_tahun)} / tahun` : `${rm((p as any).harga_bulan)} / bulan`;
+            const label = `${rm(p.harga_bulan)} / bulan`;
             return (
               <button
                 key={p.kod}
@@ -71,21 +69,17 @@ export default function PenajaSertaiForm() {
       {/* Tempoh */}
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-slate-900">2. Tempoh Tajaan</h2>
-        {tahunan ? (
-          <p className="mt-2 text-sm text-slate-600">Pakej Direktori adalah untuk tempoh <b>1 tahun (12 bulan)</b>.</p>
-        ) : (
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {TEMPOH_PENAJA.map((b) => (
-              <button
-                key={b}
-                onClick={() => setBulan(b)}
-                className={`rounded-lg border-2 py-3 text-center font-bold ${bulan === b ? "border-surau bg-surau/10 text-surau-dark" : "border-slate-200 text-slate-700 hover:border-surau/40"}`}
-              >
-                {b} bln
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {TEMPOH_PENAJA.map((b) => (
+            <button
+              key={b}
+              onClick={() => setBulan(b)}
+              className={`rounded-lg border-2 py-3 text-center font-bold ${bulan === b ? "border-surau bg-surau/10 text-surau-dark" : "border-slate-200 text-slate-700 hover:border-surau/40"}`}
+            >
+              {b} bln
+            </button>
+          ))}
+        </div>
         <div className="mt-4 flex items-center justify-between rounded-lg bg-surau/5 px-4 py-3">
           <span className="text-sm text-slate-600">Jumlah bayaran</span>
           <span className="text-2xl font-extrabold text-surau">{rm(harga)}</span>

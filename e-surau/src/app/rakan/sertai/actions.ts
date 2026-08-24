@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
-import { cariPakej, tempohBulan, hargaPenaja } from "@/lib/penaja";
+import { cariPakej, tempohSah, hargaPenaja } from "@/lib/penaja";
 
 // Penaja bayar sendiri (upfront). Cipta rekod penaja (aktif=false, menunggu bayaran),
 // jana pautan CHIP. Logo auto-papar bila bayaran disahkan (webhook).
@@ -14,11 +14,10 @@ export async function mulaTajaanPenaja(fd: FormData): Promise<{ ok: boolean; msg
   const pakej = cariPakej(kod);
   if (!pakej) return { ok: false, msg: "Sila pilih pakej tajaan." };
 
-  const bulanDipilih = Number(fd.get("bulan") ?? 0);
-  const bulan = tempohBulan(kod, bulanDipilih);
-  if (!bulan) return { ok: false, msg: "Sila pilih tempoh tajaan." };
+  const bulan = Number(fd.get("bulan") ?? 0);
+  if (!tempohSah(bulan)) return { ok: false, msg: "Sila pilih tempoh tajaan (3/6/9/12 bulan)." };
 
-  const harga = hargaPenaja(kod, bulanDipilih);
+  const harga = hargaPenaja(kod, bulan);
   if (!harga || harga < 1) return { ok: false, msg: "Jumlah tajaan tidak sah." };
 
   const nama = String(fd.get("nama") ?? "").trim();
@@ -60,7 +59,7 @@ export async function mulaTajaanPenaja(fd: FormData): Promise<{ ok: boolean; msg
 
   const site = siteUrl();
   const ref = `PENAJA-${Date.now()}`;
-  const labelTempoh = pakej.jenis === "tahunan" ? "1 tahun" : `${bulan} bulan`;
+  const labelTempoh = `${bulan} bulan`;
 
   let purchase: any;
   try {
