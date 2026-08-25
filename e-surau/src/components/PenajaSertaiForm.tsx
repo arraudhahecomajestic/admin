@@ -69,15 +69,16 @@ export default function PenajaSertaiForm() {
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di laman utama (strip)</div>
               <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50/60 p-3">
-                <Slot big={kod === "emas"} logo={logoPrev} />
+                <Slot saiz={kod === "emas" ? "besar" : kod === "perak" ? "sederhana" : "kecil"} logo={logoPrev} />
                 <div className="flex h-12 w-24 items-center justify-center rounded-lg border border-slate-200 bg-white text-[11px] text-slate-300">Penaja lain</div>
               </div>
+              <p className="mt-1 text-[11px] text-slate-400">{kod === "emas" ? "Emas: logo besar & tetap di kiri (tak bergerak)." : kod === "perak" ? "Perak: logo sederhana, bergerak dalam strip." : "Gangsa: logo kecil, bergerak dalam strip."}</p>
             </div>
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
               <div className="mt-2 max-w-xs rounded-xl border border-slate-200 p-3">
                 <div className="flex items-center gap-3">
-                  <Slot logo={logoPrev} />
+                  <Slot saiz="sederhana" logo={logoPrev} />
                   <div className="font-semibold text-slate-900">{nama || "Nama Perniagaan Anda"}</div>
                 </div>
                 {pakejNama && <span className="mt-2 inline-block rounded bg-surau/10 px-2 py-0.5 text-[10px] font-bold text-surau-dark">{pakejNama}</span>}
@@ -183,8 +184,8 @@ export default function PenajaSertaiForm() {
   );
 }
 
-function Slot({ big, logo }: { big?: boolean; logo?: string }) {
-  const cls = big ? "h-14 w-28" : "h-12 w-24";
+function Slot({ saiz = "sederhana", logo }: { saiz?: "besar" | "sederhana" | "kecil"; logo?: string }) {
+  const cls = saiz === "besar" ? "h-16 w-32" : saiz === "sederhana" ? "h-12 w-24" : "h-10 w-20";
   return (
     <div className={`flex ${cls} flex-none items-center justify-center rounded-lg border-2 border-surau bg-white p-1`}>
       {logo

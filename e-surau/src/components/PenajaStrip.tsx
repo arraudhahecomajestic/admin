@@ -1,12 +1,11 @@
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
 
-// pratonton = true → tunjuk contoh logo jika belum ada penaja (untuk admin lihat hasil).
+// pratonton = true → tunjuk contoh jika belum ada penaja (untuk admin lihat hasil).
 export default async function PenajaStrip({ pratonton = false }: { pratonton?: boolean }) {
   let penaja: any[] = [];
   if (supabaseConfigured) {
     const { data } = await supabase.from("v_penaja_aktif").select("*");
-    // Strip laman utama: Emas / Perak / Gangsa (berlogo) + penaja lama (tiada pakej).
-    // Direktori RM20 tak masuk strip — hanya tersenarai di /rakan.
+    // Strip: Emas / Perak / Gangsa (+ lama). Direktori RM20 tak masuk strip.
     penaja = ((data as any[]) ?? []).filter((p) => p.pakej !== "direktori");
   }
 
@@ -23,8 +22,10 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
     ];
   }
 
-  // Gandakan supaya gelung berjalan tanpa jurang
-  const senarai = [...penaja, ...penaja];
+  // Emas = logo besar, tetap di kiri (tak bergerak). Perak/Gangsa/lama = bergerak.
+  const emasList = penaja.filter((p) => p.pakej === "emas");
+  const gerakList = penaja.filter((p) => p.pakej !== "emas");
+  const gerak = [...gerakList, ...gerakList]; // gandakan untuk gelung tanpa jurang
 
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
@@ -33,22 +34,28 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/rakan" className="whitespace-nowrap text-xs font-medium text-surau hover:underline">Rakan Surau →</a>
-          <span className="hidden text-xs text-slate-400 sm:inline">
-            {pratonton ? "Pratonton" : contoh ? "Contoh" : "Tajaan"}
-          </span>
+          <span className="hidden text-xs text-slate-400 sm:inline">{pratonton ? "Pratonton" : contoh ? "Contoh" : "Tajaan"}</span>
         </div>
       </div>
 
-      <div className="penaja-marquee">
-        <div className="penaja-track">
-          {senarai.map((p, i) => (
-            <PenajaItem key={i} p={p} />
-          ))}
-        </div>
+      <div className="flex items-center gap-4">
+        {emasList.length > 0 && (
+          <div className="flex shrink-0 items-center gap-3">
+            {emasList.map((p, i) => <PenajaItem key={`e${i}`} p={p} saiz="besar" />)}
+          </div>
+        )}
+
+        {gerakList.length > 0 && (
+          <div className="penaja-marquee flex-1">
+            <div className="penaja-track">
+              {gerak.map((p, i) => <PenajaItem key={i} p={p} saiz={p.pakej === "gangsa" ? "kecil" : "sederhana"} />)}
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
-        .penaja-marquee { overflow: hidden; position: relative; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+        .penaja-marquee { overflow: hidden; position: relative; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
         .penaja-track { display: flex; align-items: center; gap: 2rem; width: max-content; animation: penaja-scroll 28s linear infinite; }
         .penaja-marquee:hover .penaja-track { animation-play-state: paused; }
         @keyframes penaja-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -57,11 +64,13 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
   );
 }
 
-function PenajaItem({ p }: { p: any }) {
+function PenajaItem({ p, saiz }: { p: any; saiz: "besar" | "sederhana" | "kecil" }) {
+  const dim = saiz === "besar" ? "h-20 w-44" : saiz === "sederhana" ? "h-16 w-36" : "h-12 w-28";
+  const border = saiz === "besar" ? "border-2 border-surau" : "border border-slate-100";
   const inner = (
-    <div className="flex h-16 w-36 shrink-0 items-center justify-center rounded-lg border border-slate-100 bg-slate-50 p-2">
+    <div className={`flex ${dim} shrink-0 items-center justify-center rounded-lg ${border} bg-slate-50 p-2`}>
       {p.logo_url
-        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={p.logo_url} alt={p.nama} className="max-h-12 max-w-full object-contain" />
+        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={p.logo_url} alt={p.nama} className="max-h-full max-w-full object-contain" />
         : <span className="text-center text-xs font-semibold text-slate-600">{p.nama}</span>}
     </div>
   );
