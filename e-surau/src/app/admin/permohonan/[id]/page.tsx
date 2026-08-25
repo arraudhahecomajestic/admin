@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProfil, isPentadbir } from "@/lib/sesi";
+import { getProfil, isPentadbir, isAdmin } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
@@ -7,6 +7,7 @@ import { tarikhMs } from "@/lib/format";
 import GambarSulit from "@/components/GambarSulit";
 import SulitTeks from "@/components/SulitTeks";
 import ButangHantar from "@/components/ButangHantar";
+import AkaunAhliTindakan from "@/components/AkaunAhliTindakan";
 import { ulasanSU, ulasanNazir, keputusan } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -170,6 +171,11 @@ export default async function PermohonanPage({ params }: { params: { id: string 
           <p className="text-sm text-amber-700">Hanya admin / Pengerusi JK boleh membuat keputusan akhir. Sila pastikan ulasan B1 & B2 selesai dahulu.</p>
         )}
       </section>
+
+      {/* Pengurusan Akaun — admin/master sahaja */}
+      {isAdmin(profil) && (
+        <AkaunAhliTindakan ahliId={a.id} nama={a.nama ?? ""} noAhli={a.no_ahli ?? ""} emel={a.emel ?? null} />
+      )}
     </div>
   );
 }
