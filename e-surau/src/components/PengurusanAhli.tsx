@@ -195,7 +195,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
               <th className="px-4 py-3">No. Ahli</th>
               <th className="px-4 py-3">Nama</th>
               <th className="px-4 py-3">Telefon</th>
-              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 text-center">Status</th>
               <th className="px-4 py-3">Data</th>
               <th className="px-4 py-3 text-right">Tindakan</th>
             </tr>
@@ -218,7 +218,7 @@ export default function PengurusanAhli({ senarai, bolehPapar }: { senarai: Ahli[
                     <div className="font-mono text-xs text-slate-400">{bolehLihat ? (a.no_kp || "—") : topengKp(a.no_kp)}</div>
                   </td>
                   <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{bolehLihat ? (a.telefon || "—") : topengTel(a.telefon)}</td>
-                  <td className="px-4 py-2.5"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${pr.cls}`}>{pr.label}</span></td>
+                  <td className="px-4 py-2.5 text-center"><span className={`inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${pr.cls}`}>{pr.label}</span></td>
                   <td className="px-4 py-2.5">
                     {a.maklumat_disahkan
                       ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Lengkap</span>
