@@ -1,4 +1,5 @@
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
+import { YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 
 // Baca semua tetapan sistem (key-value) — untuk Server Components.
 export async function bacaTetapan(): Promise<Record<string, string>> {
@@ -23,6 +24,13 @@ export async function pampasanKhairat(): Promise<number> {
   const t = await bacaTetapan();
   const n = Number(t.pampasan_khairat);
   return isNaN(n) || !n ? 1200 : n;
+}
+
+// Yuran khairat tahunan (caruman/ahli/tahun) — boleh dilaras di /admin/tetapan.
+export async function yuranKhairat(): Promise<number> {
+  const t = await bacaTetapan();
+  const n = Number(t.yuran_khairat);
+  return isNaN(n) || !n ? YURAN_KHAIRAT_TAHUNAN : n;
 }
 
 export async function penajaDipapar(): Promise<boolean> {

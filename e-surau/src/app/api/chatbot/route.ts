@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { getProfil } from "@/lib/sesi";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
-import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
+import { khairatDibuka, pampasanKhairat, yuranKhairat } from "@/lib/tetapanSistem";
 import {
   NAMA_SURAU,
   ALAMAT_SURAU,
   EMEL_SURAU,
   BANK_SURAU,
   ZON_SOLAT,
-  YURAN_KHAIRAT_TAHUNAN,
 } from "@/lib/tetapan";
 
 export const dynamic = "force-dynamic";
@@ -97,9 +96,9 @@ async function ambilKonteksLangsung(): Promise<string> {
 
   // Status khairat
   try {
-    const [dibuka, pampasan] = await Promise.all([khairatDibuka(), pampasanKhairat()]);
+    const [dibuka, pampasan, yuran] = await Promise.all([khairatDibuka(), pampasanKhairat(), yuranKhairat()]);
     bahagian.push(
-      `KHAIRAT KEMATIAN: Yuran RM${YURAN_KHAIRAT_TAHUNAN}/tahun. Pampasan RM${pampasan} setiap kematian dilindungi. Sertai skim: ${dibuka ? "DIBUKA sekarang" : "belum dibuka buat masa ini (pendaftaran tanggungan tetap boleh)"}.`,
+      `KHAIRAT KEMATIAN: Yuran RM${yuran}/tahun. Pampasan RM${pampasan} setiap kematian dilindungi. Sertai skim: ${dibuka ? "DIBUKA sekarang" : "belum dibuka buat masa ini (pendaftaran tanggungan tetap boleh)"}.`,
     );
   } catch {
     /* abai */

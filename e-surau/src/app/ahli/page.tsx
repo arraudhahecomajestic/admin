@@ -8,7 +8,7 @@ import { pautkanAhli } from "@/app/daftar/actions";
 import PautRekodForm from "@/components/PautRekodForm";
 import BayarKhairatButton from "@/components/BayarKhairatButton";
 import ButangHantar from "@/components/ButangHantar";
-import { khairatDibuka, bayaranOnlineDibuka } from "@/lib/tetapanSistem";
+import { khairatDibuka, bayaranOnlineDibuka, yuranKhairat, pampasanKhairat } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +72,8 @@ export default async function AhliPage() {
   // Semasa ujian: khairat nampak untuk pentadbir walaupun belum dilancarkan umum.
   const dibuka = await khairatDibuka();
   const bayaranDibuka = await bayaranOnlineDibuka();
+  const yuran = await yuranKhairat();
+  const pampasan = await pampasanKhairat();
   const bolehKhairat = dibuka || isPentadbir(profil);
   const modUjian = bolehKhairat && !dibuka;
 
@@ -133,7 +135,10 @@ export default async function AhliPage() {
                 <div className="font-bold text-green-800">🟢 Maklumat Anda Telah Disahkan</div>
                 <p className="mt-0.5 text-sm text-green-700">Keahlian anda diluluskan{a.tarikh_kemaskini ? ` · dikemas kini ${tarikhMs(a.tarikh_kemaskini)}` : ""}. Terima kasih!</p>
               </div>
-              <Link href="/ahli/kemaskini" className="text-sm font-medium text-green-800 underline">Kemas kini semula</Link>
+              <div className="flex items-center gap-3">
+                <Link href="/ahli/borang" className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">Muat Turun Borang</Link>
+                <Link href="/ahli/kemaskini" className="text-sm font-medium text-green-800 underline">Kemas kini semula</Link>
+              </div>
             </div>
           );
         }
@@ -223,10 +228,10 @@ export default async function AhliPage() {
         ) : !kh ? (
           <div className="space-y-3">
             <p className="text-sm text-slate-600">
-              Anda belum menyertai skim khairat. Yuran <b>RM60 setahun</b>, pampasan tetap
-              <b> RM1,400</b> setiap kematian ahli atau tanggungan yang dilindungi.
+              Anda belum menyertai skim khairat. Yuran <b>RM{yuran} setahun</b>, pampasan tetap
+              <b> {rm(pampasan)}</b> setiap kematian ahli atau tanggungan yang dilindungi.
             </p>
-            <BayarKhairatButton bayaranDibuka={bayaranDibuka} />
+            <BayarKhairatButton bayaranDibuka={bayaranDibuka} yuran={yuran} />
             <form action={sertaiKhairat}>
               <ButangHantar className="text-xs text-slate-500 underline disabled:opacity-50" pendingText="Sila tunggu…">atau sertai dahulu & bayar tunai di kaunter</ButangHantar>
             </form>
@@ -242,7 +247,7 @@ export default async function AhliPage() {
               Keahlian khairat anda{kh.no_khairat ? ` (No. ${kh.no_khairat})` : ""} — Yuran {TAHUN}:
               <b className="text-red-600"> Belum bayar</b>.
             </p>
-            <BayarKhairatButton bayaranDibuka={bayaranDibuka} />
+            <BayarKhairatButton bayaranDibuka={bayaranDibuka} yuran={yuran} />
             <p className="text-xs text-slate-500">Bayaran diproses oleh CHIP (FPX / kad / e-wallet). Atau bayar tunai di kaunter surau.</p>
           </div>
         )}

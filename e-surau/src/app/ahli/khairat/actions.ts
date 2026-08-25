@@ -3,8 +3,7 @@
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil } from "@/lib/sesi";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
-import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
-import { YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
+import { bayaranOnlineDibuka, yuranKhairat } from "@/lib/tetapanSistem";
 
 const tahunSemasa = () => new Date().getFullYear();
 
@@ -48,7 +47,7 @@ export async function mulaBayaranKhairat(tahunBil: number = 1): Promise<{ ok: bo
   const emel = ((a as any)?.emel || p.emel || "").trim().toLowerCase();
   if (!emel || !emel.includes("@")) return { ok: false, msg: "E-mel tidak sah. Sila kemas kini e-mel anda dahulu." };
 
-  const seunit = Number(keahlian.kadar_yuran_tahunan || YURAN_KHAIRAT_TAHUNAN);
+  const seunit = Number(keahlian.kadar_yuran_tahunan || (await yuranKhairat()));
   const jumlah = seunit * bilTahun;
   const ref = `KH-${String(keahlian.id).slice(0, 8)}-${tahun}-${bilTahun}T`;
   const site = siteUrl();

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { mulaBayaranKhairat } from "@/app/ahli/khairat/actions";
 import { PAKEJ_KHAIRAT, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
 
-export default function BayarKhairatButton({ bayaranDibuka = false }: { bayaranDibuka?: boolean }) {
+export default function BayarKhairatButton({ bayaranDibuka = false, yuran = YURAN_KHAIRAT_TAHUNAN }: { bayaranDibuka?: boolean; yuran?: number }) {
   const [sedang, setSedang] = useState<number | null>(null);
   const [ralat, setRalat] = useState("");
 
@@ -30,7 +30,7 @@ export default function BayarKhairatButton({ bayaranDibuka = false }: { bayaranD
       <div className="text-sm font-medium text-slate-700">Pilih pakej & bayar (online):</div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {PAKEJ_KHAIRAT.map((pk) => {
-          const jum = YURAN_KHAIRAT_TAHUNAN * pk.tahun;
+          const jum = yuran * pk.tahun;
           return (
             <button
               key={pk.tahun}
@@ -46,7 +46,7 @@ export default function BayarKhairatButton({ bayaranDibuka = false }: { bayaranD
           );
         })}
       </div>
-      <p className="text-xs text-slate-500">Yuran RM{YURAN_KHAIRAT_TAHUNAN}/tahun. Bayar terus untuk beberapa tahun sekali gus (FPX/kad/e-wallet).</p>
+      <p className="text-xs text-slate-500">Yuran RM{yuran}/tahun. Bayar terus untuk beberapa tahun sekali gus (FPX/kad/e-wallet).</p>
       {ralat && <p className="text-sm text-red-600">{ralat}</p>}
     </div>
   );

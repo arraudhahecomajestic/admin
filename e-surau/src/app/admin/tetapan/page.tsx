@@ -17,6 +17,7 @@ export default async function TetapanPage() {
   const t = await bacaTetapan();
   const khairatOn = t.khairat_dibuka === "true";
   const pampasan = t.pampasan_khairat || "1200";
+  const yuran = t.yuran_khairat || "60";
   const penajaOn = t.penaja_dipapar === "true";
   const bayaranOnlineOn = t.bayaran_online === "true";
   const kewanganAwamOn = t.kewangan_awam === "true";
@@ -62,6 +63,21 @@ export default async function TetapanPage() {
           </label>
           <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan</ButangHantar>
         </form>
+      </section>
+
+      {/* Yuran / Caruman Khairat Tahunan */}
+      <section className="rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-slate-900">Yuran Khairat Tahunan</h2>
+        <p className="mt-1 text-sm text-slate-600">Caruman yuran setiap ahli bagi setahun (dipapar di halaman Khairat, borang daftar &amp; Portal Ahli, dan digunakan untuk pengiraan pakej 1/3/5/10 tahun).</p>
+        <form action={setTetapan} className="mt-3 flex items-end gap-2">
+          <input type="hidden" name="kunci" value="yuran_khairat" />
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Yuran / tahun (RM)</span>
+            <input name="nilai" type="number" min="0" defaultValue={yuran} className="w-40 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          </label>
+          <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan</ButangHantar>
+        </form>
+        <p className="mt-2 text-xs text-slate-400">Nota: yuran ini terpakai untuk ahli baru. Ahli sedia ada yang sudah ada kadar tersendiri (kadar_yuran_tahunan) kekal ikut kadar mereka.</p>
       </section>
 
       {/* Suis Iklan / Penaja */}

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import PrayerTimes from "@/components/PrayerTimes";
 import { supabase, supabaseConfigured } from "@/lib/supabaseClient";
-import { NAMA_SURAU, ZON_SOLAT, YURAN_KHAIRAT_TAHUNAN } from "@/lib/tetapan";
-import { khairatDibuka, pampasanKhairat, kewanganAwamDibuka } from "@/lib/tetapanSistem";
+import { NAMA_SURAU, ZON_SOLAT } from "@/lib/tetapan";
+import { khairatDibuka, pampasanKhairat, yuranKhairat, kewanganAwamDibuka } from "@/lib/tetapanSistem";
 import { getProfil, isStaf } from "@/lib/sesi";
 import { rm, tarikhMs } from "@/lib/format";
 import { bahasaSemasa } from "@/lib/bahasa";
@@ -121,12 +121,13 @@ export default async function Home() {
   const lang = bahasaSemasa();
   const tr = buatT(lang);
   const tahunPie = new Date().getFullYear();
-  const [pengumuman, program, statFasa, khDibuka, pampasan, kewanganAwam, profil, tenderAktif, kewBulan] = await Promise.all([
+  const [pengumuman, program, statFasa, khDibuka, pampasan, yuran, kewanganAwam, profil, tenderAktif, kewBulan] = await Promise.all([
     ambilPengumuman(),
     ambilProgram(),
     ambilStatFasa(),
     khairatDibuka(),
     pampasanKhairat(),
+    yuranKhairat(),
     kewanganAwamDibuka(),
     getProfil(),
     ambilTender(),
@@ -149,7 +150,7 @@ export default async function Home() {
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-teal-50 sm:text-base">
             {tr("Ringankan beban keluarga di saat dukacita. Dengan hanya ", "Ease your family's burden in times of grief. For just ")}
-            <span className="font-bold text-white">RM{YURAN_KHAIRAT_TAHUNAN}/{tr("tahun", "year")}</span>
+            <span className="font-bold text-white">RM{yuran}/{tr("tahun", "year")}</span>
             {tr(", keluarga menerima pampasan khairat ", ", your family receives a death benefit of ")}
             <span className="font-bold text-white">RM{rm(pampasan).replace("RM", "")}</span>
             {tr(" bagi setiap kematian yang dilindungi. Sertai sekarang — jangan tunggu hingga terlambat.", " for each covered death. Join now — don't wait until it's too late.")}

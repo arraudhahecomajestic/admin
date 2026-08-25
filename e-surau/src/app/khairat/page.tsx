@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { NAMA_SURAU, YURAN_KHAIRAT_TAHUNAN, PAKEJ_KHAIRAT } from "@/lib/tetapan";
-import { khairatDibuka, pampasanKhairat } from "@/lib/tetapanSistem";
+import { NAMA_SURAU, PAKEJ_KHAIRAT } from "@/lib/tetapan";
+import { khairatDibuka, pampasanKhairat, yuranKhairat } from "@/lib/tetapanSistem";
 import { getProfil, isMaster } from "@/lib/sesi";
 import { rm } from "@/lib/format";
 import { bahasaSemasa } from "@/lib/bahasa";
@@ -16,9 +16,10 @@ export const metadata = {
 };
 
 export default async function KhairatInfo() {
-  const [dibuka, pampasan, profil] = await Promise.all([
+  const [dibuka, pampasan, yuran, profil] = await Promise.all([
     khairatDibuka(),
     pampasanKhairat(),
+    yuranKhairat(),
     getProfil(),
   ]);
   const stafPreview = !dibuka && isMaster(profil);
@@ -102,7 +103,7 @@ export default async function KhairatInfo() {
         </h1>
         <p className="mt-3 max-w-2xl text-teal-50">
           {tr("Dengan hanya ", "For just ")}
-          <span className="font-bold text-white">RM{YURAN_KHAIRAT_TAHUNAN}/{tr("tahun", "year")}</span>
+          <span className="font-bold text-white">RM{yuran}/{tr("tahun", "year")}</span>
           {tr(", anda dan keluarga dilindungi. Keluarga menerima pampasan ", ", you and your family are covered. The family receives a benefit of ")}
           <span className="font-bold text-white">RM{pampasanTeks}</span>
           {tr(" bagi setiap kematian yang dilindungi.", " for each covered death.")}
@@ -146,8 +147,8 @@ export default async function KhairatInfo() {
               <div className="text-sm font-bold text-slate-900">
                 {pk.tahun} {tr("Tahun", pk.tahun > 1 ? "Years" : "Year")}
               </div>
-              <div className="mt-1 text-2xl font-extrabold text-surau">RM{YURAN_KHAIRAT_TAHUNAN * pk.tahun}</div>
-              <div className="mt-0.5 text-xs text-slate-500">RM{YURAN_KHAIRAT_TAHUNAN}/{tr("tahun", "year")}</div>
+              <div className="mt-1 text-2xl font-extrabold text-surau">RM{yuran * pk.tahun}</div>
+              <div className="mt-0.5 text-xs text-slate-500">RM{yuran}/{tr("tahun", "year")}</div>
             </div>
           ))}
         </div>
