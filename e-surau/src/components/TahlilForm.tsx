@@ -102,6 +102,7 @@ export default function TahlilForm({ bayaranDibuka = false }: { bayaranDibuka?: 
             <button type="button" onClick={bayarSumbangan} disabled={bayarSedang} className="w-full rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
               {bayarSedang ? "Menyambung ke gerbang bayaran…" : "Bayar Sumbangan (FPX / Kad / e-Wallet)"}
             </button>
+            <p className="text-center text-xs text-slate-500">+ RM1 fi pemprosesan gerbang. Surau terima sumbangan anda penuh.</p>
             <div className="rounded-lg bg-slate-50 p-2 text-xs text-slate-500">
               Atau transfer manual: <b>{BANK_SURAU.bank}</b> · <b className="font-mono">{BANK_SURAU.no_akaun}</b> · {BANK_SURAU.nama_akaun}. Jazakumullah khairan.
             </div>

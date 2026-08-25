@@ -4,6 +4,8 @@
 //   Khairat: CHIP_KHAIRAT_BRAND_ID, CHIP_KHAIRAT_SECRET_KEY (akaun bank berasingan)
 //            — jika tidak diset, fallback ke kunci umum (memudahkan testing).
 
+import { FI_CHIP } from "@/lib/tetapan";
+
 const BASE = "https://gate.chip-in.asia/api/v1";
 
 export type Akaun = "umum" | "khairat";
@@ -55,7 +57,14 @@ export async function ciptaPurchase(opts: PurchaseOpts): Promise<any> {
       },
       purchase: {
         currency: "MYR",
-        products: [{ name: opts.productName.slice(0, 256), price: opts.amountCents }],
+        // Fi pemprosesan gerbang ditanggung pembayar (baris berasingan) — surau terima jumlah penuh.
+        products:
+          Math.round((FI_CHIP || 0) * 100) > 0
+            ? [
+                { name: opts.productName.slice(0, 256), price: opts.amountCents },
+                { name: "Fi pemprosesan (gerbang bayaran)", price: Math.round(FI_CHIP * 100) },
+              ]
+            : [{ name: opts.productName.slice(0, 256), price: opts.amountCents }],
       },
       reference: opts.reference,
       success_redirect: opts.success_redirect,

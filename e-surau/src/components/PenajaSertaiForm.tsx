@@ -179,6 +179,7 @@ export default function PenajaSertaiForm() {
       <button onClick={hantar} disabled={sedang || !setuju} className="w-full rounded-lg bg-surau px-6 py-3.5 text-base font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {sedang ? "Menyambung ke gerbang bayaran…" : `Bayar Tajaan ${rm(harga)} (FPX / Kad / e-Wallet)`}
       </button>
+      <p className="text-center text-xs text-slate-500">+ RM1 fi pemprosesan gerbang (jumlah dibayar {rm(harga + 1)}).</p>
       <p className="text-center text-xs text-slate-400">Logo & penyenaraian akan aktif automatik sebaik bayaran disahkan, dan luput automatik bila tamat tempoh.</p>
     </div>
   );

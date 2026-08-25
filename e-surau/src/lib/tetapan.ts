@@ -36,6 +36,7 @@ export const BANK_SURAU = {
 export const ALAMAT_SURAU = "Jalan Eco Majestic 2/5, Eco Majestic, 43500 Semenyih, Selangor Darul Ehsan";
 export const EMEL_SURAU = "arraudhah.ecomajestic@gmail.com";
 export const NO_PENDAFTARAN = "JAIS.BPM.600-5/13/465"; // No. pendaftaran JAIS (dipapar utk gerbang bayaran CHIP)
+export const FI_CHIP = 1; // Fi pemprosesan gerbang (RM) ditambah pada setiap bayaran online — surau terima penuh. Set 0 untuk matikan.
 export const WEB_SURAU = "https://ar-raudhah.mimbar.my/";
 export const CARA_BAYAR_BELANJA = ["Pindahan Atas Talian", "Tunai", "Cek"];
 

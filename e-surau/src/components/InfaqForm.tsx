@@ -82,6 +82,7 @@ export default function InfaqForm() {
       <button onClick={bayar} disabled={sedang} className="w-full rounded-lg bg-surau px-6 py-3.5 text-base font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {sedang ? "Menyambung ke gerbang bayaran…" : `Infaq ${tab === "subuh" ? `RM${subuhAmt}` : `RM${jamuanAmt}`} Sekarang (FPX / Kad / e-Wallet)`}
       </button>
+      <p className="text-center text-xs text-slate-500">+ RM1 fi pemprosesan gerbang (jumlah dibayar RM{(tab === "subuh" ? subuhAmt : jamuanAmt) + 1}). Surau terima infaq anda penuh.</p>
       <p className="text-center text-xs text-slate-400">Semoga Allah membalas infaq anda dengan kebaikan yang berlipat ganda. </p>
     </div>
   );
