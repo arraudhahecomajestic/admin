@@ -48,6 +48,45 @@ export default function PenajaSertaiForm() {
 
   return (
     <div className="space-y-5">
+      {/* Contoh paparan langsung — ikut pakej & logo dipilih */}
+      <div className="rounded-xl border border-surau/30 bg-white p-5 shadow-sm">
+        <h2 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
+          Contoh Paparan
+          {pakejNama && <span className="rounded-md bg-surau px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Pakej {pakejNama}</span>}
+        </h2>
+        <p className="mb-3 mt-0.5 text-xs text-slate-500">Beginilah rupa brand anda selepas bayaran — ikut pakej &amp; logo yang dipilih di bawah.</p>
+        {isDir ? (
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
+            <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
+              <span className="font-medium text-slate-700">{nama || "Nama Perniagaan Anda"}{kategori ? <span className="ml-2 text-xs text-slate-400">{kategori}</span> : null}</span>
+              <span className="font-semibold text-surau">Lihat &rarr;</span>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">Pakej Direktori papar nama sahaja &mdash; tiada logo.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di laman utama (strip)</div>
+              <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50/60 p-3">
+                <Slot big={kod === "emas"} logo={logoPrev} />
+                <div className="flex h-12 w-24 items-center justify-center rounded-lg border border-slate-200 bg-white text-[11px] text-slate-300">Penaja lain</div>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
+              <div className="mt-2 max-w-xs rounded-xl border border-slate-200 p-3">
+                <div className="flex items-center gap-3">
+                  <Slot logo={logoPrev} />
+                  <div className="font-semibold text-slate-900">{nama || "Nama Perniagaan Anda"}</div>
+                </div>
+                {pakejNama && <span className="mt-2 inline-block rounded bg-surau/10 px-2 py-0.5 text-[10px] font-bold text-surau-dark">{pakejNama}</span>}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Pilih pakej */}
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-slate-900">1. Pilih Pakej Tajaan</h2>
@@ -123,45 +162,6 @@ export default function PenajaSertaiForm() {
             <span className="mt-1 block text-xs text-slate-400">Logo akan dipapar automatik selepas bayaran disahkan.</span>
           </label>
         </div>
-      </div>
-
-      {/* Contoh paparan langsung — ikut pakej & logo dipilih */}
-      <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
-          Contoh Paparan
-          {pakejNama && <span className="rounded-md bg-surau px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Pakej {pakejNama}</span>}
-        </h2>
-        <p className="mb-3 mt-0.5 text-xs text-slate-500">Beginilah rupa brand anda selepas bayaran — ikut pakej &amp; logo yang dipilih.</p>
-        {isDir ? (
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
-            <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
-              <span className="font-medium text-slate-700">{nama || "Nama Perniagaan Anda"}{kategori ? <span className="ml-2 text-xs text-slate-400">{kategori}</span> : null}</span>
-              <span className="font-semibold text-surau">Lihat &rarr;</span>
-            </div>
-            <p className="mt-2 text-xs text-slate-400">Pakej Direktori papar nama sahaja &mdash; tiada logo.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di laman utama (strip)</div>
-              <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50/60 p-3">
-                <Slot big={kod === "emas"} logo={logoPrev} />
-                <div className="flex h-12 w-24 items-center justify-center rounded-lg border border-slate-200 bg-white text-[11px] text-slate-300">Penaja lain</div>
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
-              <div className="mt-2 max-w-xs rounded-xl border border-slate-200 p-3">
-                <div className="flex items-center gap-3">
-                  <Slot logo={logoPrev} />
-                  <div className="font-semibold text-slate-900">{nama || "Nama Perniagaan Anda"}</div>
-                </div>
-                {pakejNama && <span className="mt-2 inline-block rounded bg-surau/10 px-2 py-0.5 text-[10px] font-bold text-surau-dark">{pakejNama}</span>}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <label className="flex items-start gap-3 rounded-xl bg-white p-4 text-sm shadow-sm">
