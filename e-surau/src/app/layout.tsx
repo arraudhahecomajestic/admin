@@ -73,11 +73,11 @@ export default async function RootLayout({
             {paparPenaja && <Link href="/rakan" className="font-medium text-surau hover:underline">{t("Rakan Surau", "Our Partners")}</Link>}
             <Link href="/tender" className="font-medium text-surau hover:underline">{t("Tender & Iklan", "Tenders")}</Link>
             <Link href="/kewangan" className="font-medium text-surau hover:underline">{t("Kewangan", "Finances")}</Link>
-            <Link href="/dasar-privasi" className="hover:text-surau hover:underline">{t("Dasar Privasi", "Privacy Policy")}</Link>
-            <Link href="/terma" className="hover:text-surau hover:underline">{t("Terma & Penafian", "Terms & Disclaimer")}</Link>
+            <Link href="/dasar-privasi" className="font-medium text-surau hover:underline">{t("Dasar Privasi", "Privacy Policy")}</Link>
+            <Link href="/terma" className="font-medium text-surau hover:underline">{t("Terma & Penafian", "Terms & Disclaimer")}</Link>
             <Link href="/maklum-balas" className="font-medium text-surau hover:underline">{t("Maklum Balas", "Feedback")}</Link>
-            <Link href="/keselamatan" className="hover:text-surau hover:underline">{t("Keselamatan", "Security")}</Link>
-            <Link href="/polisi-bayaran-balik" className="hover:text-surau hover:underline">{t("Bayaran Balik", "Refunds")}</Link>
+            <Link href="/keselamatan" className="font-medium text-surau hover:underline">{t("Keselamatan", "Security")}</Link>
+            <Link href="/polisi-bayaran-balik" className="font-medium text-surau hover:underline">{t("Bayaran Balik", "Refunds")}</Link>
           </div>
           <div>{t("Jawatankuasa Surau Ar Raudhah, Eco Majestic", "Surau Ar Raudhah Committee, Eco Majestic")}</div>
           <div className="mt-1 text-slate-400">No. Pendaftaran JAIS: {NO_PENDAFTARAN}</div>
