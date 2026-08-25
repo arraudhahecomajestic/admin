@@ -15,11 +15,14 @@ export default function PenajaSertaiForm() {
   const [pautan, setPautan] = useState("");
   const [kategori, setKategori] = useState("");
   const logoRef = useRef<HTMLInputElement>(null);
+  const [logoPrev, setLogoPrev] = useState("");
   const [setuju, setSetuju] = useState(false);
   const [sedang, setSedang] = useState(false);
   const [ralat, setRalat] = useState("");
 
   const harga = hargaPenaja(kod, bulan);
+  const pakejNama = PAKEJ_PENAJA.find((p) => p.kod === kod)?.nama ?? "";
+  const isDir = kod === "direktori";
 
   async function hantar() {
     setRalat("");
@@ -116,10 +119,49 @@ export default function PenajaSertaiForm() {
           </label>
           <label className="block sm:col-span-2">
             <span className="mb-1 block text-sm font-medium text-slate-700">Logo (PNG/JPG, maks 3MB)</span>
-            <input ref={logoRef} type="file" accept="image/png,image/jpeg,image/webp" className="w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-surau/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-surau" />
+            <input ref={logoRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { const f = e.target.files?.[0]; setLogoPrev(f ? URL.createObjectURL(f) : ""); }} className="w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-surau/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-surau" />
             <span className="mt-1 block text-xs text-slate-400">Logo akan dipapar automatik selepas bayaran disahkan.</span>
           </label>
         </div>
+      </div>
+
+      {/* Contoh paparan langsung — ikut pakej & logo dipilih */}
+      <div className="rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
+          Contoh Paparan
+          {pakejNama && <span className="rounded-md bg-surau px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Pakej {pakejNama}</span>}
+        </h2>
+        <p className="mb-3 mt-0.5 text-xs text-slate-500">Beginilah rupa brand anda selepas bayaran — ikut pakej &amp; logo yang dipilih.</p>
+        {isDir ? (
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
+            <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
+              <span className="font-medium text-slate-700">{nama || "Nama Perniagaan Anda"}{kategori ? <span className="ml-2 text-xs text-slate-400">{kategori}</span> : null}</span>
+              <span className="font-semibold text-surau">Lihat &rarr;</span>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">Pakej Direktori papar nama sahaja &mdash; tiada logo.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di laman utama (strip)</div>
+              <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50/60 p-3">
+                <Slot big={kod === "emas"} logo={logoPrev} />
+                <div className="flex h-12 w-24 items-center justify-center rounded-lg border border-slate-200 bg-white text-[11px] text-slate-300">Penaja lain</div>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
+              <div className="mt-2 max-w-xs rounded-xl border border-slate-200 p-3">
+                <div className="flex items-center gap-3">
+                  <Slot logo={logoPrev} />
+                  <div className="font-semibold text-slate-900">{nama || "Nama Perniagaan Anda"}</div>
+                </div>
+                {pakejNama && <span className="mt-2 inline-block rounded bg-surau/10 px-2 py-0.5 text-[10px] font-bold text-surau-dark">{pakejNama}</span>}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <label className="flex items-start gap-3 rounded-xl bg-white p-4 text-sm shadow-sm">
@@ -137,6 +179,17 @@ export default function PenajaSertaiForm() {
         {sedang ? "Menyambung ke gerbang bayaran…" : `Bayar Tajaan ${rm(harga)} (FPX / Kad / e-Wallet)`}
       </button>
       <p className="text-center text-xs text-slate-400">Logo & penyenaraian akan aktif automatik sebaik bayaran disahkan, dan luput automatik bila tamat tempoh.</p>
+    </div>
+  );
+}
+
+function Slot({ big, logo }: { big?: boolean; logo?: string }) {
+  const cls = big ? "h-14 w-28" : "h-12 w-24";
+  return (
+    <div className={`flex ${cls} flex-none items-center justify-center rounded-lg border-2 border-surau bg-white p-1`}>
+      {logo
+        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={logo} alt="Logo anda" className="max-h-full max-w-full object-contain" />
+        : <span className="text-[11px] font-bold text-surau-dark">LOGO ANDA</span>}
     </div>
   );
 }

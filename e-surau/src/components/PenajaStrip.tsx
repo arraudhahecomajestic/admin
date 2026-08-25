@@ -15,11 +15,11 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
     if (!pratonton) return null;
     contoh = true;
     penaja = [
-      { id: "c1", nama: "Kedai Runcit Pak Mat" },
-      { id: "c2", nama: "Restoran Nasi Kandar EcoM" },
-      { id: "c3", nama: "Klinik Ar-Rahman" },
-      { id: "c4", nama: "Bakeri Manis Sdn Bhd" },
-      { id: "c5", nama: "Enterprise Barakah" },
+      { id: "c1", nama: "Brand Anda Di Sini" },
+      { id: "c2", nama: "Brand Anda Di Sini" },
+      { id: "c3", nama: "Brand Anda Di Sini" },
+      { id: "c4", nama: "Brand Anda Di Sini" },
+      { id: "c5", nama: "Brand Anda Di Sini" },
     ];
   }
 
