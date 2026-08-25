@@ -15,6 +15,7 @@ export default function PenajaSertaiForm() {
   const [pautan, setPautan] = useState("");
   const [kategori, setKategori] = useState("");
   const logoRef = useRef<HTMLInputElement>(null);
+  const [setuju, setSetuju] = useState(false);
   const [sedang, setSedang] = useState(false);
   const [ralat, setRalat] = useState("");
 
@@ -24,10 +25,12 @@ export default function PenajaSertaiForm() {
     setRalat("");
     if (nama.trim().length < 2) { setRalat("Sila isi nama syarikat / perniagaan."); return; }
     if (!emel.includes("@")) { setRalat("Sila isi e-mel yang sah untuk resit."); return; }
+    if (!setuju) { setRalat("Sila baca & tanda setuju dengan akad penajaan dahulu."); return; }
     setSedang(true);
     const fd = new FormData();
     fd.set("pakej", kod);
     fd.set("bulan", String(bulan));
+    fd.set("setuju", "1");
     fd.set("nama", nama);
     fd.set("emel", emel);
     fd.set("telefon", telefon);
@@ -119,9 +122,18 @@ export default function PenajaSertaiForm() {
         </div>
       </div>
 
+      <label className="flex items-start gap-3 rounded-xl bg-white p-4 text-sm shadow-sm">
+        <input type="checkbox" checked={setuju} onChange={(e) => setSetuju(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-surau" />
+        <span className="text-slate-700">
+          Saya telah membaca &amp; bersetuju dengan{" "}
+          <a href="/rakan/akad" target="_blank" rel="noreferrer" className="font-semibold text-surau underline">Akad Penajaan</a>
+          {" "}Rakan Surau. Akad rasmi akan dijana automatik selepas bayaran.
+        </span>
+      </label>
+
       {ralat && <p className="text-sm text-red-600">{ralat}</p>}
 
-      <button onClick={hantar} disabled={sedang} className="w-full rounded-lg bg-surau px-6 py-3.5 text-base font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
+      <button onClick={hantar} disabled={sedang || !setuju} className="w-full rounded-lg bg-surau px-6 py-3.5 text-base font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
         {sedang ? "Menyambung ke gerbang bayaran…" : `Bayar Tajaan ${rm(harga)} (FPX / Kad / e-Wallet)`}
       </button>
       <p className="text-center text-xs text-slate-400">Logo & penyenaraian akan aktif automatik sebaik bayaran disahkan, dan luput automatik bila tamat tempoh.</p>

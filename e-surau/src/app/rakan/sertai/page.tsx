@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NAMA_SURAU } from "@/lib/tetapan";
 import PenajaSertaiForm from "@/components/PenajaSertaiForm";
+import PakejFaedah from "@/components/PakejFaedah";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,8 @@ export default function PenajaSertaiPage() {
           Sokong operasi &amp; dakwah {NAMA_SURAU}. Logo &amp; perniagaan anda akan dipaparkan di portal kariah sepanjang tempoh tajaan — insya-Allah menjadi sedekah jariah &amp; pendedahan kepada komuniti.
         </p>
       </section>
+
+      <PakejFaedah />
 
       <PenajaSertaiForm />
 

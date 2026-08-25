@@ -43,7 +43,10 @@ export default async function PenajaSelesaiPage({ searchParams }: { searchParams
       <h1 className="text-xl font-bold text-slate-900">{tajuk}</h1>
       <p className="mt-2 text-slate-600">{mesej}</p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <Link href="/rakan" className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Direktori Rakan Surau</Link>
+        {status === "dibayar" && ref && (
+          <Link href={`/rakan/akad/${encodeURIComponent(ref)}`} className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark">Lihat / Cetak Akad</Link>
+        )}
+        <Link href="/rakan" className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Direktori Rakan Surau</Link>
         <Link href="/" className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Laman Utama</Link>
       </div>
     </div>

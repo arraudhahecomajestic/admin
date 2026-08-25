@@ -33,8 +33,13 @@ export default async function RakanPage() {
   }
 
   const tawaranAda = senarai.filter((p) => p.tawaran);
+  // Tiering: pakej berlogo (Emas/Perak/Gangsa + lama) papar sebagai kad;
+  // pakej "direktori" (RM20) papar sebagai senarai nama ringkas sahaja.
+  const berlogo = senarai.filter((p) => p.pakej !== "direktori");
+  const teks = senarai.filter((p) => p.pakej === "direktori");
+
   const kategoriMap = new Map<string, any[]>();
-  for (const p of senarai) {
+  for (const p of berlogo) {
     const k = (p.kategori || "Lain-lain").trim() || "Lain-lain";
     if (!kategoriMap.has(k)) kategoriMap.set(k, []);
     kategoriMap.get(k)!.push(p);
@@ -127,6 +132,28 @@ export default async function RakanPage() {
           </div>
         </section>
       ))}
+
+      {/* Penyenaraian ringkas — pakej Direktori (nama + pautan sahaja) */}
+      {teks.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-lg font-bold text-slate-900">Penyenaraian Rakan Surau</h2>
+          <p className="mb-3 text-sm text-slate-600">Rakan perniagaan komuniti kita.</p>
+          <div className="space-y-2">
+            {teks.map((p) => {
+              const wa = waLink(p.telefon);
+              const pautan = p.pautan || wa;
+              return (
+                <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-4 py-3 shadow-sm">
+                  <span className="font-medium text-slate-700">{p.nama}{p.kategori ? <span className="ml-2 text-xs text-slate-400">{p.kategori}</span> : null}</span>
+                  {pautan && (
+                    <a href={pautan} target="_blank" rel="noopener noreferrer sponsored" className="shrink-0 text-sm font-semibold text-surau hover:underline">Lihat →</a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl bg-slate-50 p-6 text-center">
         <h2 className="text-lg font-bold text-slate-900">Nak jadi Rakan Surau?</h2>

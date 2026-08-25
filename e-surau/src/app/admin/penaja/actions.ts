@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { getProfil, isMaster } from "@/lib/sesi";
+import { tambahBulan } from "@/lib/penaja";
 
 function segar() {
   revalidatePath("/admin/penaja");
@@ -23,6 +24,12 @@ export async function tambahPenaja(formData: FormData) {
     if (!error) logoUrl = db.storage.from("penaja").getPublicUrl(path).data.publicUrl;
   }
 
+  const tempoh = formData.get("tempoh_bulan") ? Number(formData.get("tempoh_bulan")) : null;
+  const mula = String(formData.get("tarikh_mula") ?? "") || null;
+  let tamat = String(formData.get("tarikh_tamat") ?? "") || null;
+  // Auto-kira tarikh tamat jika ada tempoh + tarikh mula tapi tamat kosong
+  if (!tamat && mula && tempoh) tamat = tambahBulan(new Date(mula), tempoh);
+
   await db.from("penaja").insert({
     nama: String(formData.get("nama") ?? ""),
     logo_url: logoUrl,
@@ -30,11 +37,14 @@ export async function tambahPenaja(formData: FormData) {
     keterangan: String(formData.get("keterangan") ?? "") || null,
     kategori: String(formData.get("kategori") ?? "") || null,
     telefon: String(formData.get("telefon") ?? "") || null,
+    emel: String(formData.get("emel") ?? "") || null,
+    pakej: String(formData.get("pakej") ?? "") || null,
+    tempoh_bulan: tempoh,
     tawaran: String(formData.get("tawaran") ?? "") || null,
     kod_promo: String(formData.get("kod_promo") ?? "").toUpperCase().trim() || null,
     susunan: formData.get("susunan") ? Number(formData.get("susunan")) : 100,
-    tarikh_mula: String(formData.get("tarikh_mula") ?? "") || null,
-    tarikh_tamat: String(formData.get("tarikh_tamat") ?? "") || null,
+    tarikh_mula: mula,
+    tarikh_tamat: tamat,
     aktif: true,
   });
   segar();

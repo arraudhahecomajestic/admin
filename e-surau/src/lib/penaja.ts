@@ -23,3 +23,20 @@ export function tambahBulan(dari: Date, bulan: number): string {
   d.setMonth(d.getMonth() + bulan);
   return d.toISOString().slice(0, 10);
 }
+
+export function namaPakej(kod: string): string {
+  return cariPakej(kod)?.nama ?? kod;
+}
+
+// Matriks faedah setiap pakej (untuk jadual perbandingan di /rakan/sertai).
+// nilai: true = ✓, false = —, string = teks (cth "1×/bln").
+export const FAEDAH_PENAJA: { label: string; nilai: Record<string, boolean | string> }[] = [
+  { label: "Tersenarai dalam Direktori Rakan Surau", nilai: { direktori: true, gangsa: true, perak: true, emas: true } },
+  { label: "Pautan ke laman / WhatsApp perniagaan", nilai: { direktori: true, gangsa: true, perak: true, emas: true } },
+  { label: "Logo dipaparkan (bukan teks sahaja)", nilai: { direktori: false, gangsa: true, perak: true, emas: true } },
+  { label: "Ruang tawaran / promo eksklusif ahli kariah", nilai: { direktori: false, gangsa: true, perak: true, emas: true } },
+  { label: "Logo dipapar di laman utama portal", nilai: { direktori: false, gangsa: true, perak: true, emas: true } },
+  { label: "Logo besar + keutamaan paling atas", nilai: { direktori: false, gangsa: false, perak: false, emas: true } },
+  { label: "Sebutan di media sosial surau", nilai: { direktori: false, gangsa: false, perak: "1×/bln", emas: "2×/bln" } },
+  { label: "Sebutan semasa program / majlis surau", nilai: { direktori: false, gangsa: false, perak: false, emas: true } },
+];

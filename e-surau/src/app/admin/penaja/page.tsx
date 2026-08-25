@@ -4,7 +4,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import PenajaStrip from "@/components/PenajaStrip";
-import { PENAJA_DIPAPAR } from "@/lib/tetapan";
+import { PENAJA_DIPAPAR, PAKEJ_PENAJA } from "@/lib/tetapan";
 import { tarikhMs } from "@/lib/format";
 import { tambahPenaja, togglePenaja, padamPenaja } from "./actions";
 
@@ -20,6 +20,11 @@ export default async function AdminPenajaPage() {
   const { data } = await db.from("penaja").select("*").order("susunan").order("dicipta", { ascending: false });
   const penaja = (data as any[]) ?? [];
   const aktifBil = penaja.filter((p) => p.aktif).length;
+
+  // Status bayaran penaja daftar-sendiri (jenis 'penaja') — untuk selaras dengan /rakan/sertai
+  const { data: byr } = await db.from("bayaran").select("rujukan_id, status").eq("jenis", "penaja");
+  const bayarMap = new Map(((byr as any[]) ?? []).map((b) => [b.rujukan_id, b.status]));
+  const namaPakej: Record<string, string> = Object.fromEntries(PAKEJ_PENAJA.map((p) => [p.kod, p.nama]));
 
   return (
     <div className="space-y-6">
@@ -45,6 +50,14 @@ export default async function AdminPenajaPage() {
         <h2 className="mb-3 font-semibold text-slate-900">Tambah Penaja</h2>
         <form action={tambahPenaja} className="grid gap-3 sm:grid-cols-2">
           <input name="nama" required placeholder="Nama penaja / syarikat *" className="inp sm:col-span-2" />
+          <label className="text-sm text-slate-600">Pakej
+            <select name="pakej" className="inp">
+              <option value="">— Tiada / manual —</option>
+              {PAKEJ_PENAJA.map((p) => <option key={p.kod} value={p.kod}>{p.nama} (RM{p.harga_bulan}/bln)</option>)}
+            </select>
+          </label>
+          <label className="text-sm text-slate-600">Tempoh (bulan)<input name="tempoh_bulan" type="number" placeholder="cth: 3" className="inp" /></label>
+          <input name="emel" placeholder="E-mel penaja" className="inp" />
           <input name="pautan" placeholder="Pautan laman web / WhatsApp (https://…)" className="inp" />
           <input name="kategori" placeholder="Kategori (cth: Makanan, Klinik, Servis Rumah)" className="inp" />
           <input name="telefon" placeholder="No. telefon / WhatsApp" className="inp" />
@@ -73,8 +86,26 @@ export default async function AdminPenajaPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {p.logo_url ? <img src={p.logo_url} alt={p.nama} className="h-10 w-auto max-w-[80px] rounded border object-contain" /> : <div className="flex h-10 w-14 items-center justify-center rounded border bg-slate-50 text-xs text-slate-400">Tiada</div>}
                 <div>
-                  <div className="font-medium text-slate-900">{p.nama} {!p.aktif && <span className="ml-1 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">Tidak aktif</span>}</div>
-                  <div className="text-xs text-slate-500">{p.kategori || "—"}{p.tarikh_tamat ? ` · Tamat: ${tarikhMs(p.tarikh_tamat)}` : ""}</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-slate-900">{p.nama}</span>
+                    {p.pakej && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{namaPakej[p.pakej] || p.pakej}{p.tempoh_bulan ? ` · ${p.tempoh_bulan} bln` : ""}</span>}
+                    {(() => {
+                      const bs = bayarMap.get(p.id);
+                      const [t, c] = p.aktif
+                        ? ["Aktif", "bg-green-100 text-green-700"]
+                        : bs === "menunggu"
+                        ? ["Menunggu bayaran", "bg-amber-100 text-amber-700"]
+                        : bs === "gagal"
+                        ? ["Bayaran gagal", "bg-red-100 text-red-700"]
+                        : ["Tidak aktif", "bg-slate-100 text-slate-500"];
+                      return <span className={`rounded px-2 py-0.5 text-xs font-semibold ${c}`}>{t}</span>;
+                    })()}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {p.kategori || "—"}
+                    {p.tarikh_mula || p.tarikh_tamat ? ` · ${p.tarikh_mula ? tarikhMs(p.tarikh_mula) : "?"} → ${p.tarikh_tamat ? tarikhMs(p.tarikh_tamat) : "?"}` : ""}
+                    {p.emel ? ` · ${p.emel}` : ""}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">

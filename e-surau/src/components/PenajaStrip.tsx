@@ -5,7 +5,9 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
   let penaja: any[] = [];
   if (supabaseConfigured) {
     const { data } = await supabase.from("v_penaja_aktif").select("*");
-    penaja = (data as any[]) ?? [];
+    // Strip laman utama: Emas / Perak / Gangsa (berlogo) + penaja lama (tiada pakej).
+    // Direktori RM20 tak masuk strip — hanya tersenarai di /rakan.
+    penaja = ((data as any[]) ?? []).filter((p) => p.pakej !== "direktori");
   }
 
   let contoh = false;

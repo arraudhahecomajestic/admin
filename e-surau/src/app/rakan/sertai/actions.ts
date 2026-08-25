@@ -20,6 +20,9 @@ export async function mulaTajaanPenaja(fd: FormData): Promise<{ ok: boolean; msg
   const harga = hargaPenaja(kod, bulan);
   if (!harga || harga < 1) return { ok: false, msg: "Jumlah tajaan tidak sah." };
 
+  if (String(fd.get("setuju") ?? "") !== "1")
+    return { ok: false, msg: "Sila baca & tanda setuju dengan akad penajaan dahulu." };
+
   const nama = String(fd.get("nama") ?? "").trim();
   if (nama.length < 2) return { ok: false, msg: "Sila isi nama syarikat / perniagaan." };
   const emel = String(fd.get("emel") ?? "").trim().toLowerCase();
