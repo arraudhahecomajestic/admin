@@ -120,6 +120,24 @@ export async function laksanakanBayaran(chipId: string): Promise<{ dibayar: bool
         direkod_oleh: "CHIP",
       });
     }
+  } else if (b.jenis === "program_sumbangan") {
+    // Sumbangan KHAS untuk sesuatu program percuma → rekod income "Sumbangan Program"
+    let tajuk = "";
+    if (b.rujukan_id) {
+      const { data: pr } = await db.from("program").select("tajuk").eq("id", b.rujukan_id).maybeSingle();
+      tajuk = (pr as any)?.tajuk || "";
+    }
+    const katId = await pastiKategori(db, "Sumbangan Program", false);
+    if (katId) {
+      await db.from("kutipan").insert({
+        kategori_id: katId,
+        jumlah: Number(b.jumlah || 0),
+        kaedah: "online",
+        catatan: `Sumbangan program${tajuk ? ": " + tajuk : ""}${b.nama ? " — " + b.nama : ""} (CHIP)`,
+        tarikh: new Date().toISOString().slice(0, 10),
+        direkod_oleh: "CHIP",
+      });
+    }
   } else if (b.jenis === "jamuan") {
     // Sumbangan jamuan tahlil / doa selamat → rekod ikut kategori Bendahari: Dana Jamuan Makanan
     const katId = await pastiKategori(db, "Dana Jamuan Makanan", false);

@@ -89,6 +89,8 @@ export async function kemasProgram(formData: FormData) {
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
     maklumbalas_dibuka: String(formData.get("maklumbalas_dibuka") ?? "") === "on",
     checkin_dibuka: String(formData.get("checkin_dibuka") ?? "") === "on",
+    sumbangan_dibuka: String(formData.get("sumbangan_dibuka") ?? "") === "on",
+    sumbangan_nota: String(formData.get("sumbangan_nota") ?? "").trim() || null,
   }).eq("id", id);
   revalidatePath("/admin/program");
   revalidatePath(`/admin/program/${id}`);

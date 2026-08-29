@@ -4,7 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
-import { tarikhMs, namaKemas, telefonPapar } from "@/lib/format";
+import { tarikhMs, namaKemas, telefonPapar, rm } from "@/lib/format";
 import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran, tandaHadir } from "../actions";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
 import EksportPeserta from "@/components/EksportPeserta";
@@ -62,6 +62,16 @@ export default async function EditProgramPage({ params }: { params: { id: string
   const mb = (mbData as any[]) ?? [];
   const purataRating = mb.length ? mb.reduce((s, r) => s + Number(r.rating || 0), 0) / mb.length : 0;
 
+  // Sumbangan khas program (CHIP, telah dibayar)
+  const { data: sbData } = await db
+    .from("bayaran")
+    .select("jumlah, nama, status")
+    .eq("jenis", "program_sumbangan")
+    .eq("rujukan_id", params.id)
+    .eq("status", "dibayar");
+  const sumbangan = (sbData as any[]) ?? [];
+  const jumSumbangan = sumbangan.reduce((s, r) => s + Number(r.jumlah || 0), 0);
+
   // Signed URL untuk resit bayaran (bucket private).
   async function signedResit(path: string | null) {
     if (!path) return null;
@@ -110,6 +120,8 @@ export default async function EditProgramPage({ params }: { params: { id: string
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="diterbitkan" defaultChecked={p.diterbitkan} /> Terbitkan di laman (senarai awam)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="maklumbalas_dibuka" defaultChecked={p.maklumbalas_dibuka} /> Buka borang maklum balas (untuk kongsi pautan/QR selepas program)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="checkin_dibuka" defaultChecked={p.checkin_dibuka} /> Buka check-in kehadiran (papar QR di pintu pada hari acara)</label>
+          <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2"><input type="checkbox" name="sumbangan_dibuka" defaultChecked={p.sumbangan_dibuka} /> Buka sumbangan khas untuk program ini (CHIP) — dipapar di halaman program</label>
+          <label className="block sm:col-span-2"><span className="mb-1 block text-xs font-medium text-slate-500">Nota sumbangan (pilihan) — cth tujuan sumbangan</span><input name="sumbangan_nota" defaultValue={p.sumbangan_nota ?? ""} placeholder="cth: Sumbangan menampung kos jamuan & hadiah peserta." className="inp" /></label>
           <div className="sm:col-span-2 flex gap-3">
             <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Simpan Perubahan</ButangHantar>
             <Link href="/admin/program" className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Batal</Link>
@@ -120,6 +132,25 @@ export default async function EditProgramPage({ params }: { params: { id: string
           tetapi masih boleh dibuka & RSVP melalui pautan jemputan yang Tuan/Puan kongsi.
         </p>
       </section>
+      )}
+
+      {/* Ringkasan sumbangan khas program */}
+      {(p.sumbangan_dibuka || sumbangan.length > 0) && (
+        <section className="rounded-xl border border-surau/30 bg-surau/5 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-semibold text-slate-900">Sumbangan Khas Program</h2>
+              <p className="mt-0.5 text-sm text-slate-600">
+                {p.sumbangan_dibuka ? "Borang sumbangan DIBUKA di halaman program." : "Borang sumbangan ditutup — rekod lepas masih dipaparkan."}
+                {" "}Masuk ke Kewangan bawah kategori <b>Sumbangan Program</b>.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="rounded-lg bg-surau/10 px-3 py-1 font-semibold text-surau">{sumbangan.length} sumbangan</span>
+              <span className="rounded-lg bg-green-100 px-3 py-1 font-semibold text-green-700">{rm(jumSumbangan)}</span>
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Senarai Pendaftaran Peserta (program berbayar) */}

@@ -5,11 +5,12 @@ import ButangHantar from "@/components/ButangHantar";
 import { rsvpProgram } from "../actions";
 import BorangDaftarProgram from "@/components/BorangDaftarProgram";
 import BorangDaftarProgramManual from "@/components/BorangDaftarProgramManual";
+import SumbangProgramForm from "@/components/SumbangProgramForm";
 import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
 
-export default async function JemputanProgramPage({ params, searchParams }: { params: { id: string }; searchParams: { rsvp?: string; bayar?: string } }) {
+export default async function JemputanProgramPage({ params, searchParams }: { params: { id: string }; searchParams: { rsvp?: string; bayar?: string; sumbang?: string } }) {
   if (!adminConfigured)
     return <p className="text-center text-slate-500">Sistem belum dikonfigurasi.</p>;
 
@@ -82,6 +83,18 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
               Bayaran tidak berjaya atau dibatalkan. Sila cuba daftar semula di bawah.
             </div>
           )}
+          {searchParams.sumbang === "ok" && (
+            <div className="mt-2 rounded-xl border-2 border-green-500 bg-green-50 p-5 text-center">
+              <div className="text-3xl">✓</div>
+              <div className="mt-1 text-lg font-bold text-green-700">Terima kasih atas sumbangan anda!</div>
+              <div className="mt-1 text-sm text-green-700">Resit dihantar ke e-mel anda. Semoga Allah membalas kebaikan anda.</div>
+            </div>
+          )}
+          {searchParams.sumbang === "gagal" && (
+            <div className="mt-2 rounded-xl border-2 border-red-300 bg-red-50 p-4 text-center text-sm font-semibold text-red-700">
+              Sumbangan tidak berjaya atau dibatalkan. Sila cuba semula.
+            </div>
+          )}
 
           {p.rsvp_dibuka && !penuh ? (
             p.berbayar ? (
@@ -107,6 +120,10 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
             <p className="mt-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
               {penuh ? "Pendaftaran telah penuh. Terima kasih." : "Pendaftaran ditutup."}
             </p>
+          )}
+
+          {p.sumbangan_dibuka && (
+            <SumbangProgramForm programId={p.id} nota={p.sumbangan_nota} bayaranDibuka={bayaranOnline} />
           )}
         </div>
       </article>

@@ -220,6 +220,68 @@ export async function hantarMaklumBalasProgram(data: {
   return { ok: true };
 }
 
+// Sumbangan KHAS untuk sesuatu program percuma (via CHIP) — pilihan.
+export async function mulaSumbanganProgram(data: {
+  program_id?: string;
+  nama?: string;
+  emel?: string;
+  telefon?: string;
+  amount?: number | string;
+}): Promise<{ ok: boolean; msg?: string; checkout_url?: string }> {
+  const program_id = String(data.program_id ?? "");
+  if (!program_id) return { ok: false, msg: "Program tidak sah." };
+  if (!(await bayaranOnlineDibuka()))
+    return { ok: false, msg: "Bayaran online sedang diselenggara. Sila salurkan sumbangan melalui pindahan bank." };
+  if (!chipConfigured("umum"))
+    return { ok: false, msg: "Gerbang pembayaran belum disediakan. Sila hubungi admin surau." };
+  const emel = (data.emel || "").trim().toLowerCase();
+  if (!emel || !emel.includes("@")) return { ok: false, msg: "Sila isi e-mel yang sah untuk resit." };
+  const amt = Number(data.amount);
+  if (!amt || amt < 1) return { ok: false, msg: "Sila masukkan jumlah sumbangan (minimum RM1)." };
+
+  const db = createAdminClient();
+  const { data: pr } = await db.from("program").select("tajuk, sumbangan_dibuka").eq("id", program_id).maybeSingle();
+  if (!pr) return { ok: false, msg: "Program tidak dijumpai." };
+  if (!(pr as any).sumbangan_dibuka) return { ok: false, msg: "Sumbangan untuk program ini belum dibuka." };
+
+  const site = siteUrl();
+  const ref = `PRGDN-${program_id.slice(0, 8).toUpperCase()}-${Date.now()}`;
+  const tajuk = (pr as any).tajuk || "Program";
+
+  let purchase: any;
+  try {
+    purchase = await ciptaPurchase({
+      akaun: "umum",
+      email: emel,
+      nama: data.nama || undefined,
+      telefon: data.telefon || undefined,
+      amountCents: Math.round(amt * 100),
+      productName: `Sumbangan Program: ${tajuk}`.slice(0, 250),
+      reference: ref,
+      success_redirect: `${site}/program/${program_id}?sumbang=ok`,
+      failure_redirect: `${site}/program/${program_id}?sumbang=gagal`,
+      success_callback: `${site}/api/chip/webhook`,
+    });
+  } catch (err: any) {
+    return { ok: false, msg: "Ralat gerbang pembayaran: " + (err?.message ?? String(err)) };
+  }
+
+  await db.from("bayaran").insert({
+    chip_id: purchase.id,
+    jenis: "program_sumbangan",
+    rujukan_id: program_id,
+    no_rujukan: ref,
+    nama: namaKemas(data.nama || "") || null,
+    emel,
+    jumlah: amt,
+    status: "menunggu",
+    checkout_url: purchase.checkout_url,
+  });
+
+  if (!purchase.checkout_url) return { ok: false, msg: "CHIP tidak mengembalikan pautan pembayaran." };
+  return { ok: true, checkout_url: purchase.checkout_url };
+}
+
 // Check-in kehadiran (peserta self-scan QR di pintu → masuk no. phone).
 // Padan dengan RSVP ikut telefon + kesan sama ada ahli kariah berdaftar &
 // asal (kariah tempatan / luar). Jika bukan ahli & tiada RSVP → minta nama+asal.
