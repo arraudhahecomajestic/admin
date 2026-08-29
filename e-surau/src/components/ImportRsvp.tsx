@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { unzipSync, strFromU8 } from "fflate";
 import { importRsvp, type BarisRsvp } from "@/app/admin/program/actions";
 
 // Parser CSV ringkas — sokong medan berpetik & koma dalam petikan.
@@ -24,28 +25,83 @@ function parseCsv(teks: string): string[][] {
   return baris;
 }
 
-// Muat SheetJS (xlsx) dari cdnjs — hanya bila fail Excel dipilih.
-let xlsxJanji: Promise<any> | null = null;
-function muatXLSX(): Promise<any> {
-  if (typeof window !== "undefined" && (window as any).XLSX) return Promise.resolve((window as any).XLSX);
-  if (xlsxJanji) return xlsxJanji;
-  xlsxJanji = new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    s.async = true;
-    s.onload = () => resolve((window as any).XLSX);
-    s.onerror = () => { xlsxJanji = null; reject(new Error("Gagal memuat pembaca Excel.")); };
-    document.head.appendChild(s);
-  });
-  return xlsxJanji;
+// Pembaca Excel (.xlsx) tempatan guna fflate — tiada pergantungan CDN luar.
+// Baca OOXML: unzip → sharedStrings + helaian pertama → grid string[][].
+function nyahEntiti(s: string): string {
+  return s
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&amp;/g, "&");
+}
+function colIdx(ref: string): number {
+  const m = ref.match(/[A-Z]+/);
+  if (!m) return 0;
+  let n = 0;
+  for (const ch of m[0]) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
 }
 async function bacaExcel(fail: File): Promise<string[][]> {
-  const XLSX = await muatXLSX();
-  const buf = await fail.arrayBuffer();
-  const wb = XLSX.read(buf, { type: "array" });
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const grid: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
-  return grid.map((r) => (r || []).map((c: any) => (c == null ? "" : String(c))));
+  const buf = new Uint8Array(await fail.arrayBuffer());
+  let zip: Record<string, Uint8Array>;
+  try {
+    zip = unzipSync(buf);
+  } catch {
+    throw new Error("Fail Excel tidak sah atau rosak. Cuba simpan semula sebagai .xlsx atau muat naik CSV.");
+  }
+
+  // sharedStrings.xml → senarai teks
+  const shared: string[] = [];
+  const sstFile = zip["xl/sharedStrings.xml"];
+  if (sstFile) {
+    const xml = strFromU8(sstFile);
+    for (const si of xml.match(/<si\b[^>]*>[\s\S]*?<\/si>/g) || []) {
+      const ts = si.match(/<t[^>]*>[\s\S]*?<\/t>/g) || [];
+      shared.push(ts.map((t) => nyahEntiti(t.replace(/<t[^>]*>/, "").replace(/<\/t>/, ""))).join(""));
+    }
+  }
+
+  // Helaian pertama
+  const wsKey =
+    Object.keys(zip).find((k) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(k)) ||
+    Object.keys(zip).find((k) => /^xl\/worksheets\/.+\.xml$/i.test(k));
+  if (!wsKey) throw new Error("Helaian tidak dijumpai dalam fail Excel.");
+  const ws = strFromU8(zip[wsKey]);
+
+  const grid: string[][] = [];
+  const cellRe = /<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  for (const row of ws.match(/<row[^>]*>[\s\S]*?<\/row>/g) || []) {
+    const cells: Record<number, string> = {};
+    let m: RegExpExecArray | null;
+    cellRe.lastIndex = 0;
+    while ((m = cellRe.exec(row))) {
+      const ref = m[1], attrs = m[2] || "", inner = m[3] || "";
+      const tM = attrs.match(/t="([^"]+)"/);
+      const t = tM ? tM[1] : "";
+      let val = "";
+      if (t === "inlineStr") {
+        const mm = inner.match(/<t[^>]*>([\s\S]*?)<\/t>/);
+        val = mm ? nyahEntiti(mm[1]) : "";
+      } else {
+        const mm = inner.match(/<v>([\s\S]*?)<\/v>/);
+        const v = mm ? mm[1] : "";
+        if (t === "s") val = v !== "" ? (shared[Number(v)] ?? "") : "";
+        else val = nyahEntiti(v);
+      }
+      cells[colIdx(ref)] = val;
+    }
+    const keys = Object.keys(cells).map(Number);
+    if (keys.length) {
+      const maxc = Math.max(...keys);
+      const arr: string[] = [];
+      for (let i = 0; i <= maxc; i++) arr.push(cells[i] ?? "");
+      grid.push(arr);
+    } else {
+      grid.push([]);
+    }
+  }
+  return grid;
 }
 
 // Kesan kolum ikut kata kunci tajuk (fleksibel untuk pelbagai Google Form).
@@ -82,8 +138,8 @@ export default function ImportRsvp({ programId }: { programId: string }) {
       const nama = (c[iNama] ?? "").trim();
       if (!nama) continue;
       const telefon = iTel >= 0 ? (c[iTel] ?? "").trim() : "";
-      const bilRaw = iBil >= 0 ? (c[iBil] ?? "").replace(/[^0-9]/g, "") : "";
-      const bil_orang = Math.max(1, Number(bilRaw) || 1);
+      const bilRaw = iBil >= 0 ? (c[iBil] ?? "") : "";
+      const bil_orang = Math.max(1, Math.floor(parseFloat(String(bilRaw)) || 1));
       out.push({ nama, telefon, bil_orang });
     }
     if (!out.length) { setRalat("Tiada baris nama yang sah dijumpai."); return; }
