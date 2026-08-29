@@ -3,7 +3,7 @@ import { getProfil, isPentadbir } from "@/lib/sesi";
 import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { NAMA_SURAU, ALAMAT_SURAU, LOGO_SURAU } from "@/lib/tetapan";
-import { tarikhMs } from "@/lib/format";
+import { tarikhMs, namaKemas, telefonPapar } from "@/lib/format";
 import ButangCetak from "@/components/ButangCetak";
 
 export const dynamic = "force-dynamic";
@@ -102,8 +102,8 @@ export default async function SenaraiPesertaCetak({ params }: { params: { id: st
             return (
               <tr key={i}>
                 <td className="border px-2 py-1.5 text-center text-slate-500">{i + 1}</td>
-                <td className="border px-2 py-1.5">{r.nama}</td>
-                <td className="border px-2 py-1.5">{r.telefon || "—"}</td>
+                <td className="border px-2 py-1.5">{namaKemas(r.nama)}</td>
+                <td className="border px-2 py-1.5">{telefonPapar(r.telefon)}</td>
                 <td className="border px-2 py-1.5 text-center">{r.bil_orang}</td>
                 <td className="border px-2 py-1.5 text-center text-slate-300">☐</td>
               </tr>

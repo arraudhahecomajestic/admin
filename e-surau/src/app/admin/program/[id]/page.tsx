@@ -4,7 +4,7 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
-import { tarikhMs } from "@/lib/format";
+import { tarikhMs, namaKemas, telefonPapar } from "@/lib/format";
 import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran, tandaHadir } from "../actions";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
 import EksportPeserta from "@/components/EksportPeserta";
@@ -275,7 +275,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
                     <td className="px-4 py-2 text-slate-400">{i + 1}</td>
                     <td className="px-4 py-2 font-medium text-slate-800">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span>{r.nama}</span>
+                        <span>{namaKemas(r.nama)}</span>
                         {r.walk_in && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">Walk-in</span>}
                         {r.hadir && (r.adalah_ahli
                           ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-bold text-green-700">Ahli</span>
@@ -284,7 +284,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
                         {r.asal === "luar" && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">Luar</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-2">{r.telefon || "—"}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-slate-600">{telefonPapar(r.telefon)}</td>
                     <td className="px-4 py-2 text-center">{r.bil_orang}</td>
                     <td className="px-4 py-2 text-center">
                       {r.hadir

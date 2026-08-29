@@ -1,5 +1,7 @@
 "use client";
 
+import { namaKemas, telefonLokal } from "@/lib/format";
+
 // Butang muat turun CSV senarai peserta (buka dalam Excel). Data dari server.
 export default function EksportPeserta({ rows, jenis, namaFail }: { rows: any[]; jenis: "berbayar" | "rsvp"; namaFail: string }) {
   function csvEscape(v: any): string {
@@ -19,7 +21,7 @@ export default function EksportPeserta({ rows, jenis, namaFail }: { rows: any[];
       });
     } else {
       header = ["Bil", "Nama", "Telefon", "Bil. Orang", "Tarikh Daftar"];
-      baris = rows.map((r, i) => [String(i + 1), r.nama || "", r.telefon || "", String(r.bil_orang || 1), (r.dicipta || "").slice(0, 10)]);
+      baris = rows.map((r, i) => [String(i + 1), namaKemas(r.nama), telefonLokal(r.telefon), String(r.bil_orang || 1), (r.dicipta || "").slice(0, 10)]);
     }
     const isi = [header, ...baris].map((row) => row.map(csvEscape).join(",")).join("\r\n");
     const blob = new Blob(["﻿" + isi], { type: "text/csv;charset=utf-8;" });

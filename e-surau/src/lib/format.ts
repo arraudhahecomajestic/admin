@@ -19,6 +19,46 @@ export function noTelefon(raw: string | null | undefined): string {
   return "60" + d;
 }
 
+// Nombor telefon → format tempatan (0XXXXXXXXX), tanpa dash/ruang. Untuk simpanan.
+// "+60 19-345 6789" → "0193456789", "6012..." → "012...", "12345678" → "012345678"? (tambah 0).
+export function telefonLokal(raw: string | null | undefined): string {
+  let d = (raw || "").replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("60")) d = d.slice(2);
+  if (!d.startsWith("0")) d = "0" + d;
+  return d;
+}
+
+// Nombor telefon → paparan kemas dengan dash. Mudah baca & seragam.
+// "0194453411" → "019-4453411", "0342991234" → "03-42991234".
+export function telefonPapar(raw: string | null | undefined): string {
+  const d = telefonLokal(raw);
+  if (!d) return "—";
+  if (d.startsWith("01") && d.length >= 10) return d.slice(0, 3) + "-" + d.slice(3); // mobil 01X
+  if (d.startsWith("0")) return d.slice(0, 2) + "-" + d.slice(2); // talian tetap 0X
+  return d;
+}
+
+// Nama → huruf besar setiap perkataan (Title Case), penghubung bin/binti kekal huruf kecil.
+// "NOR ALWANI BINTI MOHAMAD" → "Nor Alwani binti Mohamad"; "huda bt basuri" → "Huda bt Basuri".
+export function namaKemas(raw: string | null | undefined): string {
+  const s = (raw || "").replace(/\s+/g, " ").trim();
+  if (!s) return "";
+  const kecil = new Set(["bin", "binti", "bt", "bte", "al", "a/l", "a/p", "a/k"]);
+  return s
+    .split(" ")
+    .map((w, i) => {
+      const lw = w.toLowerCase();
+      if (i > 0 && kecil.has(lw)) return lw;
+      // hormati sempang & apostrof (cth: Abdul-Rahman, Dato')
+      return w
+        .split(/([-'])/)
+        .map((p) => (p === "-" || p === "'" ? p : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()))
+        .join("");
+    })
+    .join(" ");
+}
+
 export function rm(nilai: number | string | null | undefined): string {
   const n = Number(nilai ?? 0);
   const v = isNaN(n) ? 0 : n;

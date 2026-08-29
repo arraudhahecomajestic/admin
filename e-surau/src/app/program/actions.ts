@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
 import { kenalKawasan } from "@/lib/kawasan";
+import { namaKemas, telefonLokal } from "@/lib/format";
 
 // Pendaftaran program BERBAYAR (kem/kelas) — consent + kesihatan + bayaran CHIP.
 export async function daftarProgramBerbayar(data: {
@@ -276,7 +277,7 @@ export async function checkInKehadiran(data: {
   if (ahli) {
     // Ahli berdaftar tapi tak RSVP → check-in terus (nama & asal diketahui).
     await db.from("rsvp").insert({
-      program_id, nama: ahli.nama, telefon: String(data.telefon ?? "").trim() || null,
+      program_id, nama: namaKemas(ahli.nama), telefon: telefonLokal(String(data.telefon ?? "")) || null,
       bil_orang: bil, hadir: true, hadir_pada: new Date().toISOString(), walk_in: true,
       adalah_ahli: true, ahli_id: ahli.id, asal: asalAhli,
     });
@@ -285,12 +286,12 @@ export async function checkInKehadiran(data: {
   }
 
   // Bukan ahli & tiada RSVP → perlu nama + asal.
-  const nama = String(data.nama ?? "").trim();
+  const nama = namaKemas(String(data.nama ?? ""));
   const asal = String(data.asal ?? "").trim();
   if (!nama || (asal !== "tempatan" && asal !== "luar")) return { ok: true, status: "perlu_nama", adalah_ahli: false };
 
   const { error } = await db.from("rsvp").insert({
-    program_id, nama, telefon: String(data.telefon ?? "").trim() || null,
+    program_id, nama, telefon: telefonLokal(String(data.telefon ?? "")) || null,
     bil_orang: bil, hadir: true, hadir_pada: new Date().toISOString(), walk_in: true,
     adalah_ahli: false, asal,
   });
@@ -302,8 +303,8 @@ export async function checkInKehadiran(data: {
 
 export async function rsvpProgram(formData: FormData) {
   const program_id = String(formData.get("program_id") ?? "");
-  const nama = String(formData.get("nama") ?? "").trim();
-  const telefonRaw = String(formData.get("telefon") ?? "").trim();
+  const nama = namaKemas(String(formData.get("nama") ?? ""));
+  const telefonRaw = telefonLokal(String(formData.get("telefon") ?? ""));
   const telDigit = telefonRaw.replace(/\D/g, "");
   const bil = Number(formData.get("bil_orang")) || 1;
   if (!program_id || !nama) return;

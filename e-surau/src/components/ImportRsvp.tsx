@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { unzipSync, strFromU8 } from "fflate";
 import { importRsvp, type BarisRsvp } from "@/app/admin/program/actions";
+import { namaKemas, telefonLokal, telefonPapar } from "@/lib/format";
 
 // Parser CSV ringkas — sokong medan berpetik & koma dalam petikan.
 function parseCsv(teks: string): string[][] {
@@ -135,9 +136,9 @@ export default function ImportRsvp({ programId }: { programId: string }) {
     const out: BarisRsvp[] = [];
     for (let i = 1; i < grid.length; i++) {
       const c = grid[i];
-      const nama = (c[iNama] ?? "").trim();
+      const nama = namaKemas(c[iNama] ?? "");
       if (!nama) continue;
-      const telefon = iTel >= 0 ? (c[iTel] ?? "").trim() : "";
+      const telefon = iTel >= 0 ? telefonLokal(c[iTel] ?? "") : "";
       const bilRaw = iBil >= 0 ? (c[iBil] ?? "") : "";
       const bil_orang = Math.max(1, Math.floor(parseFloat(String(bilRaw)) || 1));
       out.push({ nama, telefon, bil_orang });
@@ -211,7 +212,7 @@ export default function ImportRsvp({ programId }: { programId: string }) {
                       <tr key={i} className="border-t">
                         <td className="px-2 py-1 text-slate-400">{i + 1}</td>
                         <td className="px-2 py-1 text-slate-800">{r.nama}</td>
-                        <td className="px-2 py-1 text-slate-600">{r.telefon || "—"}</td>
+                        <td className="px-2 py-1 text-slate-600">{r.telefon ? telefonPapar(r.telefon) : "—"}</td>
                         <td className="px-2 py-1 text-center">{r.bil_orang}</td>
                       </tr>
                     ))}
