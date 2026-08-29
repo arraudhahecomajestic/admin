@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
+import { kenalKawasan } from "@/lib/kawasan";
 
 // Pendaftaran program BERBAYAR (kem/kelas) — consent + kesihatan + bayaran CHIP.
 export async function daftarProgramBerbayar(data: {
@@ -184,6 +185,119 @@ export async function daftarProgramManual(data: {
   revalidatePath(`/program/${program_id}`);
   revalidatePath("/admin/program");
   return { ok: true };
+}
+
+// Maklum balas awam bagi sesuatu program/aktiviti (selepas program).
+// Hanya diterima bila suis maklumbalas_dibuka = true.
+export async function hantarMaklumBalasProgram(data: {
+  program_id?: string;
+  rating?: number | string;
+  apa_baik?: string;
+  cadangan?: string;
+  nama?: string;
+}): Promise<{ ok: boolean; msg?: string }> {
+  const program_id = String(data.program_id ?? "");
+  const rating = Math.round(Number(data.rating) || 0);
+  if (!program_id) return { ok: false, msg: "Program tidak sah." };
+  if (rating < 1 || rating > 5) return { ok: false, msg: "Sila pilih penilaian bintang (1–5)." };
+
+  const db = createAdminClient();
+  const { data: pr } = await db.from("program").select("maklumbalas_dibuka").eq("id", program_id).maybeSingle();
+  if (!pr) return { ok: false, msg: "Program tidak dijumpai." };
+  if (!(pr as any).maklumbalas_dibuka) return { ok: false, msg: "Borang maklum balas program ini telah ditutup." };
+
+  const { error } = await db.from("program_maklumbalas").insert({
+    program_id,
+    rating,
+    apa_baik: (data.apa_baik ?? "").trim() || null,
+    cadangan: (data.cadangan ?? "").trim() || null,
+    nama: (data.nama ?? "").trim() || null,
+  });
+  if (error) return { ok: false, msg: "Ralat menghantar: " + error.message };
+
+  revalidatePath(`/admin/program/${program_id}`);
+  return { ok: true };
+}
+
+// Check-in kehadiran (peserta self-scan QR di pintu → masuk no. phone).
+// Padan dengan RSVP ikut telefon + kesan sama ada ahli kariah berdaftar &
+// asal (kariah tempatan / luar). Jika bukan ahli & tiada RSVP → minta nama+asal.
+// Hanya diterima bila suis checkin_dibuka = true.
+export async function checkInKehadiran(data: {
+  program_id?: string;
+  telefon?: string;
+  nama?: string;
+  bil_orang?: number | string;
+  asal?: string; // 'tempatan' | 'luar' — hanya untuk walk-in bukan ahli
+}): Promise<{
+  ok: boolean;
+  status?: "hadir" | "sudah" | "walkin" | "perlu_nama";
+  nama?: string;
+  bil?: number;
+  adalah_ahli?: boolean;
+  asal?: string;
+  msg?: string;
+}> {
+  const program_id = String(data.program_id ?? "");
+  const telDigit = String(data.telefon ?? "").replace(/\D/g, "");
+  if (!program_id) return { ok: false, msg: "Program tidak sah." };
+  if (telDigit.length < 6) return { ok: false, msg: "Sila masukkan no. telefon yang sah." };
+
+  const db = createAdminClient();
+  const { data: pr } = await db.from("program").select("checkin_dibuka").eq("id", program_id).maybeSingle();
+  if (!pr) return { ok: false, msg: "Program tidak dijumpai." };
+  if (!(pr as any).checkin_dibuka) return { ok: false, msg: "Check-in untuk program ini belum dibuka. Sila hubungi AJK." };
+
+  // Kesan ahli kariah berdaftar ikut telefon (padan digit).
+  const { data: ahliRows } = await db.from("ahli_kariah").select("id, nama, alamat, kawasan, telefon");
+  const ahli = ((ahliRows as any[]) ?? []).find((a) => (a.telefon || "").replace(/\D/g, "") === telDigit && telDigit.length >= 9);
+  const adalahAhli = !!ahli;
+  const asalAhli = ahli ? (kenalKawasan(ahli.alamat, ahli.kawasan).kod === "lain" ? "luar" : "tempatan") : null;
+
+  // Cari RSVP ikut telefon (padan digit).
+  const { data: senarai } = await db.from("rsvp").select("id, nama, telefon, bil_orang, hadir").eq("program_id", program_id);
+  const sedia = ((senarai as any[]) ?? []).find((r) => (r.telefon || "").replace(/\D/g, "") === telDigit);
+
+  if (sedia) {
+    const patch: any = { adalah_ahli: adalahAhli, ahli_id: ahli?.id ?? null };
+    if (asalAhli) patch.asal = asalAhli;
+    if (sedia.hadir) {
+      await db.from("rsvp").update(patch).eq("id", sedia.id);
+      return { ok: true, status: "sudah", nama: sedia.nama, bil: Number(sedia.bil_orang || 1), adalah_ahli: adalahAhli, asal: asalAhli ?? undefined };
+    }
+    await db.from("rsvp").update({ ...patch, hadir: true, hadir_pada: new Date().toISOString() }).eq("id", sedia.id);
+    revalidatePath(`/admin/program/${program_id}`);
+    return { ok: true, status: "hadir", nama: sedia.nama, bil: Number(sedia.bil_orang || 1), adalah_ahli: adalahAhli, asal: asalAhli ?? undefined };
+  }
+
+  // Tiada RSVP.
+  const bil = Math.max(1, Math.floor(Number(data.bil_orang) || 1));
+
+  if (ahli) {
+    // Ahli berdaftar tapi tak RSVP → check-in terus (nama & asal diketahui).
+    await db.from("rsvp").insert({
+      program_id, nama: ahli.nama, telefon: String(data.telefon ?? "").trim() || null,
+      bil_orang: bil, hadir: true, hadir_pada: new Date().toISOString(), walk_in: true,
+      adalah_ahli: true, ahli_id: ahli.id, asal: asalAhli,
+    });
+    revalidatePath(`/admin/program/${program_id}`);
+    return { ok: true, status: "walkin", nama: ahli.nama, bil, adalah_ahli: true, asal: asalAhli ?? undefined };
+  }
+
+  // Bukan ahli & tiada RSVP → perlu nama + asal.
+  const nama = String(data.nama ?? "").trim();
+  const asal = String(data.asal ?? "").trim();
+  if (!nama || (asal !== "tempatan" && asal !== "luar")) return { ok: true, status: "perlu_nama", adalah_ahli: false };
+
+  const { error } = await db.from("rsvp").insert({
+    program_id, nama, telefon: String(data.telefon ?? "").trim() || null,
+    bil_orang: bil, hadir: true, hadir_pada: new Date().toISOString(), walk_in: true,
+    adalah_ahli: false, asal,
+  });
+  if (error) return { ok: false, msg: "Ralat menyimpan kehadiran: " + error.message };
+
+  revalidatePath(`/admin/program/${program_id}`);
+  return { ok: true, status: "walkin", nama, bil, adalah_ahli: false, asal };
 }
 
 export async function rsvpProgram(formData: FormData) {

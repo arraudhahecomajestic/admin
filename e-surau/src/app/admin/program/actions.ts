@@ -87,6 +87,8 @@ export async function kemasProgram(formData: FormData) {
     ruj_bayar: String(formData.get("ruj_bayar") ?? "").trim() || null,
     rsvp_dibuka: String(formData.get("rsvp_dibuka") ?? "") === "on",
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
+    maklumbalas_dibuka: String(formData.get("maklumbalas_dibuka") ?? "") === "on",
+    checkin_dibuka: String(formData.get("checkin_dibuka") ?? "") === "on",
   }).eq("id", id);
   revalidatePath("/admin/program");
   revalidatePath(`/admin/program/${id}`);
@@ -109,6 +111,68 @@ export async function padamProgram(formData: FormData) {
   revalidatePath("/admin/program");
   revalidatePath("/program");
   revalidatePath("/");
+}
+
+// Import senarai RSVP (dari Google Form / Excel / CSV) ke senarai kehadiran
+// program percuma. Langkau duplikat ikut (nama + telefon) yang sudah wujud.
+export type BarisRsvp = { nama: string; telefon?: string; bil_orang?: number };
+export async function importRsvp(
+  programId: string,
+  baris: BarisRsvp[],
+): Promise<{ ok: boolean; msg?: string; ditambah?: number; dilangkau?: number }> {
+  const me = await getProfil();
+  if (!isPentadbir(me)) return { ok: false, msg: "Tiada akses." };
+  if (!programId || !(await bolehUrusProgramId(me, programId)))
+    return { ok: false, msg: "Anda tiada kebenaran untuk program ini." };
+
+  const db = createAdminClient();
+
+  // Kunci normalisasi untuk banding duplikat.
+  const kunci = (n: string, t: string) =>
+    `${(n || "").trim().toLowerCase()}|${(t || "").replace(/\D/g, "")}`;
+
+  const { data: sedia } = await db.from("rsvp").select("nama, telefon").eq("program_id", programId);
+  const adaKunci = new Set(((sedia as any[]) ?? []).map((r) => kunci(r.nama, r.telefon)));
+
+  const bakalMasuk: { program_id: string; nama: string; telefon: string | null; bil_orang: number }[] = [];
+  const dalamFail = new Set<string>();
+  let dilangkau = 0;
+
+  for (const b of baris) {
+    const nama = (b.nama || "").trim();
+    if (!nama) { dilangkau++; continue; }
+    const telefon = (b.telefon || "").trim();
+    const k = kunci(nama, telefon);
+    if (adaKunci.has(k) || dalamFail.has(k)) { dilangkau++; continue; }
+    dalamFail.add(k);
+    const bil = Math.max(1, Math.floor(Number(b.bil_orang) || 1));
+    bakalMasuk.push({ program_id: programId, nama, telefon: telefon || null, bil_orang: bil });
+  }
+
+  if (bakalMasuk.length) {
+    const { error } = await db.from("rsvp").insert(bakalMasuk);
+    if (error) return { ok: false, msg: error.message };
+  }
+
+  revalidatePath(`/admin/program/${programId}`);
+  revalidatePath(`/program/${programId}`);
+  return { ok: true, ditambah: bakalMasuk.length, dilangkau };
+}
+
+// Tanda / buang tanda kehadiran secara manual (sokongan AJK di pintu).
+export async function tandaHadir(formData: FormData) {
+  const me = await getProfil();
+  if (!isPentadbir(me)) return;
+  const id = String(formData.get("id") ?? "");
+  const programId = String(formData.get("program_id") ?? "");
+  const jadiHadir = String(formData.get("hadir") ?? "") === "1";
+  if (!id || !(await bolehUrusProgramId(me, programId))) return;
+  const db = createAdminClient();
+  await db.from("rsvp").update({
+    hadir: jadiHadir,
+    hadir_pada: jadiHadir ? new Date().toISOString() : null,
+  }).eq("id", id);
+  revalidatePath(`/admin/program/${programId}`);
 }
 
 // Semak: pengguna ini pencipta program (atau Admin/Master)?
