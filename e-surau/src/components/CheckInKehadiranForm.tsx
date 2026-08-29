@@ -8,7 +8,7 @@ export default function CheckInKehadiranForm({ programId }: { programId: string 
   const [nama, setNama] = useState("");
   const [bil, setBil] = useState("1");
   const [asal, setAsal] = useState<"" | "tempatan" | "luar">("");
-  const [perlubutiran, setPerluButiran] = useState(false); // tunjuk medan nama+asal bila bukan ahli & tiada RSVP
+  const [perluButiran, setPerluButiran] = useState(false); // tunjuk medan nama+asal bila bukan ahli & tiada RSVP
   const [busy, setBusy] = useState(false);
   const [hasil, setHasil] = useState<null | { ok: boolean; status?: string; nama?: string; bil?: number; adalah_ahli?: boolean; asal?: string; msg?: string }>(null);
 
