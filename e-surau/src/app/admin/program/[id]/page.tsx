@@ -4,11 +4,12 @@ import { PerluMasuk, TiadaAkses } from "@/components/PerluMasuk";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
-import { tarikhMs, namaKemas, telefonPapar, rm } from "@/lib/format";
-import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran, tandaHadir, padamRsvp } from "../actions";
+import { tarikhMs, rm } from "@/lib/format";
+import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran } from "../actions";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
 import EksportPeserta from "@/components/EksportPeserta";
 import ImportRsvp from "@/components/ImportRsvp";
+import SenaraiRsvp from "@/components/SenaraiRsvp";
 import KongsiMaklumBalas from "@/components/KongsiMaklumBalas";
 import KongsiCheckIn from "@/components/KongsiCheckIn";
 
@@ -253,7 +254,13 @@ export default async function EditProgramPage({ params }: { params: { id: string
                           <form action={padamPendaftaran}>
                             <input type="hidden" name="id" value={r.id} />
                             <input type="hidden" name="program_id" value={p.id} />
-                            <ButangHantar className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-400 hover:text-red-600 disabled:opacity-50" pendingText="…">Padam</ButangHantar>
+                            <ButangHantar
+                              className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-400 hover:text-red-600 disabled:opacity-50"
+                              pendingText="…"
+                              konfirmasi={`Padam pendaftaran "${r.nama_penjaga || "peserta ini"}"?\n\nRekod pendaftaran ini akan dibuang terus dan tak boleh dikembalikan.`}
+                            >
+                              Padam
+                            </ButangHantar>
                           </form>
                         </div>
                         )}
@@ -295,78 +302,7 @@ export default async function EditProgramPage({ params }: { params: { id: string
             )}
           </div>
         )}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-2">#</th>
-                <th className="px-4 py-2">Nama</th>
-                <th className="px-4 py-2">Telefon</th>
-                <th className="px-4 py-2 text-center">Bil. Orang</th>
-                <th className="px-4 py-2 text-center">Kehadiran</th>
-                <th className="px-4 py-2">Tarikh Daftar</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rsvp.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">Belum ada pendaftaran kehadiran.</td></tr>
-              )}
-              {rsvp.map((r, i) => {
-                const w = wa(r.telefon);
-                return (
-                  <tr key={i} className={`border-b last:border-0 ${r.hadir ? "bg-teal-50/40" : ""}`}>
-                    <td className="px-4 py-2 text-slate-400">{i + 1}</td>
-                    <td className="px-4 py-2 font-medium text-slate-800">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span>{namaKemas(r.nama)}</span>
-                        {r.walk_in && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">Walk-in</span>}
-                        {r.hadir && (r.adalah_ahli
-                          ? <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-bold text-green-700">Ahli</span>
-                          : <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">Bukan ahli</span>)}
-                        {r.asal === "tempatan" && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">Tempatan</span>}
-                        {r.asal === "luar" && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">Luar</span>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 font-mono text-xs text-slate-600">{telefonPapar(r.telefon)}</td>
-                    <td className="px-4 py-2 text-center">{r.bil_orang}</td>
-                    <td className="px-4 py-2 text-center">
-                      {r.hadir
-                        ? <span className="rounded-full bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">✓ Hadir</span>
-                        : <span className="text-xs text-slate-400">Belum</span>}
-                    </td>
-                    <td className="px-4 py-2 text-slate-500">{tarikhMs(r.dicipta)}</td>
-                    <td className="px-4 py-2 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {boleh && (
-                          <form action={tandaHadir}>
-                            <input type="hidden" name="id" value={r.id} />
-                            <input type="hidden" name="program_id" value={p.id} />
-                            <input type="hidden" name="hadir" value={r.hadir ? "0" : "1"} />
-                            <ButangHantar
-                              className={`rounded-lg px-3 py-1 text-xs font-semibold disabled:opacity-50 ${r.hadir ? "border border-slate-300 text-slate-500 hover:bg-slate-50" : "bg-teal-600 text-white hover:bg-teal-700"}`}
-                              pendingText="…"
-                            >
-                              {r.hadir ? "Batal" : "Tanda Hadir"}
-                            </ButangHantar>
-                          </form>
-                        )}
-                        {w && <a href={`https://wa.me/${w}`} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700">WhatsApp</a>}
-                        {boleh && (
-                          <form action={padamRsvp}>
-                            <input type="hidden" name="id" value={r.id} />
-                            <input type="hidden" name="program_id" value={p.id} />
-                            <ButangHantar className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-400 hover:text-red-600 disabled:opacity-50" pendingText="…">Padam</ButangHantar>
-                          </form>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <SenaraiRsvp rows={rsvp} programId={p.id} boleh={boleh} />
         {boleh && <ImportRsvp programId={p.id} />}
       </section>
       )}
