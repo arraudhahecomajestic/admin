@@ -95,6 +95,11 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
             </div>
           )}
 
+          {p.poster_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.poster_url} alt={`Poster ${p.tajuk}`} className="mt-2 w-full rounded-xl border border-slate-200 object-cover" />
+          )}
+
           {p.rsvp_dibuka && !penuh ? (
             p.berbayar ? (
               bayaranOnline

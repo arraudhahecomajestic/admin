@@ -23,7 +23,20 @@ export default function TahlilForm({ bayaranDibuka = false }: { bayaranDibuka?: 
     const amt = Number(jumlah);
     if (!amt || amt < 1) { setBayarRalat("Sila masukkan jumlah sumbangan (minimum RM1)."); return; }
     if (!emelSumbang.includes("@")) { setBayarRalat("Sila isi e-mel yang sah untuk resit."); return; }
+
+    // Simpan nama arwah DAHULU (sebelum ke gerbang bayaran) supaya tak hilang selepas redirect.
+    const isi = senarai.filter((s) => s.trim());
+    if (isi.length > 0) {
+      if (!pemohon.trim()) { setBayarRalat("Sila isi nama anda (pemohon) dahulu."); return; }
+      if (!telefon.trim()) { setBayarRalat("Sila isi no. telefon anda dahulu."); return; }
+    }
+
     setBayarSedang(true);
+    if (isi.length > 0) {
+      const rA = await tambahArwah({ pemohon, telefon, senarai: isi.map((nama) => ({ nama })) });
+      if (!rA.ok) { setBayarSedang(false); setBayarRalat(rA.msg ?? "Ralat menyimpan nama arwah."); return; }
+    }
+
     const res = await mulaSumbanganTahlil({ nama: pemohon, emel: emelSumbang, telefon, amount: amt });
     if (!res.ok) { setBayarSedang(false); setBayarRalat(res.msg ?? "Ralat pembayaran."); return; }
     if (res.checkout_url) window.location.href = res.checkout_url;
@@ -102,7 +115,7 @@ export default function TahlilForm({ bayaranDibuka = false }: { bayaranDibuka?: 
             <button type="button" onClick={bayarSumbangan} disabled={bayarSedang} className="w-full rounded-lg bg-surau px-5 py-2.5 font-semibold text-white hover:bg-surau-dark disabled:opacity-60">
               {bayarSedang ? "Menyambung ke gerbang bayaran…" : "Bayar Sumbangan (FPX / Kad / e-Wallet)"}
             </button>
-            <p className="text-center text-xs text-slate-500">+ RM1 fi pemprosesan gerbang. Surau terima sumbangan anda penuh.</p>
+            <p className="text-center text-xs text-slate-500">+ RM1 fi pemprosesan gerbang. Nama arwah di atas turut dihantar automatik apabila anda bayar.</p>
             <div className="rounded-lg bg-slate-50 p-2 text-xs text-slate-500">
               Atau transfer manual: <b>{BANK_SURAU.bank}</b> · <b className="font-mono">{BANK_SURAU.no_akaun}</b> · {BANK_SURAU.nama_akaun}. Jazakumullah khairan.
             </div>

@@ -72,9 +72,25 @@ export async function kemasProgram(formData: FormData) {
   if (!id) return;
   const db = createAdminClient();
   // Hanya pencipta program (atau Admin/Master) boleh edit.
-  const { data: prog } = await db.from("program").select("dicipta_oleh").eq("id", id).single();
+  const { data: prog } = await db.from("program").select("dicipta_oleh, poster_url").eq("id", id).single();
   if (!bolehUrusProgram(p, (prog as any)?.dicipta_oleh)) return;
+
+  // Poster: muat naik fail baharu / kekal / buang.
+  let posterUrl: string | null = (prog as any)?.poster_url ?? null;
+  const buangPoster = String(formData.get("buang_poster") ?? "") === "on";
+  const poster = formData.get("poster") as File | null;
+  if (buangPoster) {
+    posterUrl = null;
+  } else if (poster && typeof poster === "object" && poster.size > 0) {
+    if (poster.size > 5 * 1024 * 1024) return; // maks 5MB — abai jika terlalu besar
+    const ext = (poster.name.split(".").pop() || "png").toLowerCase();
+    const path = `poster-program/${id}-${Date.now()}.${ext}`;
+    const { error } = await db.storage.from("kandungan").upload(path, poster, { contentType: poster.type || "image/png", upsert: true });
+    if (!error) posterUrl = db.storage.from("kandungan").getPublicUrl(path).data.publicUrl;
+  }
+
   await db.from("program").update({
+    poster_url: posterUrl,
     tajuk: String(formData.get("tajuk") ?? ""),
     keterangan: String(formData.get("keterangan") ?? "") || null,
     kategori: String(formData.get("kategori") ?? "") || null,

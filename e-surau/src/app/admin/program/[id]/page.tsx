@@ -115,6 +115,19 @@ export default async function EditProgramPage({ params }: { params: { id: string
           <input name="masa" defaultValue={p.masa ?? ""} placeholder="Masa (cth: 8:30 malam)" className="inp" />
           <input name="had_peserta" type="number" min="1" defaultValue={p.had_peserta ?? ""} placeholder="Had peserta (kosong = tiada had)" className="inp sm:col-span-2" />
           <textarea name="keterangan" rows={3} defaultValue={p.keterangan ?? ""} placeholder="Keterangan / butiran program" className="inp sm:col-span-2" />
+          <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+            <span className="mb-2 block text-xs font-medium text-slate-600">Poster / Iklan Program (PNG/JPG, maks 5MB) — dipapar di atas halaman program</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {p.poster_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.poster_url} alt="Poster" className="h-24 w-auto rounded-lg border" />
+              )}
+              <input type="file" name="poster" accept="image/png,image/jpeg,image/webp" className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-surau/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-surau" />
+            </div>
+            {p.poster_url && (
+              <label className="mt-2 flex items-center gap-2 text-xs text-slate-500"><input type="checkbox" name="buang_poster" /> Buang poster semasa</label>
+            )}
+          </div>
           <MedanBayarProgram defaultBerbayar={!!p.berbayar} defaultYuran={p.yuran ?? ""} defaultRuj={p.ruj_bayar ?? ""} />
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="rsvp_dibuka" defaultChecked={p.rsvp_dibuka} /> Buka pendaftaran (RSVP)</label>
           <label className="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="diterbitkan" defaultChecked={p.diterbitkan} /> Terbitkan di laman (senarai awam)</label>
