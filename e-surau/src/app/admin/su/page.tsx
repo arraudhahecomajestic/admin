@@ -25,7 +25,7 @@ export default async function PanelSetiausahaPage() {
   ] = await Promise.all([
     c(db.from("ahli_kariah").select("id", { count: "exact", head: true }).eq("status", "lulus")),
     c(db.from("ahli_kariah").select("id", { count: "exact", head: true }).not("status", "in", "(lulus,tolak)")),
-    c(db.from("program").select("id", { count: "exact", head: true }).gte("tarikh", hariIni)),
+    c(db.from("program").select("id", { count: "exact", head: true }).is("dibuang_pada", null).gte("tarikh", hariIni)),
     c(db.from("maklum_balas").select("id", { count: "exact", head: true }).eq("status", "baru")),
     c(db.from("mesyuarat").select("id", { count: "exact", head: true }).neq("status", "selesai")),
     c(db.from("staf_penilaian").select("id", { count: "exact", head: true }).neq("status", "disahkan")),

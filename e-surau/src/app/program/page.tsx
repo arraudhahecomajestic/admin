@@ -17,6 +17,7 @@ export default async function ProgramPage() {
       .from("program")
       .select("*, rsvp(bil_orang)")
       .eq("diterbitkan", true)
+      .is("dibuang_pada", null)
       .order("tarikh", { ascending: true });
     program = (data as any[]) ?? [];
 

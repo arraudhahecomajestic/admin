@@ -125,7 +125,8 @@ export async function padamProgram(formData: FormData) {
   // Hanya pencipta program (atau Admin/Master) boleh padam.
   const { data: prog } = await db.from("program").select("dicipta_oleh").eq("id", id).single();
   if (!bolehUrusProgram(p, (prog as any)?.dicipta_oleh)) return;
-  await db.from("program").delete().eq("id", id);
+  // Soft delete — arkib rekod (boleh dipulihkan), bukan buang kekal.
+  await db.from("program").update({ dibuang_pada: new Date().toISOString() }).eq("id", id);
   revalidatePath("/admin/program");
   revalidatePath("/program");
   revalidatePath("/");

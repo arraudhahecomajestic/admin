@@ -8,7 +8,8 @@ import ButangHantar from "@/components/ButangHantar";
 import KeteranganProgramAI from "@/components/KeteranganProgramAI";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
 import { tarikhMs } from "@/lib/format";
-import { tambahProgram, padamProgram } from "./actions";
+import { tambahProgram } from "./actions";
+import PadamProgramButton from "@/components/PadamProgramButton";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function ProgramAdminPage() {
   if (!isPentadbir(profil)) return <TiadaAkses />;
 
   const db = createAdminClient();
-  const { data } = await db.from("program").select("*, rsvp(bil_orang)").order("tarikh", { ascending: false }).limit(200);
+  const { data } = await db.from("program").select("*, rsvp(bil_orang)").is("dibuang_pada", null).order("tarikh", { ascending: false }).limit(200);
   const program = (data as any[]) ?? [];
 
   return (
@@ -58,7 +59,7 @@ export default async function ProgramAdminPage() {
               <div key={p.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900">{p.tajuk}</span>
+                    <Link href={`/program/${p.id}`} className="font-medium text-slate-900 hover:text-surau hover:underline" title="Tekan untuk lihat butiran program">{p.tajuk}</Link>
                     {!p.diterbitkan && <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">Draf</span>}
                     {p.kategori && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs text-surau">{p.kategori}</span>}
                   </div>
@@ -70,13 +71,11 @@ export default async function ProgramAdminPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Link href={`/admin/program/${p.id}`} className="text-xs font-semibold text-surau hover:underline">Butiran / RSVP</Link>
+                  <Link href={`/program/${p.id}`} className="text-xs font-semibold text-slate-500 hover:text-surau hover:underline">Lihat</Link>
                   {boleh && (
-                    <form action={padamProgram}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <button className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
-                    </form>
+                    <Link href={`/admin/program/${p.id}`} className="rounded-lg bg-surau/10 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/20">Edit / RSVP</Link>
                   )}
+                  {boleh && <PadamProgramButton id={p.id} tajuk={p.tajuk} />}
                 </div>
               </div>
             );
