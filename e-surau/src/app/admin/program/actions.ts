@@ -72,25 +72,24 @@ export async function kemasProgram(formData: FormData) {
   if (!id) return;
   const db = createAdminClient();
   // Hanya pencipta program (atau Admin/Master) boleh edit.
-  const { data: prog } = await db.from("program").select("dicipta_oleh, poster_url").eq("id", id).single();
+  const { data: prog } = await db.from("program").select("dicipta_oleh, poster_url, poster_urls").eq("id", id).single();
   if (!bolehUrusProgram(p, (prog as any)?.dicipta_oleh)) return;
 
-  // Poster: muat naik fail baharu / kekal / buang.
-  let posterUrl: string | null = (prog as any)?.poster_url ?? null;
-  const buangPoster = String(formData.get("buang_poster") ?? "") === "on";
-  const poster = formData.get("poster") as File | null;
-  if (buangPoster) {
-    posterUrl = null;
-  } else if (poster && typeof poster === "object" && poster.size > 0) {
-    if (poster.size > 5 * 1024 * 1024) return; // maks 5MB — abai jika terlalu besar
-    const ext = (poster.name.split(".").pop() || "png").toLowerCase();
-    const path = `poster-program/${id}-${Date.now()}.${ext}`;
-    const { error } = await db.storage.from("kandungan").upload(path, poster, { contentType: poster.type || "image/png", upsert: true });
-    if (!error) posterUrl = db.storage.from("kandungan").getPublicUrl(path).data.publicUrl;
+  // Poster berbilang (galeri swipe): senarai URL dihantar sebagai JSON dari
+  // komponen PosterProgramInput (fail sudah dimuat naik di pihak pelayar).
+  let posterUrls: string[] = (prog as any)?.poster_urls ?? [];
+  const posterRaw = formData.get("poster_urls");
+  if (typeof posterRaw === "string") {
+    try {
+      const arr = JSON.parse(posterRaw);
+      if (Array.isArray(arr)) posterUrls = arr.filter((u) => typeof u === "string" && u.trim()).slice(0, 4);
+    } catch { /* kekalkan sedia ada */ }
   }
+  const posterUrl: string | null = posterUrls[0] ?? null; // poster utama (keserasian ke belakang)
 
   await db.from("program").update({
     poster_url: posterUrl,
+    poster_urls: posterUrls,
     tajuk: String(formData.get("tajuk") ?? ""),
     keterangan: String(formData.get("keterangan") ?? "") || null,
     kategori: String(formData.get("kategori") ?? "") || null,
@@ -102,6 +101,7 @@ export async function kemasProgram(formData: FormData) {
     yuran: formData.get("yuran") ? Number(formData.get("yuran")) : 0,
     ruj_bayar: String(formData.get("ruj_bayar") ?? "").trim() || null,
     rsvp_dibuka: String(formData.get("rsvp_dibuka") ?? "") === "on",
+    wa_group: String(formData.get("wa_group") ?? "").trim() || null,
     diterbitkan: String(formData.get("diterbitkan") ?? "") === "on",
     maklumbalas_dibuka: String(formData.get("maklumbalas_dibuka") ?? "") === "on",
     checkin_dibuka: String(formData.get("checkin_dibuka") ?? "") === "on",

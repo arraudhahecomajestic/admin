@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { simpanVisiMisi, tambahCarta, padamCarta, tambahBuletin, padamBuletin, toggleBuletin, drafBuletinAI } from "@/app/admin/kandungan/actions";
+import { simpanVisiMisi, tambahCarta, padamCarta, tambahBuletin, kemasBuletin, padamBuletin, toggleBuletin, drafBuletinAI } from "@/app/admin/kandungan/actions";
 import { tarikhMs } from "@/lib/format";
 
 type Carta = { id: string; jawatan: string; nama: string | null; gambar_url: string | null; susunan: number };
@@ -229,26 +229,132 @@ function BuletinSeksyen({ buletin, onDone }: { buletin: Buletin[]; onDone: () =>
       </div>
       <div className="divide-y divide-slate-100">
         {buletin.length === 0 && <p className="text-sm text-slate-400">Tiada buletin lagi.</p>}
-        {buletin.map((b) => {
-          const bilGambar = (b.gambar?.length ?? 0) || (b.url_fail && b.jenis_fail === "imej" ? 1 : 0);
-          return (
-            <div key={b.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-              <div>
-                <div className="font-medium text-slate-800">{b.tajuk} {!b.diterbitkan && <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">Draf</span>}</div>
-                <div className="text-xs text-slate-500">
-                  {tarikhMs(b.tarikh)}
-                  {bilGambar > 0 ? ` · ${bilGambar} gambar` : ""}
-                  {b.url_fail && b.jenis_fail === "pdf" ? " · PDF" : ""}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button onClick={async () => { await toggleBuletin(b.id, !b.diterbitkan); onDone(); }} className="text-xs font-semibold text-surau hover:underline">{b.diterbitkan ? "Sorok" : "Terbit"}</button>
-                <button onClick={async () => { await padamBuletin(b.id); onDone(); }} className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
-              </div>
-            </div>
-          );
-        })}
+        {buletin.map((b) => <BuletinBaris key={b.id} b={b} onDone={onDone} />)}
       </div>
     </section>
+  );
+}
+
+function BuletinBaris({ b, onDone }: { b: Buletin; onDone: () => void }) {
+  const [edit, setEdit] = useState(false);
+  const [tajuk, setTajuk] = useState(b.tajuk);
+  const [ket, setKet] = useState(b.keterangan ?? "");
+  const [tarikh, setTarikh] = useState((b.tarikh || "").slice(0, 10));
+  const [gambar, setGambar] = useState<string[]>(
+    b.gambar?.length ? b.gambar : (b.url_fail && b.jenis_fail === "imej" ? [b.url_fail] : []),
+  );
+  const [urlPdf, setUrlPdf] = useState(b.jenis_fail === "pdf" ? (b.url_fail ?? "") : "");
+  const [busy, setBusy] = useState(false);
+  const [ai, setAi] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const bilGambar = (b.gambar?.length ?? 0) || (b.url_fail && b.jenis_fail === "imej" ? 1 : 0);
+
+  function reset() {
+    setTajuk(b.tajuk); setKet(b.keterangan ?? "");
+    setTarikh((b.tarikh || "").slice(0, 10));
+    setGambar(b.gambar?.length ? b.gambar : (b.url_fail && b.jenis_fail === "imej" ? [b.url_fail] : []));
+    setUrlPdf(b.jenis_fail === "pdf" ? (b.url_fail ?? "") : "");
+    setMsg("");
+  }
+  async function pilihGambar(e: React.ChangeEvent<HTMLInputElement>) {
+    const fail = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!fail.length) return;
+    setBusy(true); setMsg("");
+    const url: string[] = [];
+    for (const f of fail) { const r = await muatFail(f); if (r) url.push(r.url); }
+    setBusy(false);
+    if (url.length) setGambar((g) => [...g, ...url]); else setMsg("Gagal muat naik gambar.");
+  }
+  async function pilihPdf(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; if (!f) return;
+    setBusy(true); setMsg("");
+    const r = await muatFail(f);
+    setBusy(false);
+    if (r) setUrlPdf(r.url); else setMsg("Gagal muat naik PDF.");
+  }
+  async function drafAI() {
+    setMsg(""); setAi(true);
+    const r = await drafBuletinAI({ tajuk, idea: ket });
+    setAi(false);
+    if (!r.ok) { setMsg(r.msg ?? "AI gagal."); return; }
+    setKet(r.teks || "");
+  }
+  async function simpan() {
+    setMsg(""); setBusy(true);
+    const r = await kemasBuletin({
+      id: b.id, tajuk, keterangan: ket, tarikh: tarikh || undefined,
+      gambar, urlFail: urlPdf || null, jenisFail: urlPdf ? "pdf" : null,
+    });
+    setBusy(false);
+    if (!r.ok) { setMsg(r.msg ?? "Ralat."); return; }
+    setEdit(false); onDone();
+  }
+
+  if (!edit) {
+    return (
+      <div className="flex items-center justify-between gap-3 py-2 text-sm">
+        <div>
+          <div className="font-medium text-slate-800">{b.tajuk} {!b.diterbitkan && <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">Draf</span>}</div>
+          <div className="text-xs text-slate-500">
+            {tarikhMs(b.tarikh)}
+            {bilGambar > 0 ? ` · ${bilGambar} gambar` : ""}
+            {b.url_fail && b.jenis_fail === "pdf" ? " · PDF" : ""}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => { reset(); setEdit(true); }} className="text-xs font-semibold text-slate-600 hover:underline">Edit</button>
+          <button onClick={async () => { await toggleBuletin(b.id, !b.diterbitkan); onDone(); }} className="text-xs font-semibold text-surau hover:underline">{b.diterbitkan ? "Sorok" : "Terbit"}</button>
+          <button onClick={async () => { if (!window.confirm(`Padam buletin "${b.tajuk}"? Tindakan ini tak boleh diundur.`)) return; await padamBuletin(b.id); onDone(); }} className="text-xs font-semibold text-red-600 hover:underline">Padam</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-2 grid gap-2 rounded-lg border border-surau/30 bg-surau/5 p-3 sm:grid-cols-2">
+      <div className="sm:col-span-2 text-xs font-semibold text-surau">Edit buletin</div>
+      <input value={tajuk} onChange={(e) => setTajuk(e.target.value)} placeholder="Tajuk buletin" className="inp sm:col-span-2" />
+      <div className="sm:col-span-2">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-slate-700">Isi kandungan</span>
+          <button type="button" onClick={drafAI} disabled={ai || busy} className="rounded-lg border border-surau/40 bg-surau/5 px-3 py-1 text-xs font-semibold text-surau hover:bg-surau/10 disabled:opacity-60">
+            {ai ? "AI sedang mengarang…" : "Draf dengan AI"}
+          </button>
+        </div>
+        <textarea value={ket} onChange={(e) => setKet(e.target.value)} rows={6} className="inp" placeholder="Isi kandungan buletin…" />
+      </div>
+      <label className="text-sm text-slate-600">Tarikh<input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="inp" /></label>
+      <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
+        <input type="file" accept="image/*" multiple className="hidden" onChange={pilihGambar} />
+        {busy ? "Memuat naik…" : "Tambah Gambar (boleh banyak)"}
+      </label>
+      {gambar.length > 0 && (
+        <div className="sm:col-span-2 flex flex-wrap gap-2">
+          {gambar.map((u, i) => (
+            <div key={i} className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} alt={`Gambar ${i + 1}`} className="h-20 w-20 rounded-lg object-cover" />
+              <button type="button" onClick={() => setGambar((g) => g.filter((_, idx) => idx !== i))} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <label className="sm:col-span-2 flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 p-2 text-sm text-slate-600 hover:border-surau">
+        <input type="file" accept="application/pdf" className="hidden" onChange={pilihPdf} />
+        {urlPdf ? "PDF dilampir — tekan untuk ganti" : "Lampir PDF (pilihan)"}
+      </label>
+      {urlPdf && (
+        <label className="sm:col-span-2 flex items-center gap-2 text-xs text-slate-500">
+          <input type="checkbox" onChange={(e) => { if (e.target.checked) setUrlPdf(""); }} /> Buang PDF
+        </label>
+      )}
+      <div className="sm:col-span-2 flex items-center gap-2">
+        <button onClick={simpan} disabled={busy || ai} className="rounded-lg bg-surau px-5 py-2 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60">{busy ? "Menyimpan…" : "Simpan Perubahan"}</button>
+        <button onClick={() => { setEdit(false); reset(); }} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+        {msg && <span className="text-sm text-red-600">{msg}</span>}
+      </div>
+    </div>
   );
 }

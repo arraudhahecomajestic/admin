@@ -167,6 +167,51 @@ GARIS PANDUAN:
   }
 }
 
+// ---- KEMAS KINI BULETIN SEDIA ADA ----
+export async function kemasBuletin(input: {
+  id: string;
+  tajuk: string;
+  keterangan?: string;
+  urlFail?: string | null;
+  jenisFail?: string | null;
+  tarikh?: string;
+  gambar?: string[];
+}): Promise<{ ok: boolean; msg?: string }> {
+  const p = await getProfil();
+  if (!boleh(p)) return { ok: false, msg: "Tiada akses." };
+  const id = (input.id || "").trim();
+  if (!id) return { ok: false, msg: "ID buletin tiada." };
+  const tajuk = (input.tajuk || "").trim();
+  if (tajuk.length < 2) return { ok: false, msg: "Sila isi tajuk buletin." };
+
+  const gambar = Array.from(new Set((input.gambar || []).filter((u) => u && u.trim())));
+  let urlFail: string | null = input.urlFail ?? null;
+  let jenisFail: string | null = input.jenisFail ?? null;
+  // Kalau ada PDF, url_fail = PDF; jika tiada tapi ada gambar, url_fail = gambar pertama.
+  if (jenisFail === "pdf" && urlFail) {
+    // kekalkan PDF
+  } else if (gambar.length) {
+    urlFail = gambar[0];
+    jenisFail = "imej";
+  } else {
+    urlFail = null;
+    jenisFail = null;
+  }
+
+  const db = createAdminClient();
+  const { error } = await db.from("buletin").update({
+    tajuk,
+    keterangan: (input.keterangan || "").trim() || null,
+    url_fail: urlFail,
+    jenis_fail: jenisFail,
+    gambar,
+    tarikh: input.tarikh || undefined,
+  }).eq("id", id);
+  if (error) return { ok: false, msg: error.message };
+  revalidasi();
+  return { ok: true };
+}
+
 export async function padamBuletin(id: string): Promise<{ ok: boolean }> {
   const p = await getProfil();
   if (!boleh(p)) return { ok: false };
