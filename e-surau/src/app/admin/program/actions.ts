@@ -177,6 +177,19 @@ export async function tandaHadir(formData: FormData) {
   revalidatePath(`/admin/program/${programId}`);
 }
 
+// Padam satu rekod RSVP (cth pendua "double punch" / tersalah).
+export async function padamRsvp(formData: FormData) {
+  const me = await getProfil();
+  if (!isPentadbir(me)) return;
+  const id = String(formData.get("id") ?? "");
+  const programId = String(formData.get("program_id") ?? "");
+  if (!id || !(await bolehUrusProgramId(me, programId))) return;
+  const db = createAdminClient();
+  await db.from("rsvp").delete().eq("id", id);
+  revalidatePath(`/admin/program/${programId}`);
+  revalidatePath(`/program/${programId}`);
+}
+
 // Semak: pengguna ini pencipta program (atau Admin/Master)?
 async function bolehUrusProgramId(p: any, programId: string): Promise<boolean> {
   if (!programId) return false;

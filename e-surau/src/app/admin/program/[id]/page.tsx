@@ -5,7 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import { tarikhMs, namaKemas, telefonPapar, rm } from "@/lib/format";
-import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran, tandaHadir } from "../actions";
+import { kemasProgram, sahkanPendaftaran, tolakPendaftaran, padamPendaftaran, tandaHadir, padamRsvp } from "../actions";
 import MedanBayarProgram from "@/components/MedanBayarProgram";
 import EksportPeserta from "@/components/EksportPeserta";
 import ImportRsvp from "@/components/ImportRsvp";
@@ -339,6 +339,13 @@ export default async function EditProgramPage({ params }: { params: { id: string
                           </form>
                         )}
                         {w && <a href={`https://wa.me/${w}`} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700">WhatsApp</a>}
+                        {boleh && (
+                          <form action={padamRsvp}>
+                            <input type="hidden" name="id" value={r.id} />
+                            <input type="hidden" name="program_id" value={p.id} />
+                            <ButangHantar className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-400 hover:text-red-600 disabled:opacity-50" pendingText="…">Padam</ButangHantar>
+                          </form>
+                        )}
                       </div>
                     </td>
                   </tr>

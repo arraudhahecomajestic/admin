@@ -235,6 +235,7 @@ export async function daftarRsvp(data: {
   const telDigit = telefonRaw.replace(/\D/g, "");
   const bil = Math.max(1, Math.floor(Number(data.bil_orang) || 1));
   if (!program_id || !nama) return { ok: false, msg: "Sila isi nama anda." };
+  if (telDigit.length < 9) return { ok: false, msg: "Sila isi no. telefon yang sah (wajib)." };
 
   const db = createAdminClient();
   const { data: p } = await db.from("program").select("had_peserta, rsvp_dibuka").eq("id", program_id).single();

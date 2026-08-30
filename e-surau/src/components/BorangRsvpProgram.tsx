@@ -32,6 +32,7 @@ export default function BorangRsvpProgram({
   async function hantar() {
     setRalat(""); setMsg(null);
     if (!nama.trim()) { setRalat("Sila isi nama anda."); return; }
+    if (telefon.replace(/\D/g, "").length < 9) { setRalat("Sila isi no. telefon yang sah (wajib)."); return; }
 
     const menyumbang = nakSumbang && sumbanganDibuka && bayaranDibuka;
     if (menyumbang) {
@@ -69,7 +70,7 @@ export default function BorangRsvpProgram({
       {msg && <div className={`rounded-lg border p-2 text-sm ${msg.ok ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>{msg.text}</div>}
 
       <input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama anda" className="inp" />
-      <input value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="No. telefon (WhatsApp)" className="inp" />
+      <input value={telefon} onChange={(e) => setTelefon(e.target.value)} type="tel" inputMode="numeric" placeholder="No. telefon (WhatsApp) *" className="inp" />
       <label className="block">
         <span className="mb-1 block text-xs font-medium text-slate-600">Bilangan yang akan hadir (termasuk anda)</span>
         <input value={bil} onChange={(e) => setBil(e.target.value)} type="number" min="1" placeholder="cth: 3 orang" className="inp" />
