@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabaseAdmin";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
 import { kenalKawasan } from "@/lib/kawasan";
 import { namaKemas, telefonLokal } from "@/lib/format";
+import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 // Pendaftaran program BERBAYAR (kem/kelas) — consent + kesihatan + bayaran CHIP.
 export async function daftarProgramBerbayar(data: {
@@ -217,6 +218,51 @@ export async function hantarMaklumBalasProgram(data: {
   if (error) return { ok: false, msg: "Ralat menghantar: " + error.message };
 
   revalidatePath(`/admin/program/${program_id}`);
+  return { ok: true };
+}
+
+// Daftar RSVP (versi pulangkan status, untuk borang client + aliran sumbangan).
+// Elak pendua ikut telefon/nama; hormati had peserta.
+export async function daftarRsvp(data: {
+  program_id?: string;
+  nama?: string;
+  telefon?: string;
+  bil_orang?: number | string;
+}): Promise<{ ok: boolean; msg?: string; penuh?: boolean }> {
+  const program_id = String(data.program_id ?? "");
+  const nama = namaKemas(String(data.nama ?? ""));
+  const telefonRaw = telefonLokal(String(data.telefon ?? ""));
+  const telDigit = telefonRaw.replace(/\D/g, "");
+  const bil = Math.max(1, Math.floor(Number(data.bil_orang) || 1));
+  if (!program_id || !nama) return { ok: false, msg: "Sila isi nama anda." };
+
+  const db = createAdminClient();
+  const { data: p } = await db.from("program").select("had_peserta, rsvp_dibuka").eq("id", program_id).single();
+  if (!p || !(p as any).rsvp_dibuka) return { ok: false, msg: "Pendaftaran ditutup." };
+
+  const { data: senaraiSedia } = await db.from("rsvp").select("id, nama, telefon, bil_orang").eq("program_id", program_id);
+  const semua = (senaraiSedia as any[]) ?? [];
+  const sediaAda = semua.find((r) => {
+    if (telDigit) return (r.telefon || "").replace(/\D/g, "") === telDigit;
+    return (r.nama || "").trim().toLowerCase() === nama.toLowerCase() && !r.telefon;
+  });
+
+  if ((p as any).had_peserta) {
+    const jum = semua.reduce((s, r) => s + Number(r.bil_orang || 0), 0);
+    const bilSedia = sediaAda ? Number(sediaAda.bil_orang || 0) : 0;
+    if (jum - bilSedia + bil > (p as any).had_peserta) return { ok: false, msg: "Maaf, pendaftaran telah penuh.", penuh: true };
+  }
+
+  if (sediaAda) {
+    await db.from("rsvp").update({ nama, telefon: telefonRaw || null, bil_orang: bil }).eq("id", sediaAda.id);
+  } else {
+    await db.from("rsvp").insert({ program_id, nama, telefon: telefonRaw || null, bil_orang: bil });
+  }
+
+  revalidatePath("/program");
+  revalidatePath(`/program/${program_id}`);
+  revalidatePath("/admin/program");
+  revalidatePath("/");
   return { ok: true };
 }
 

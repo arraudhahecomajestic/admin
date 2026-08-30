@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { createAdminClient, adminConfigured } from "@/lib/supabaseAdmin";
 import { tarikhMs } from "@/lib/format";
-import ButangHantar from "@/components/ButangHantar";
-import { rsvpProgram } from "../actions";
 import BorangDaftarProgram from "@/components/BorangDaftarProgram";
 import BorangDaftarProgramManual from "@/components/BorangDaftarProgramManual";
 import SumbangProgramForm from "@/components/SumbangProgramForm";
+import BorangRsvpProgram from "@/components/BorangRsvpProgram";
 import { bayaranOnlineDibuka } from "@/lib/tetapanSistem";
 
 export const dynamic = "force-dynamic";
@@ -102,19 +101,13 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
                 ? <BorangDaftarProgram programId={p.id} yuran={Number(p.yuran || 0)} />
                 : <BorangDaftarProgramManual programId={p.id} yuran={Number(p.yuran || 0)} tajuk={p.tajuk} rujBayar={p.ruj_bayar} />
             ) : (
-              <form action={rsvpProgram} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-slate-800">{searchParams.rsvp === "ok" ? "Kemas kini kehadiran anda" : "Sahkan Kehadiran (RSVP)"}</div>
-                <p className="text-xs text-slate-500">Guna nombor telefon yang sama untuk kemas kini — tak akan jadi pendaftaran berganda.</p>
-                <input type="hidden" name="program_id" value={p.id} />
-                <input name="nama" required placeholder="Nama anda" className="inp" />
-                <input name="telefon" placeholder="No. telefon (WhatsApp)" className="inp" />
-                <label className="block">
-                  <span className="mb-1 block text-xs font-medium text-slate-600">Bilangan yang akan hadir (termasuk anda)</span>
-                  <input name="bil_orang" type="number" min="1" defaultValue={1} placeholder="cth: 3 orang" title="Bilangan orang yang akan hadir bersama anda" className="inp" />
-                  <span className="mt-1 block text-[11px] text-slate-400">Contoh: jika anda hadir bersama pasangan &amp; 2 anak, isi 4.</span>
-                </label>
-                <ButangHantar className="rounded-lg bg-surau px-5 py-2.5 text-sm font-semibold text-white hover:bg-surau-dark disabled:opacity-60" pendingText="Menyimpan…">Sahkan Kehadiran →</ButangHantar>
-              </form>
+              <BorangRsvpProgram
+                programId={p.id}
+                bayaranDibuka={bayaranOnline}
+                sumbanganDibuka={!!p.sumbangan_dibuka}
+                sumbanganNota={p.sumbangan_nota}
+                rsvpOk={searchParams.rsvp === "ok"}
+              />
             )
           ) : (
             <p className="mt-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
@@ -122,7 +115,8 @@ export default async function JemputanProgramPage({ params, searchParams }: { pa
             </p>
           )}
 
-          {p.sumbangan_dibuka && (
+          {/* Sumbangan berdiri sendiri — bila TIDAK dalam borang RSVP percuma (cth berbayar / RSVP tutup / penuh) */}
+          {p.sumbangan_dibuka && (p.berbayar || !p.rsvp_dibuka || penuh) && (
             <SumbangProgramForm programId={p.id} nota={p.sumbangan_nota} bayaranDibuka={bayaranOnline} />
           )}
         </div>
