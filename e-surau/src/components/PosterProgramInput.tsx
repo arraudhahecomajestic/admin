@@ -5,10 +5,36 @@ import { createClient } from "@/lib/supabase/client";
 
 const MAKS = 4;
 
+// Auto-kecilkan gambar dalam pelayar sebelum muat naik supaya poster besar
+// (>5MB) tak gagal. Resize ke lebar maks 1600px, simpan sebagai JPEG.
+async function mampatImej(f: File): Promise<File> {
+  try {
+    if (!f.type.startsWith("image/")) return f;
+    const bitmap = await createImageBitmap(f).catch(() => null);
+    if (!bitmap) return f;
+    const maksLebar = 1600;
+    const skala = Math.min(1, maksLebar / bitmap.width);
+    const w = Math.max(1, Math.round(bitmap.width * skala));
+    const h = Math.max(1, Math.round(bitmap.height * skala));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return f;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", 0.85));
+    if (!blob) return f;
+    // Kalau hasil mampat tak lebih kecil (gambar sudah kecil), guna asal.
+    if (blob.size >= f.size) return f;
+    return new File([blob], f.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    return f;
+  }
+}
+
 async function muatPoster(f: File): Promise<{ url: string | null; ralat?: string }> {
   try {
     const supabase = createClient();
-    const ext = (f.name.split(".").pop() || "png").toLowerCase();
+    const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
     // Muat naik ke ROOT bucket (sama seperti buletin) — polisi storage RLS
     // hanya benarkan authenticated insert ke bucket "kandungan" tanpa subfolder.
     const path = `poster-${crypto.randomUUID()}.${ext}`;
@@ -42,11 +68,12 @@ export default function PosterProgramInput({ awal }: { awal: string[] }) {
     const baharu: string[] = [];
     let ralatAkhir = "";
     for (const f of fail.slice(0, ruang)) {
-      if (f.size > 5 * 1024 * 1024) {
-        ralatAkhir = `"${f.name}" melebihi 5MB — dilangkau.`;
+      if (f.size > 25 * 1024 * 1024) {
+        ralatAkhir = `"${f.name}" terlalu besar (>25MB) — dilangkau.`;
         continue;
       }
-      const r = await muatPoster(f);
+      const kecil = await mampatImej(f); // auto-kecilkan poster besar
+      const r = await muatPoster(kecil);
       if (r.url) baharu.push(r.url);
       else ralatAkhir = r.ralat ? `Gagal muat naik: ${r.ralat}` : "Gagal muat naik poster.";
     }
@@ -71,7 +98,7 @@ export default function PosterProgramInput({ awal }: { awal: string[] }) {
   return (
     <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
       <span className="mb-1 block text-xs font-medium text-slate-600">
-        Poster / Iklan Program (PNG/JPG, maks 5MB · sehingga {MAKS} keping) — kariah boleh swipe di atas borang RSVP
+        Poster / Iklan Program (PNG/JPG · sehingga {MAKS} keping · gambar besar auto-dikecilkan) — kariah boleh swipe di atas borang RSVP
       </span>
       <input type="hidden" name="poster_urls" value={JSON.stringify(poster)} />
 
