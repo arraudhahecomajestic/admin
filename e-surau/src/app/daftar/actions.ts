@@ -28,6 +28,10 @@ export async function semakKpDaftar(noKp: string): Promise<{
   wujud?: boolean;
   nama?: string | null;
   ada_emel?: boolean;
+  ada_akaun?: boolean;   // sudah ada akaun log masuk (profil terpaut)
+  disahkan?: boolean;    // maklumat sudah disahkan
+  status?: string | null;
+  emel?: string | null;
   msg?: string;
 }> {
   const kp = (noKp || "").replace(/\D/g, "");
@@ -35,12 +39,24 @@ export async function semakKpDaftar(noKp: string): Promise<{
   const db = createAdminClient();
   const { data, error } = await db
     .from("ahli_kariah")
-    .select("id, nama, emel")
+    .select("id, nama, emel, maklumat_disahkan, status")
     .eq("no_kp", kp)
     .maybeSingle();
   if (error) return { ok: false, msg: error.message };
   if (data) {
-    return { ok: true, wujud: true, nama: (data as any).nama, ada_emel: !!(data as any).emel };
+    const a: any = data;
+    // Adakah ahli ini sudah ada akaun log masuk? (profil terpaut ikut ahli_id)
+    const { data: prof } = await db.from("profil").select("id").eq("ahli_id", a.id).limit(1).maybeSingle();
+    return {
+      ok: true,
+      wujud: true,
+      nama: a.nama,
+      ada_emel: !!a.emel,
+      ada_akaun: !!prof,
+      disahkan: !!a.maklumat_disahkan,
+      status: a.status ?? null,
+      emel: a.emel ?? null,
+    };
   }
   return { ok: true, wujud: false };
 }

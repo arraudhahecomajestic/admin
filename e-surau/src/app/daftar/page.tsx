@@ -31,7 +31,9 @@ const kosong = (): Tanggungan => ({
 
 export default function DaftarPage() {
   // Gate: semak No. KP dahulu sebelum borang penuh dipaparkan
-  const [peringkat, setPeringkat] = useState<"semak" | "baru" | "akaun">("semak");
+  const [peringkat, setPeringkat] = useState<"semak" | "baru" | "akaun" | "sudah">("semak");
+  const [disahkanRec, setDisahkanRec] = useState(false);
+  const [emelRec, setEmelRec] = useState<string | null>(null);
   const [semakNoKp, setSemakNoKp] = useState("");
   const [semakSedang, setSemakSedang] = useState(false);
   const [semakRalat, setSemakRalat] = useState("");
@@ -155,10 +157,17 @@ export default function DaftarPage() {
     setSemakSedang(false);
     if (!res.ok) { setSemakRalat(res.msg ?? "Ralat semakan."); return; }
     if (res.wujud) {
-      // Ahli sedia ada → terus set akaun (emel & kata laluan)
       setAhliNama(res.nama ?? null);
       setNoKp(kp);
-      setPeringkat("akaun");
+      setEmelRec(res.emel ?? null);
+      setDisahkanRec(!!res.disahkan);
+      if (res.ada_akaun) {
+        // Sudah ada akaun log masuk → arahkan LOG MASUK, bukan cipta akaun.
+        setPeringkat("sudah");
+      } else {
+        // Ada rekod tapi belum ada akaun log masuk → cipta akaun.
+        setPeringkat("akaun");
+      }
     } else {
       // Belum ada → borang penuh, isi dari awal (No. KP dibawa masuk)
       setNoKp(kp);
@@ -347,20 +356,53 @@ export default function DaftarPage() {
     );
   }
 
-  // ---------- PERINGKAT 2b: Ahli sedia ada → set akaun (emel & kata laluan) ----------
+  // ---------- PERINGKAT 2c: Sudah ada akaun log masuk → arahkan LOG MASUK ----------
+  if (peringkat === "sudah") {
+    return (
+      <div className="mx-auto max-w-lg space-y-6">
+        <div className="text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-700">✓</div>
+          <h1 className="text-2xl font-bold text-slate-900">Anda Sudah Berdaftar</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            {ahliNama ? <>Salam, <b>{ahliNama}</b>. </> : null}
+            Anda sudah menjadi ahli kariah &amp; <b>sudah ada akaun log masuk</b>
+            {disahkanRec ? <> (maklumat telah disahkan)</> : null}. Tak perlu daftar semula — sila <b>log masuk</b> untuk akses Portal Ahli.
+          </p>
+        </div>
+        <div className="rounded-xl bg-white p-6 text-center shadow-sm">
+          {emelRec && <p className="mb-3 text-sm text-slate-500">Akaun anda: <b className="text-slate-800">{emelRec}</b></p>}
+          <Link href="/masuk" className="inline-block w-full rounded-lg bg-surau px-6 py-3 font-semibold text-white hover:bg-surau-dark">Log Masuk Portal Ahli</Link>
+          <p className="mt-3 text-xs text-slate-500">
+            Lupa kata laluan? <Link href="/lupa-kata-laluan" className="font-medium text-surau hover:underline">Set semula di sini</Link>
+          </p>
+        </div>
+        <p className="text-center">
+          <button type="button" onClick={() => setPeringkat("semak")} className="text-xs text-slate-500 hover:underline">← Semak No. KP lain</button>
+        </p>
+      </div>
+    );
+  }
+
+  // ---------- PERINGKAT 2b: Ahli sedia ada (belum ada akaun) → cipta akaun log masuk ----------
   if (peringkat === "akaun") {
     return (
       <div className="mx-auto max-w-lg space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-700">Permohonan Anda Belum Lengkap</h1>
+          <h1 className={`text-2xl font-bold ${disahkanRec ? "text-slate-900" : "text-red-700"}`}>
+            {disahkanRec ? "Cipta Akaun Log Masuk" : "Permohonan Anda Belum Lengkap"}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
             {ahliNama ? <>Salam, <b>{ahliNama}</b>. </> : null}
-            No. KP anda ada dalam rekod, tetapi maklumat anda <b>belum lengkap &amp; belum disahkan</b>. Cipta akaun sekarang untuk melengkapkannya.
+            {disahkanRec
+              ? <>No. KP anda sudah dalam rekod ahli kariah, cuma <b>belum ada akaun log masuk</b>. Cipta akaun sekarang untuk akses Portal Ahli.</>
+              : <>No. KP anda ada dalam rekod, tetapi maklumat anda <b>belum lengkap &amp; belum disahkan</b>. Cipta akaun sekarang untuk melengkapkannya.</>}
           </p>
         </div>
-        <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4 text-center">
-          <div className="text-lg font-bold text-red-700">PERMOHONAN ANDA BELUM LENGKAP</div>
-        </div>
+        {!disahkanRec && (
+          <div className="rounded-xl border-2 border-red-400 bg-red-50 p-4 text-center">
+            <div className="text-lg font-bold text-red-700">PERMOHONAN ANDA BELUM LENGKAP</div>
+          </div>
+        )}
         {selesai && !selesai.ok && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{selesai.msg}</div>
         )}
