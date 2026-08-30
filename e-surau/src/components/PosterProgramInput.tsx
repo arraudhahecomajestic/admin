@@ -5,16 +5,18 @@ import { createClient } from "@/lib/supabase/client";
 
 const MAKS = 4;
 
-async function muatPoster(f: File): Promise<string | null> {
+async function muatPoster(f: File): Promise<{ url: string | null; ralat?: string }> {
   try {
     const supabase = createClient();
     const ext = (f.name.split(".").pop() || "png").toLowerCase();
-    const path = `poster-program/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("kandungan").upload(path, f, { contentType: f.type || "image/png", upsert: true });
-    if (error) return null;
-    return supabase.storage.from("kandungan").getPublicUrl(path).data.publicUrl;
-  } catch {
-    return null;
+    // Muat naik ke ROOT bucket (sama seperti buletin) — polisi storage RLS
+    // hanya benarkan authenticated insert ke bucket "kandungan" tanpa subfolder.
+    const path = `poster-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("kandungan").upload(path, f, { contentType: f.type || undefined, upsert: true });
+    if (error) return { url: null, ralat: error.message };
+    return { url: supabase.storage.from("kandungan").getPublicUrl(path).data.publicUrl };
+  } catch (e: any) {
+    return { url: null, ralat: e?.message || "ralat tidak diketahui" };
   }
 }
 
@@ -38,17 +40,19 @@ export default function PosterProgramInput({ awal }: { awal: string[] }) {
     }
     setBusy(true);
     const baharu: string[] = [];
+    let ralatAkhir = "";
     for (const f of fail.slice(0, ruang)) {
       if (f.size > 5 * 1024 * 1024) {
-        setMsg(`"${f.name}" melebihi 5MB — dilangkau.`);
+        ralatAkhir = `"${f.name}" melebihi 5MB — dilangkau.`;
         continue;
       }
-      const url = await muatPoster(f);
-      if (url) baharu.push(url);
+      const r = await muatPoster(f);
+      if (r.url) baharu.push(r.url);
+      else ralatAkhir = r.ralat ? `Gagal muat naik: ${r.ralat}` : "Gagal muat naik poster.";
     }
     setBusy(false);
-    if (baharu.length) setPoster((p) => [...p, ...baharu].slice(0, MAKS));
-    else if (!msg) setMsg("Gagal muat naik poster.");
+    if (baharu.length) { setPoster((p) => [...p, ...baharu].slice(0, MAKS)); if (!ralatAkhir) setMsg(""); else setMsg(ralatAkhir); }
+    else setMsg(ralatAkhir || "Gagal muat naik poster.");
   }
 
   function buang(i: number) {
