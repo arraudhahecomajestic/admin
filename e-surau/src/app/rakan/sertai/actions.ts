@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabaseAdmin";
 import { chipConfigured, ciptaPurchase, siteUrl } from "@/lib/chip";
 import { cariPakej, tempohSah, hargaPenaja } from "@/lib/penaja";
+import { PAKEJ_TETAP_SEBULAN } from "@/lib/tetapan";
 
 // Penaja bayar sendiri (upfront). Cipta rekod penaja (aktif=false, menunggu bayaran),
 // jana pautan CHIP. Logo auto-papar bila bayaran disahkan (webhook).
@@ -14,8 +15,11 @@ export async function mulaTajaanPenaja(fd: FormData): Promise<{ ok: boolean; msg
   const pakej = cariPakej(kod);
   if (!pakej) return { ok: false, msg: "Sila pilih pakej tajaan." };
 
-  const bulan = Number(fd.get("bulan") ?? 0);
-  if (!tempohSah(bulan)) return { ok: false, msg: "Sila pilih tempoh tajaan (3/6/9/12 bulan)." };
+  // Pakej "Bulanan" tetap 1 bulan; pakej lain ikut pilihan 3/6/9/12 bulan.
+  const tetapSebulan = PAKEJ_TETAP_SEBULAN.includes(kod);
+  const bulan = tetapSebulan ? 1 : Number(fd.get("bulan") ?? 0);
+  if (tetapSebulan ? bulan !== 1 : !tempohSah(bulan))
+    return { ok: false, msg: tetapSebulan ? "Pakej ini untuk sebulan sahaja." : "Sila pilih tempoh tajaan (3/6/9/12 bulan)." };
 
   const harga = hargaPenaja(kod, bulan);
   if (!harga || harga < 1) return { ok: false, msg: "Jumlah tajaan tidak sah." };
@@ -45,7 +49,7 @@ export async function mulaTajaanPenaja(fd: FormData): Promise<{ ok: boolean; msg
   }
 
   // Susunan: Emas paling atas, Gangsa bawah
-  const susunan = kod === "emas" ? 10 : kod === "perak" ? 20 : kod === "gangsa" ? 30 : 40;
+  const susunan = kod === "emas" ? 10 : kod === "perak" ? 20 : kod === "gangsa" ? 30 : kod === "bulanan" ? 32 : 40;
 
   // Cipta rekod penaja (belum aktif — logo tak dipapar sehingga bayaran disahkan)
   const { data: pen, error: penErr } = await db

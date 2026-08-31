@@ -59,8 +59,12 @@ export const PAKEJ_PENAJA = [
   { kod: "emas",      nama: "Emas",                  harga_bulan: 1000, huraian: "Logo besar di laman utama + direktori + keutamaan susunan." },
   { kod: "perak",     nama: "Perak",                 harga_bulan: 500,  huraian: "Logo sederhana di laman utama + direktori." },
   { kod: "gangsa",    nama: "Gangsa",                harga_bulan: 200,  huraian: "Logo di direktori Rakan Surau." },
+  { kod: "bulanan",   nama: "Bulanan",               harga_bulan: 200,  huraian: "Pakej sebulan sahaja (RM200) — logo di strip + direktori. Sesuai untuk cuba dulu." },
   { kod: "direktori", nama: "Direktori Rakan Surau", harga_bulan: 20,   huraian: "Tersenarai dalam direktori Rakan Surau." },
 ] as const;
+
+// Pakej yang tempohnya tetap 1 bulan sahaja (tak boleh pilih tempoh lain).
+export const PAKEJ_TETAP_SEBULAN: readonly string[] = ["bulanan"];
 export const TEMPOH_PENAJA = [3, 6, 9, 12] as const; // pilihan bulan tajaan
 
 // Pakej Infaq (langganan/satu-tap) — halaman /infaq

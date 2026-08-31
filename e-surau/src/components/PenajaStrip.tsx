@@ -48,7 +48,7 @@ export default async function PenajaStrip({ pratonton = false }: { pratonton?: b
         {gerakList.length > 0 && (
           <div className="penaja-marquee flex-1">
             <div className="penaja-track">
-              {gerak.map((p, i) => <PenajaItem key={i} p={p} saiz={p.pakej === "gangsa" ? "kecil" : "sederhana"} />)}
+              {gerak.map((p, i) => <PenajaItem key={i} p={p} saiz={(p.pakej === "gangsa" || p.pakej === "bulanan") ? "kecil" : "sederhana"} />)}
             </div>
           </div>
         )}

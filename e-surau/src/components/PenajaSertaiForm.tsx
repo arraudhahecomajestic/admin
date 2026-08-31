@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PAKEJ_PENAJA, TEMPOH_PENAJA } from "@/lib/tetapan";
+import { PAKEJ_PENAJA, TEMPOH_PENAJA, PAKEJ_TETAP_SEBULAN } from "@/lib/tetapan";
 import { hargaPenaja } from "@/lib/penaja";
 import { mulaTajaanPenaja } from "@/app/rakan/sertai/actions";
 import { rm } from "@/lib/format";
@@ -20,9 +20,17 @@ export default function PenajaSertaiForm() {
   const [sedang, setSedang] = useState(false);
   const [ralat, setRalat] = useState("");
 
+  const tetapSebulan = PAKEJ_TETAP_SEBULAN.includes(kod);
   const harga = hargaPenaja(kod, bulan);
   const pakejNama = PAKEJ_PENAJA.find((p) => p.kod === kod)?.nama ?? "";
   const isDir = kod === "direktori";
+
+  // Tukar pakej — kunci tempoh 1 bulan untuk pakej Bulanan, reset ke 3 untuk yang lain.
+  function pilihPakej(k: string) {
+    setKod(k);
+    if (PAKEJ_TETAP_SEBULAN.includes(k)) setBulan(1);
+    else if (bulan === 1) setBulan(3);
+  }
 
   async function hantar() {
     setRalat("");
@@ -72,7 +80,7 @@ export default function PenajaSertaiForm() {
                 <Slot saiz={kod === "emas" ? "besar" : kod === "perak" ? "sederhana" : "kecil"} logo={logoPrev} />
                 <div className="flex h-12 w-24 items-center justify-center rounded-lg border border-slate-200 bg-white text-[11px] text-slate-300">Penaja lain</div>
               </div>
-              <p className="mt-1 text-[11px] text-slate-400">{kod === "emas" ? "Emas: logo besar & tetap di kiri (tak bergerak)." : kod === "perak" ? "Perak: logo sederhana, bergerak dalam strip." : "Gangsa: logo kecil, bergerak dalam strip."}</p>
+              <p className="mt-1 text-[11px] text-slate-400">{kod === "emas" ? "Emas: logo besar & tetap di kiri (tak bergerak)." : kod === "perak" ? "Perak: logo sederhana, bergerak dalam strip." : tetapSebulan ? "Bulanan: logo kecil dalam strip — untuk sebulan." : "Gangsa: logo kecil, bergerak dalam strip."}</p>
             </div>
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700/80">Di direktori /rakan</div>
@@ -94,11 +102,11 @@ export default function PenajaSertaiForm() {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {PAKEJ_PENAJA.map((p) => {
             const dipilih = kod === p.kod;
-            const label = `${rm(p.harga_bulan)} / bulan`;
+            const label = PAKEJ_TETAP_SEBULAN.includes(p.kod) ? `${rm(p.harga_bulan)} / sebulan` : `${rm(p.harga_bulan)} / bulan`;
             return (
               <button
                 key={p.kod}
-                onClick={() => setKod(p.kod)}
+                onClick={() => pilihPakej(p.kod)}
                 className={`rounded-xl border-2 p-4 text-left transition ${dipilih ? "border-surau bg-surau/5" : "border-slate-200 hover:border-surau/40"}`}
               >
                 <div className="flex items-center justify-between">
@@ -115,17 +123,24 @@ export default function PenajaSertaiForm() {
       {/* Tempoh */}
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <h2 className="font-semibold text-slate-900">2. Tempoh Tajaan</h2>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {TEMPOH_PENAJA.map((b) => (
-            <button
-              key={b}
-              onClick={() => setBulan(b)}
-              className={`rounded-lg border-2 py-3 text-center font-bold ${bulan === b ? "border-surau bg-surau/10 text-surau-dark" : "border-slate-200 text-slate-700 hover:border-surau/40"}`}
-            >
-              {b} bln
-            </button>
-          ))}
-        </div>
+        {tetapSebulan ? (
+          <div className="mt-3 rounded-lg border-2 border-surau bg-surau/10 py-3 text-center font-bold text-surau-dark">
+            1 bulan
+            <span className="mt-0.5 block text-xs font-normal text-slate-500">Pakej Bulanan tetap untuk sebulan sahaja.</span>
+          </div>
+        ) : (
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {TEMPOH_PENAJA.map((b) => (
+              <button
+                key={b}
+                onClick={() => setBulan(b)}
+                className={`rounded-lg border-2 py-3 text-center font-bold ${bulan === b ? "border-surau bg-surau/10 text-surau-dark" : "border-slate-200 text-slate-700 hover:border-surau/40"}`}
+              >
+                {b} bln
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mt-4 flex items-center justify-between rounded-lg bg-surau/5 px-4 py-3">
           <span className="text-sm text-slate-600">Jumlah bayaran</span>
           <span className="text-2xl font-extrabold text-surau">{rm(harga)}</span>
