@@ -5,8 +5,8 @@ import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import PenajaStrip from "@/components/PenajaStrip";
 import { PENAJA_DIPAPAR, PAKEJ_PENAJA } from "@/lib/tetapan";
-import { tarikhMs } from "@/lib/format";
-import { tambahPenaja, togglePenaja, padamPenaja } from "./actions";
+import { tambahPenaja } from "./actions";
+import PenajaRow from "@/components/PenajaRow";
 
 export const dynamic = "force-dynamic";
 
@@ -80,40 +80,17 @@ export default async function AdminPenajaPage() {
         <h2 className="border-b px-5 py-3 font-semibold text-slate-900">Senarai Penaja</h2>
         <div className="divide-y">
           {penaja.length === 0 && <p className="px-5 py-6 text-center text-slate-400">Tiada penaja lagi.</p>}
-          {penaja.map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
-              <div className="flex items-center gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {p.logo_url ? <img src={p.logo_url} alt={p.nama} className="h-10 w-auto max-w-[80px] rounded border object-contain" /> : <div className="flex h-10 w-14 items-center justify-center rounded border bg-slate-50 text-xs text-slate-400">Tiada</div>}
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-slate-900">{p.nama}</span>
-                    {p.pakej && <span className="rounded bg-surau/10 px-2 py-0.5 text-xs font-semibold text-surau">{namaPakej[p.pakej] || p.pakej}{p.tempoh_bulan ? ` · ${p.tempoh_bulan} bln` : ""}</span>}
-                    {(() => {
-                      const bs = bayarMap.get(p.id);
-                      const [t, c] = p.aktif
-                        ? ["Aktif", "bg-green-100 text-green-700"]
-                        : bs === "menunggu"
-                        ? ["Menunggu bayaran", "bg-amber-100 text-amber-700"]
-                        : bs === "gagal"
-                        ? ["Bayaran gagal", "bg-red-100 text-red-700"]
-                        : ["Tidak aktif", "bg-slate-100 text-slate-500"];
-                      return <span className={`rounded px-2 py-0.5 text-xs font-semibold ${c}`}>{t}</span>;
-                    })()}
-                  </div>
-                  <div className="text-xs text-slate-500">
-                    {p.kategori || "—"}
-                    {p.tarikh_mula || p.tarikh_tamat ? ` · ${p.tarikh_mula ? tarikhMs(p.tarikh_mula) : "?"} → ${p.tarikh_tamat ? tarikhMs(p.tarikh_tamat) : "?"}` : ""}
-                    {p.emel ? ` · ${p.emel}` : ""}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <form action={togglePenaja}><input type="hidden" name="id" value={p.id} /><input type="hidden" name="aktif" value={String(p.aktif)} /><ButangHantar className="text-xs font-semibold text-surau hover:underline" pendingText="…">{p.aktif ? "Nyahaktif" : "Aktifkan"}</ButangHantar></form>
-                <form action={padamPenaja}><input type="hidden" name="id" value={p.id} /><ButangHantar className="text-xs font-semibold text-red-600 hover:underline" pendingText="…">Padam</ButangHantar></form>
-              </div>
-            </div>
-          ))}
+          {penaja.map((p) => {
+            const bs = bayarMap.get(p.id);
+            const [statusText, statusClass] = p.aktif
+              ? ["Aktif", "bg-green-100 text-green-700"]
+              : bs === "menunggu"
+              ? ["Menunggu bayaran", "bg-amber-100 text-amber-700"]
+              : bs === "gagal"
+              ? ["Bayaran gagal", "bg-red-100 text-red-700"]
+              : ["Tidak aktif", "bg-slate-100 text-slate-500"];
+            return <PenajaRow key={p.id} p={p} namaPakej={namaPakej} statusText={statusText} statusClass={statusClass} />;
+          })}
         </div>
       </section>
 
