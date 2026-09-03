@@ -94,7 +94,7 @@ export default function SenaraiBelanja({ belanja, bolehLulus, slipUrls = {} }: {
             </tr>
           </thead>
           <tbody>
-            {belanja.slice(0, 30).map((b) => (
+            {belanja.slice(0, 50).map((b) => (
               <Fragment key={b.id}>
                 <tr className="border-b last:border-0 align-top">
                   <td className="px-4 py-2 font-mono text-xs">{b.no_baucer || "—"}</td>
