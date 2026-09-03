@@ -85,7 +85,7 @@ async function ambilKewanganBulanTerkini(): Promise<{ bulan: number; masuk: Bari
     const tahun = new Date().getFullYear();
     const [{ data: kut }, { data: bel }] = await Promise.all([
       db.from("kutipan").select("jumlah, tarikh, kategori:kategori_kutipan(nama, papar_awam)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
-      db.from("perbelanjaan").select("jumlah, tarikh, kategori:kategori_belanja(nama)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
+      db.from("perbelanjaan").select("jumlah, tarikh, status, kategori:kategori_belanja(nama)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
     ]);
     const bM: Record<number, Record<string, number>> = {};
     const bK: Record<number, Record<string, number>> = {};
@@ -99,6 +99,9 @@ async function ambilKewanganBulanTerkini(): Promise<{ bulan: number; masuk: Bari
       ada.add(m);
     }
     for (const r of (bel as any[]) ?? []) {
+      // Selaras dengan laporan /kewangan — hanya baucer 'dibayar' dikira wang
+      // keluar sebenar (baucer 'menunggu'/'lulus' belum dibayar tak dikira).
+      if (r.status !== "dibayar") continue;
       const nama = r.kategori?.nama || "Lain-lain";
       const m = Number(String(r.tarikh).slice(5, 7)) - 1;
       if (m < 0 || m > 11) continue;
