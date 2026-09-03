@@ -10,7 +10,8 @@ import ProgresTuntutan from "@/components/ProgresTuntutan";
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<string, { label: string; warna: string }> = {
-  baru: { label: "Menunggu Bendahari", warna: "bg-amber-100 text-amber-700" },
+  baru: { label: "Menunggu semakan AJK", warna: "bg-amber-100 text-amber-700" },
+  disah_ajk: { label: "Disah AJK · tunggu Bendahari", warna: "bg-indigo-100 text-indigo-700" },
   diproses: { label: "Baucer disedia", warna: "bg-blue-100 text-blue-700" },
   dibayar: { label: "Selesai Dibayar", warna: "bg-green-100 text-green-700" },
   ditolak: { label: "Ditolak", warna: "bg-red-100 text-red-700" },
@@ -75,7 +76,8 @@ export default async function TuntutanSayaPage() {
           const pb = t.perbelanjaan_id ? pbMap[t.perbelanjaan_id] : null;
           const langkah = [
             { label: "Tuntutan dihantar", tarikh: t.dicipta, done: true },
-            { label: "Baucer disedia (Bendahari)", tarikh: pb ? null : null, done: ["diproses", "dibayar"].includes(t.status) },
+            { label: "Disemak AJK bertugas", tarikh: t.tarikh_sah_ajk, done: ["disah_ajk", "diproses", "dibayar"].includes(t.status) },
+            { label: "Baucer disedia (Bendahari)", tarikh: null, done: ["diproses", "dibayar"].includes(t.status) },
             { label: "Diluluskan Pengerusi", tarikh: pb?.tarikh_lulus, done: pb ? ["lulus", "dibayar"].includes(pb.status) : false },
             { label: "Bayaran selesai", tarikh: t.tarikh_bayar, done: t.status === "dibayar" },
           ];

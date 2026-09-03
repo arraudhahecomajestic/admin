@@ -26,7 +26,7 @@ export default async function KewanganPage() {
     db.from("kategori_kutipan").select("id, nama, jenis_khairat").order("id"),
     db.from("kategori_belanja").select("id, nama").order("id"),
     db.from("kutipan").select("id, no_resit, jumlah, kaedah, tarikh, catatan, kategori:kategori_kutipan(nama, jenis_khairat), ahli:ahli_kariah(nama)").order("dicipta", { ascending: false }).limit(200),
-    db.from("perbelanjaan").select("id, no_baucer, jumlah, keterangan, tarikh, dari_khairat, status, bayar_kepada, diluluskan_oleh, tarikh_bayar, sebab_tolak, url_slip, kategori:kategori_belanja(nama)").order("dicipta", { ascending: false }).limit(200),
+    db.from("perbelanjaan").select("id, no_baucer, jumlah, keterangan, tarikh, dari_khairat, status, bayar_kepada, bank, no_akaun, nama_akaun, diluluskan_oleh, tarikh_bayar, sebab_tolak, url_slip, kategori:kategori_belanja(nama)").order("dicipta", { ascending: false }).limit(200),
     db.from("tuntutan_khairat").select("jumlah_pampasan, status").eq("status", "dibayar"),
     db.from("ahli_kariah").select("id, nama, no_ahli").eq("status", "lulus").order("nama"),
   ]);

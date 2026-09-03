@@ -11,6 +11,7 @@ type Belanja = {
   id: string; no_baucer: string | null; jumlah: number; keterangan: string; tarikh: string;
   dari_khairat: boolean; status: string; bayar_kepada: string | null; diluluskan_oleh: string | null;
   tarikh_bayar: string | null; sebab_tolak: string | null; url_slip?: string | null; kategori?: { nama?: string } | null;
+  bank?: string | null; no_akaun?: string | null; nama_akaun?: string | null;
 };
 
 const CARA_BAYAR = ["Pindahan Atas Talian", "Tunai", "Cek"];
@@ -104,7 +105,10 @@ export default function SenaraiBelanja({ belanja, bolehLulus, slipUrls = {} }: {
                     {b.status === "tolak" && b.sebab_tolak && <div className="text-xs text-red-500">Sebab: {b.sebab_tolak}</div>}
                     {b.status === "dibayar" && b.tarikh_bayar && <div className="text-xs text-green-600">Dibayar: {tarikhMs(b.tarikh_bayar)}</div>}
                   </td>
-                  <td className="px-4 py-2">{b.bayar_kepada || "—"}</td>
+                  <td className="px-4 py-2">
+                    <div>{b.bayar_kepada || "—"}</div>
+                    {b.no_akaun && <div className="mt-0.5 text-xs text-slate-500">{b.bank ? `${b.bank} · ` : ""}<span className="font-mono">{b.no_akaun}</span>{b.nama_akaun && b.nama_akaun !== b.bayar_kepada ? ` · ${b.nama_akaun}` : ""}</div>}
+                  </td>
                   <td className="px-4 py-2 text-right font-medium text-red-600">{rm(b.jumlah)}</td>
                   <td className="px-4 py-2"><BadgeStatus s={b.status} /></td>
                   <td className="px-4 py-2 text-right">

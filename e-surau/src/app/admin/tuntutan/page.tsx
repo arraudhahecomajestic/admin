@@ -6,7 +6,7 @@ import AdminNav from "@/components/AdminNav";
 import ButangHantar from "@/components/ButangHantar";
 import { rm, tarikhMs } from "@/lib/format";
 import { STATUS_TUNTUTAN, STATUS_PEMBEKAL } from "@/lib/pembekal";
-import { tetapkanStatusPembekal, sahAjk, lulusBendahari, tolakTuntutan, janaBaucerDalaman, tolakTuntutanDalaman } from "./actions";
+import { tetapkanStatusPembekal, sahAjk, lulusBendahari, tolakTuntutan, sahAjkDalaman, janaBaucerDalaman, tolakTuntutanDalaman } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -72,15 +72,18 @@ export default async function AdminTuntutanPage() {
         <div className="divide-y">
           {tuntutanDalaman.length === 0 && <p className="px-5 py-6 text-center text-slate-400">Tiada tuntutan dalaman.</p>}
           {tuntutanDalaman.map((t) => {
-            const warna = t.status === "dibayar" ? "bg-green-100 text-green-700" : t.status === "diproses" ? "bg-blue-100 text-blue-700" : t.status === "ditolak" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700";
-            const label = t.status === "dibayar" ? "Dibayar" : t.status === "diproses" ? "Baucer dijana" : t.status === "ditolak" ? "Ditolak" : "Menunggu Bendahari";
+            const warna = t.status === "dibayar" ? "bg-green-100 text-green-700" : t.status === "diproses" ? "bg-blue-100 text-blue-700" : t.status === "disah_ajk" ? "bg-indigo-100 text-indigo-700" : t.status === "ditolak" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700";
+            const label = t.status === "dibayar" ? "Dibayar" : t.status === "diproses" ? "Baucer dijana" : t.status === "disah_ajk" ? "Disah AJK · tunggu Bendahari" : t.status === "ditolak" ? "Ditolak" : "Menunggu semakan AJK";
+            const tuntutanSendiri = t.profil_id && t.profil_id === profil.id;
             return (
               <div key={t.id} className="px-5 py-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <span className="font-mono text-xs text-slate-400">{t.no_tuntutan}</span>
                     <div className="font-semibold text-slate-900">{t.butiran}</div>
-                    <div className="text-xs text-slate-500">{t.nama_pemohon}{t.jawatan ? ` · ${t.jawatan}` : ""} · {tarikhMs(t.dicipta)}</div>
+                    <div className="text-xs text-slate-500">{t.nama_pemohon}{t.jawatan ? ` · ${t.jawatan}` : ""} · Hantar: {tarikhMs(t.dicipta)}{t.tarikh_bekal ? ` · Tarikh bekal: ${tarikhMs(t.tarikh_bekal)}` : ""}</div>
+                    {(t.bank || t.no_akaun) && <div className="text-xs text-slate-500">Akaun: {t.bank || "-"} {t.no_akaun || ""}{t.nama_akaun ? ` (${t.nama_akaun})` : ""}</div>}
+                    {t.sah_ajk_oleh && <div className="text-[11px] text-indigo-600">Disah AJK: {t.sah_ajk_oleh}</div>}
                     {t.url_dokumen && (tdDokMap[t.id]
                       ? <a href={tdDokMap[t.id]!} target="_blank" rel="noreferrer" className="text-xs font-semibold text-surau hover:underline">Lihat Resit</a>
                       : <span className="text-xs text-slate-400">Resit</span>)}
@@ -90,22 +93,51 @@ export default async function AdminTuntutanPage() {
                     <span className={`rounded px-2 py-0.5 text-xs font-semibold ${warna}`}>{label}</span>
                   </div>
                 </div>
-                {t.status === "baru" && bolehJanaDalaman && (
+
+                {/* Langkah 1 — AJK bertugas semak & sah */}
+                {t.status === "baru" && (
                   <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-                    <form action={janaBaucerDalaman} className="flex flex-wrap items-center gap-2">
-                      <input type="hidden" name="id" value={t.id} />
-                      <select name="kategori_id" className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
-                        <option value="">Kategori belanja…</option>
-                        {katBelanja.map((k) => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                      </select>
-                      <ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">Jana Baucer</ButangHantar>
-                    </form>
-                    <form action={tolakTuntutanDalaman}>
-                      <input type="hidden" name="id" value={t.id} />
-                      <ButangHantar className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50" pendingText="…">Tolak</ButangHantar>
-                    </form>
+                    {boleh$ && !tuntutanSendiri ? (
+                      <>
+                        <form action={sahAjkDalaman}>
+                          <input type="hidden" name="id" value={t.id} />
+                          <ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">✓ Semak & Sah (AJK)</ButangHantar>
+                        </form>
+                        <form action={tolakTuntutanDalaman}>
+                          <input type="hidden" name="id" value={t.id} />
+                          <ButangHantar className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50" pendingText="…" konfirmasi="Tolak tuntutan ini?">Tolak</ButangHantar>
+                        </form>
+                      </>
+                    ) : (
+                      <span className="text-xs text-slate-400">{tuntutanSendiri ? "Tuntutan anda sendiri — AJK lain perlu semak." : "Menunggu semakan AJK bertugas."}</span>
+                    )}
                   </div>
                 )}
+
+                {/* Langkah 2 — Bendahari jana baucer (selepas disah AJK) */}
+                {t.status === "disah_ajk" && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+                    {bolehJanaDalaman && !tuntutanSendiri ? (
+                      <>
+                        <form action={janaBaucerDalaman} className="flex flex-wrap items-center gap-2">
+                          <input type="hidden" name="id" value={t.id} />
+                          <select name="kategori_id" className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+                            <option value="">Kategori belanja…</option>
+                            {katBelanja.map((k) => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                          </select>
+                          <ButangHantar className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" pendingText="…">Jana Baucer</ButangHantar>
+                        </form>
+                        <form action={tolakTuntutanDalaman}>
+                          <input type="hidden" name="id" value={t.id} />
+                          <ButangHantar className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50" pendingText="…" konfirmasi="Tolak tuntutan ini?">Tolak</ButangHantar>
+                        </form>
+                      </>
+                    ) : (
+                      <span className="text-xs text-slate-400">Disah AJK — menunggu Bendahari jana baucer.</span>
+                    )}
+                  </div>
+                )}
+
                 {t.status === "diproses" && <div className="mt-1 text-xs text-slate-500">Baucer dijana — tunggu kelulusan Pengerusi & bayaran di Kewangan.</div>}
                 {t.status === "ditolak" && t.catatan && <div className="mt-1 text-xs text-red-500">Sebab: {t.catatan}</div>}
               </div>

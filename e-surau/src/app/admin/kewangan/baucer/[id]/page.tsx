@@ -28,11 +28,30 @@ export default async function BaucerPage({ params }: { params: { id: string } })
   // (nama & No. KP dari pendaftaran) + status pengesahan terima untuk "Diterima Oleh".
   const { data: tData } = await db
     .from("tuntutan_bayaran")
-    .select("diterima_disah, tarikh_terima, pembekal:pembekal(nama, no_kp, syarikat)")
+    .select("diterima_disah, tarikh_terima, url_dokumen, pembekal:pembekal(nama, no_kp, syarikat)")
     .eq("perbelanjaan_id", params.id)
     .maybeSingle();
   const tuntut: any = tData;
   const penerima = tuntut?.pembekal ?? null;
+
+  // Tuntutan dalaman (AJK/staf) yang menjana baucer ini — untuk tarik invois/resit.
+  const { data: tdData } = await db
+    .from("tuntutan_dalaman")
+    .select("url_dokumen, nama_pemohon")
+    .eq("perbelanjaan_id", params.id)
+    .maybeSingle();
+  const tuntutDalaman: any = tdData;
+
+  // Invois/resit sokongan (auto-lampir) — dari tuntutan dalaman atau pembekal.
+  async function signedDok(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    const rel = path.replace(/^salinan-kp\//, "");
+    const { data } = await db.storage.from("salinan-kp").createSignedUrl(rel, 3600);
+    return data?.signedUrl ?? null;
+  }
+  const invoisPath: string | null = tuntutDalaman?.url_dokumen || tuntut?.url_dokumen || null;
+  const invoisUrl = await signedDok(invoisPath);
+  const invoisPdf = !!invoisPath && invoisPath.toLowerCase().endsWith(".pdf");
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -62,6 +81,7 @@ export default async function BaucerPage({ params }: { params: { id: string } })
           <Baris k="Tarikh" v={tarikhMs(b.tarikh)} />
           <Baris k="Kos Kategori" v={b.kategori?.nama} />
           <Baris k="Bayar Kepada" v={b.bayar_kepada} />
+          {(b.bank || b.no_akaun) && <Baris k="Akaun Bank" v={`${b.bank || ""}${b.no_akaun ? ` · ${b.no_akaun}` : ""}${b.nama_akaun && b.nama_akaun !== b.bayar_kepada ? ` (${b.nama_akaun})` : ""}`.trim()} />}
           <Baris k="Butiran" v={b.keterangan} />
           <Baris k="Tabung" v={b.dari_khairat ? "Khairat" : "Am"} />
           <Baris k="Cara Bayaran" v={b.cara_bayar || "Pindahan Atas Talian"} />
@@ -124,13 +144,38 @@ export default async function BaucerPage({ params }: { params: { id: string } })
         <p className="mt-6 text-center text-[11px] text-slate-400">
           Asal untuk Bendahari · Salinan pertama untuk fail · Salinan kedua untuk penerima
         </p>
+        {invoisUrl && <p className="mt-1 text-center text-[11px] text-slate-400">Invois / resit sokongan dilampirkan di muka seterusnya.</p>}
       </div>
+
+      {/* Lampiran — invois/resit yang penuntut hantar (auto-tarik) */}
+      {invoisUrl && (
+        <div className="lampiran mt-6 rounded-xl border bg-white p-6 shadow-sm">
+          <div className="mb-3 border-b pb-2 text-center">
+            <p className="text-sm font-semibold tracking-wide text-surau-dark">LAMPIRAN — INVOIS / RESIT</p>
+            <p className="text-xs text-slate-500">Baucer {b.no_baucer || "-"}{b.bayar_kepada ? ` · ${b.bayar_kepada}` : ""}</p>
+          </div>
+          {invoisPdf ? (
+            <div>
+              <object data={invoisUrl} type="application/pdf" className="h-[80vh] w-full rounded-lg border">
+                <p className="text-sm text-slate-500">Invois dalam format PDF.{" "}
+                  <a href={invoisUrl} target="_blank" rel="noreferrer" className="font-semibold text-surau underline">Buka / cetak invois PDF</a>
+                </p>
+              </object>
+              <p className="no-print mt-2 text-xs text-slate-400">Nota: invois PDF perlu dicetak berasingan melalui pautan di atas.</p>
+            </div>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={invoisUrl} alt="Invois / Resit sokongan" className="mx-auto max-h-[88vh] w-auto max-w-full rounded-lg border" />
+          )}
+        </div>
+      )}
 
       <style>{`
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; }
           .resit { border: none !important; box-shadow: none !important; }
+          .lampiran { border: none !important; box-shadow: none !important; page-break-before: always; break-before: page; }
         }
       `}</style>
     </div>

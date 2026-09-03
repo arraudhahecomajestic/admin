@@ -7,6 +7,10 @@ import { hantarTuntutanDalaman } from "@/app/admin/tuntutan-saya/actions";
 export default function BorangTuntutanDalaman() {
   const [butiran, setButiran] = useState("");
   const [jumlah, setJumlah] = useState("");
+  const [tarikhBekal, setTarikhBekal] = useState("");
+  const [bank, setBank] = useState("");
+  const [noAkaun, setNoAkaun] = useState("");
+  const [namaAkaun, setNamaAkaun] = useState("");
   const [urlDok, setUrlDok] = useState("");
   const [muat, setMuat] = useState(false);
   const [hantar, setHantar] = useState(false);
@@ -31,13 +35,16 @@ export default function BorangTuntutanDalaman() {
     const j = Number(jumlah);
     if (!butiran.trim()) { setMsg({ ok: false, text: "Sila isi butiran tuntutan." }); return; }
     if (!j || j <= 0) { setMsg({ ok: false, text: "Sila isi jumlah yang sah." }); return; }
+    if (!tarikhBekal) { setMsg({ ok: false, text: "Sila isi tarikh pembekalan/perkhidmatan." }); return; }
+    if (!bank.trim()) { setMsg({ ok: false, text: "Sila isi nama bank." }); return; }
+    if (!noAkaun.trim()) { setMsg({ ok: false, text: "Sila isi no. akaun bank." }); return; }
     if (!urlDok) { setMsg({ ok: false, text: "Sila muat naik resit/bukti pembelian." }); return; }
     setHantar(true);
-    const res = await hantarTuntutanDalaman({ butiran, jumlah: j, url_dokumen: urlDok });
+    const res = await hantarTuntutanDalaman({ butiran, jumlah: j, url_dokumen: urlDok, tarikh_bekal: tarikhBekal, bank, no_akaun: noAkaun, nama_akaun: namaAkaun });
     setHantar(false);
     if (!res.ok) { setMsg({ ok: false, text: res.msg ?? "Ralat." }); return; }
-    setMsg({ ok: true, text: "Tuntutan berjaya dihantar. Ia akan diproses oleh Bendahari & diluluskan Pengerusi." });
-    setButiran(""); setJumlah(""); setUrlDok("");
+    setMsg({ ok: true, text: "Tuntutan berjaya dihantar. Ia akan disemak AJK bertugas, diproses Bendahari & diluluskan Pengerusi." });
+    setButiran(""); setJumlah(""); setTarikhBekal(""); setBank(""); setNoAkaun(""); setNamaAkaun(""); setUrlDok("");
   }
 
   return (
@@ -49,10 +56,35 @@ export default function BorangTuntutanDalaman() {
         <span className="mb-1 block text-sm font-medium text-slate-700">Butiran / Tujuan *</span>
         <textarea className="inp" rows={3} value={butiran} onChange={(e) => setButiran(e.target.value)} placeholder="cth: Beli alat pembersih & sampah surau (Julai 2026)" />
       </label>
-      <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Jumlah (RM) *</span>
-        <input className="inp" type="number" step="0.01" min="0.01" value={jumlah} onChange={(e) => setJumlah(e.target.value)} />
-      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">Jumlah (RM) *</span>
+          <input className="inp" type="number" step="0.01" min="0.01" value={jumlah} onChange={(e) => setJumlah(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">Tarikh Pembekalan / Perkhidmatan *</span>
+          <input className="inp" type="date" value={tarikhBekal} onChange={(e) => setTarikhBekal(e.target.value)} />
+        </label>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+        <div className="mb-2 text-sm font-semibold text-slate-700">Akaun Bank (untuk pembayaran) *</div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-slate-600">Nama Bank *</span>
+            <input className="inp" value={bank} onChange={(e) => setBank(e.target.value)} placeholder="cth: Maybank, CIMB, BSN" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-slate-600">No. Akaun *</span>
+            <input className="inp" inputMode="numeric" value={noAkaun} onChange={(e) => setNoAkaun(e.target.value)} placeholder="cth: 1234567890" />
+          </label>
+          <label className="block sm:col-span-2">
+            <span className="mb-1 block text-xs font-medium text-slate-600">Nama Pemegang Akaun (pilihan)</span>
+            <input className="inp" value={namaAkaun} onChange={(e) => setNamaAkaun(e.target.value)} placeholder="Biar kosong = guna nama anda" />
+          </label>
+        </div>
+      </div>
+
       <div>
         <span className="mb-1 block text-sm font-medium text-slate-700">Resit / Bukti Pembelian *</span>
         <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-3 text-sm hover:border-surau">

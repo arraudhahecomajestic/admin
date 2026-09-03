@@ -72,6 +72,9 @@ export async function lulusBendahari(formData: FormData) {
     jumlah: Number(tu.jumlah),
     keterangan: `${tu.no_tuntutan} — ${tu.butiran}`,
     bayar_kepada: tu.pembekal?.nama ?? null,
+    bank: tu.pembekal?.bank ?? null,
+    no_akaun: tu.pembekal?.no_akaun ?? null,
+    nama_akaun: tu.pembekal?.nama_akaun ?? tu.pembekal?.nama ?? null,
     dari_khairat: false,
     tarikh: new Date().toISOString().slice(0, 10),
     status: "menunggu",             // masuk aliran kelulusan Pengerusi
@@ -106,7 +109,29 @@ export async function tandaDibayar(data: { id: string; url_slip?: string; rujuka
 
 // ---- Tuntutan Dalaman (AJK/Staf) ----
 
-// Bendahari: assign kategori + jana Baucer dari tuntutan dalaman (baru → diproses).
+// AJK bertugas: semak & sahkan tuntutan dalaman dahulu (baru → disah_ajk)
+// sebelum sampai ke Bendahari untuk jana baucer.
+export async function sahAjkDalaman(formData: FormData) {
+  const p = await getProfil();
+  if (!bolehKewangan(p)) return; // Admin / AJK / Bendahari
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const db = createAdminClient();
+  const { data: t } = await db.from("tuntutan_dalaman").select("profil_id, status").eq("id", id).single();
+  const tu: any = t;
+  if (!tu || tu.status !== "baru") return;
+  // COI: tidak boleh sahkan tuntutan sendiri.
+  if (tu.profil_id && tu.profil_id === p!.id) return;
+  await db.from("tuntutan_dalaman").update({
+    status: "disah_ajk",
+    sah_ajk_oleh: p?.nama ?? p?.emel ?? "AJK",
+    tarikh_sah_ajk: new Date().toISOString(),
+  }).eq("id", id).eq("status", "baru");
+  segar();
+  revalidatePath("/admin/tuntutan-saya");
+}
+
+// Bendahari: assign kategori + jana Baucer dari tuntutan dalaman (disah_ajk → diproses).
 export async function janaBaucerDalaman(formData: FormData) {
   const p = await getProfil();
   if (!bolehKewanganModul(p)) return;
@@ -117,7 +142,8 @@ export async function janaBaucerDalaman(formData: FormData) {
 
   const { data: t } = await db.from("tuntutan_dalaman").select("*").eq("id", id).single();
   const tu: any = t;
-  if (!tu || tu.status !== "baru") return;
+  // Wajib disemak AJK dahulu sebelum Bendahari jana baucer.
+  if (!tu || tu.status !== "disah_ajk") return;
   // COI: tidak boleh proses tuntutan sendiri.
   if (tu.profil_id && tu.profil_id === p!.id) return;
 
@@ -136,7 +162,10 @@ export async function janaBaucerDalaman(formData: FormData) {
     kategori_id: katId,
     jumlah: Number(tu.jumlah),
     keterangan: `${tu.no_tuntutan} — ${tu.butiran}`,
-    bayar_kepada: tu.nama_pemohon ?? null,
+    bayar_kepada: tu.nama_akaun ?? tu.nama_pemohon ?? null,
+    bank: tu.bank ?? null,
+    no_akaun: tu.no_akaun ?? null,
+    nama_akaun: tu.nama_akaun ?? tu.nama_pemohon ?? null,
     dari_khairat: false,
     tarikh: new Date().toISOString().slice(0, 10),
     status: "menunggu",
@@ -163,7 +192,7 @@ export async function tolakTuntutanDalaman(formData: FormData) {
   await db.from("tuntutan_dalaman").update({
     status: "ditolak",
     catatan: String(formData.get("catatan") ?? "").trim() || "Tidak diluluskan",
-  }).eq("id", id).eq("status", "baru");
+  }).eq("id", id).in("status", ["baru", "disah_ajk"]);
   segar();
   revalidatePath("/admin/tuntutan-saya");
 }
