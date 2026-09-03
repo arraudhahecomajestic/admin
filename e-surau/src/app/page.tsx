@@ -92,7 +92,8 @@ async function ambilKewanganBulanTerkini(): Promise<{ bulan: number; masuk: Bari
     const ada = new Set<number>();
     for (const r of (kut as any[]) ?? []) {
       const kat = r.kategori;
-      if (!kat || kat.papar_awam === false) continue;
+      // Papar semua kategori as-is — visibiliti umum dikawal suis global.
+      if (!kat) continue;
       const m = Number(String(r.tarikh).slice(5, 7)) - 1;
       if (m < 0 || m > 11) continue;
       (bM[m] ??= {})[kat.nama] = (bM[m][kat.nama] || 0) + Number(r.jumlah || 0);

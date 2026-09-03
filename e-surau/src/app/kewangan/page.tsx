@@ -29,8 +29,8 @@ export default async function KewanganAwamPage() {
   const db = createAdminClient();
   const tahun = new Date().getFullYear();
   const [{ data: kut }, { data: bel }] = await Promise.all([
-    db.from("kutipan").select("jumlah, tarikh, kategori:kategori_kutipan(nama, papar_awam)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
-    db.from("perbelanjaan").select("jumlah, tarikh, kategori:kategori_belanja(nama)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`),
+    db.from("kutipan").select("jumlah, tarikh, kategori:kategori_kutipan(nama, papar_awam)").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`).limit(10000),
+    db.from("perbelanjaan").select("jumlah, tarikh, kategori:kategori_belanja(nama)").eq("status", "dibayar").gte("tarikh", `${tahun}-01-01`).lte("tarikh", `${tahun}-12-31`).limit(10000),
   ]);
 
   const bulanM: Record<number, Record<string, number>> = {};
@@ -40,7 +40,9 @@ export default async function KewanganAwamPage() {
 
   for (const r of (kut as any[]) ?? []) {
     const kat = r.kategori;
-    if (!kat || kat.papar_awam === false) continue;
+    // Papar SEMUA kategori kutipan as-is — visibiliti umum dikawal oleh suis
+    // global "Penyata Kewangan — Paparan Awam", bukan tapisan per-kategori.
+    if (!kat) continue;
     const m = Number(String(r.tarikh).slice(5, 7)) - 1;
     if (m < 0 || m > 11) continue;
     const j = Number(r.jumlah || 0);

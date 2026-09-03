@@ -253,6 +253,12 @@ export default function ImportCsvKewangan() {
             <div className="rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-800">
               <div className="font-bold">✓ Import selesai</div>
               <div className="mt-1">Masuk: <b>{hasil.masuk}</b> rekod (RM{Number(hasil.jumMasuk).toFixed(2)}) · Keluar: <b>{hasil.keluar}</b> rekod (RM{Number(hasil.jumKeluar).toFixed(2)})</div>
+              {hasil.dilangkau > 0 && (
+                <div className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-2 text-amber-800">
+                  <b>{hasil.dilangkau} baris dilangkau</b> kerana sudah wujud dalam sistem (elak berganda).
+                  {hasil.masuk === 0 && hasil.keluar === 0 && <> Nampaknya fail ini sudah diimport sebelum ini — tiada rekod baharu ditambah.</>}
+                </div>
+              )}
               {hasil.gagal > 0 && (<div className="mt-2 text-red-700"><b>{hasil.gagal} baris gagal:</b><ul className="mt-1 list-disc pl-5">{hasil.ralat.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul></div>)}
             </div>
           )}

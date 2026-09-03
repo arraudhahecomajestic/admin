@@ -128,7 +128,7 @@ function normalTarikh(s: string): string | null {
 
 export type BarisCsv = { jenis: string; tarikh: string; kategori: string; jumlah: string | number; keterangan?: string; kaedah?: string };
 
-export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean; masuk: number; keluar: number; jumMasuk: number; jumKeluar: number; gagal: number; ralat: string[]; msg?: string }> {
+export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean; masuk: number; keluar: number; jumMasuk: number; jumKeluar: number; gagal: number; dilangkau?: number; ralat: string[]; msg?: string }> {
   const p = await getProfil();
   const kosong = { ok: false, masuk: 0, keluar: 0, jumMasuk: 0, jumKeluar: 0, gagal: 0, ralat: [] as string[] };
   if (!bolehKewanganModul(p)) return { ...kosong, msg: "Tiada akses." };
@@ -144,7 +144,7 @@ export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean
     if (cacheK.has(key)) return cacheK.get(key)!;
     const { data } = await db.from("kategori_kutipan").select("id").ilike("nama", nama).maybeSingle();
     let id = (data as any)?.id;
-    if (!id) { const { data: b } = await db.from("kategori_kutipan").insert({ nama, jenis_khairat: false, papar_awam: false }).select("id").single(); id = (b as any)?.id; }
+    if (!id) { const { data: b } = await db.from("kategori_kutipan").insert({ nama, jenis_khairat: false, papar_awam: true }).select("id").single(); id = (b as any)?.id; }
     cacheK.set(key, id); return id;
   }
   async function katBelanja(nama: string): Promise<number> {
@@ -191,6 +191,37 @@ export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean
     } catch (e: any) { gagal++; if (ralat.length < 25) ralat.push(`Baris ${baris}: ${e?.message ?? "ralat simpan"}`); }
   }
 
+  // --- ELAK DUPLICATE ---
+  // Langkau baris yang SUDAH WUJUD dalam DB (tarikh + kategori + jumlah +
+  // keterangan yang sama). Ini halang import berganda walaupun fail sama
+  // diimport dua kali oleh orang berbeza / hari lain.
+  let dilangkau = 0;
+  const semuaTarikh = [...barisKutipan, ...barisBelanja].map((x) => x.tarikh).sort();
+  if (semuaTarikh.length) {
+    const minT = semuaTarikh[0];
+    const maxT = semuaTarikh[semuaTarikh.length - 1];
+    const norm = (n: any) => Number(n || 0).toFixed(2);
+    const [{ data: adaK }, { data: adaB }] = await Promise.all([
+      db.from("kutipan").select("tarikh, kategori_id, jumlah, catatan").gte("tarikh", minT).lte("tarikh", maxT).limit(20000),
+      db.from("perbelanjaan").select("tarikh, kategori_id, jumlah, keterangan").gte("tarikh", minT).lte("tarikh", maxT).limit(20000),
+    ]);
+    const setK = new Set(((adaK as any[]) ?? []).map((r) => `${r.tarikh}|${r.kategori_id}|${norm(r.jumlah)}|${(r.catatan || "").trim()}`));
+    const setB = new Set(((adaB as any[]) ?? []).map((r) => `${r.tarikh}|${r.kategori_id}|${norm(r.jumlah)}|${(r.keterangan || "").trim()}`));
+
+    const kutipanBaru = barisKutipan.filter((r) => {
+      const k = `${r.tarikh}|${r.kategori_id}|${norm(r.jumlah)}|${(r.catatan || "").trim()}`;
+      if (setK.has(k)) { dilangkau++; masuk--; jumMasuk -= Number(r.jumlah || 0); return false; }
+      return true;
+    });
+    const belanjaBaru = barisBelanja.filter((r) => {
+      const k = `${r.tarikh}|${r.kategori_id}|${norm(r.jumlah)}|${(r.keterangan || "").trim()}`;
+      if (setB.has(k)) { dilangkau++; keluar--; jumKeluar -= Number(r.jumlah || 0); return false; }
+      return true;
+    });
+    barisKutipan.length = 0; barisKutipan.push(...kutipanBaru);
+    barisBelanja.length = 0; barisBelanja.push(...belanjaBaru);
+  }
+
   // Batch insert (chunk 200) — laju & elak had permintaan
   const chunk = <T,>(arr: T[], n: number) => { const o: T[][] = []; for (let i = 0; i < arr.length; i += n) o.push(arr.slice(i, i + n)); return o; };
   for (const c of chunk(barisKutipan, 200)) { const { error } = await db.from("kutipan").insert(c); if (error) { masuk -= c.length; gagal += c.length; if (ralat.length < 25) ralat.push(`Kutipan: ${error.message}`); } }
@@ -198,7 +229,10 @@ export async function importKewanganCsv(rows: BarisCsv[]): Promise<{ ok: boolean
 
   revalidatePath("/admin/kewangan");
   revalidatePath("/");
-  return { ok: true, masuk, keluar, jumMasuk, jumKeluar, gagal, ralat: ralat.slice(0, 25) };
+  const msg = dilangkau > 0
+    ? `${dilangkau} baris dilangkau kerana sudah wujud (elak berganda).`
+    : undefined;
+  return { ok: true, masuk, keluar, jumMasuk, jumKeluar, gagal, dilangkau, ralat: ralat.slice(0, 25), msg };
 }
 
 export async function padamKutipan(formData: FormData) {
